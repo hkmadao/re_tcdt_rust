@@ -1,0 +1,21 @@
+[package]
+name = "tcdt_common"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "tcdt_common"
+path = "src/lib.rs"
+
+[dependencies]
+lazy_static = "=1.4.0"
+serde = { version = "1", features = ["derive"] }
+regex = "=1.10.4"
+chrono = "0.4.38"
+dotenvy = "0.15"
+thiserror = "1.0.61"
+anyhow = "1"
+
+[dependencies.sea-orm]
+version = "=1.0.0-rc.5" # sea-orm version

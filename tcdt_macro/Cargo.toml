@@ -1,0 +1,25 @@
+[package]
+name = "tcdt_macro"
+version = "0.1.0"
+edition = "2021"
+
+
+[lib]
+path = "src/lib.rs"
+proc-macro = true
+
+[dependencies]
+tcdt_common = { path = "../tcdt_common" }
+proc-macro2 = "1.0.85"
+# syn = "1.0"
+quote = "1.0"
+
+[dependencies.syn]
+version = "2"
+features = [
+    "parsing",
+    "proc-macro",
+    "derive",
+    "printing",
+]
+default-features = false

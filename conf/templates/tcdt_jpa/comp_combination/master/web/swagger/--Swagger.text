@@ -1,0 +1,650 @@
+{
+  "swagger": "2.0",
+  "info":{
+    "version": "1.0",
+    "title": "{{ rootInfo.displayName }}",
+    "description": "{{ rootInfo.displayName }}"
+  },
+  "tags": ["{{ rootInfo.className }}Agg"],
+  "schemes": ["https","http"],
+  "paths":{
+    "/{{ rootInfo.camelCaseName }}Agg/save":{
+      "post":{
+        "tags": ["{{ rootInfo.className }}Agg"],
+        "summary": "save {{ rootInfo.className }}",
+        "description": "",
+        "operationId": "save{{ rootInfo.className }}",
+        "consumes": [
+          "application/json",
+          "application/xml"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "{{ rootInfo.className }} object that needs to be save to the store",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/{{ rootInfo.className }}"
+            }
+          }
+        ],
+        "responses": {
+          "405": {
+            "description": "Invalid input"
+          },
+          "200": {
+            "description": "{{ rootInfo.className }} info",
+            "schema": {
+              "$ref": "#/definitions/SingleCommonResult"
+            }
+          }
+        }
+      }
+    },
+    "/{{ rootInfo.camelCaseName }}Agg/update":{
+      "post":{
+        "tags": ["{{ rootInfo.className }}Agg"],
+        "summary": "update {{ rootInfo.className }}",
+        "description": "",
+        "operationId": "update{{ rootInfo.className }}",
+        "consumes": [
+          "application/json",
+          "application/xml"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "{{ rootInfo.className }} object that needs to be updated to the store",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/{{ rootInfo.className }}"
+            }
+          }
+        ],
+        "responses": {
+          "405": {
+            "description": "Invalid input"
+          },
+          "200": {
+            "description": "{{ rootInfo.className }} info",
+            "schema": {
+              "$ref": "#/definitions/SingleCommonResult"
+            }
+          }
+        }
+      }
+    },
+    "/{{ rootInfo.camelCaseName }}Agg/remove":{
+      "post":{
+        "tags": ["{{ rootInfo.className }}Agg"],
+        "summary": "remove {{ rootInfo.className }}",
+        "description": "",
+        "operationId": "remove{{ rootInfo.className }}",
+        "consumes": [
+          "application/json",
+          "application/xml"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "{{ rootInfo.className }} object that needs to be remove from the store",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/{{ rootInfo.className }}"
+            }
+          }
+        ],
+        "responses": {
+          "405": {
+            "description": "Invalid input"
+          },
+          "200": {
+            "description": "{{ rootInfo.className }} info",
+            "schema": {
+              "$ref": "#/definitions/SingleCommonResult"
+            }
+          }
+        }
+      }
+    },
+    "/{{ rootInfo.camelCaseName }}Agg/getById/{idMain}":{
+      "post":{
+        "tags": ["{{ rootInfo.className }}Agg"],
+        "summary": "getById {{ rootInfo.className }}",
+        "description": "",
+        "operationId": "getById{{ rootInfo.className }}",
+        "consumes": [
+          "application/json",
+          "application/xml"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "idMain",
+            "description": "{{ rootInfo.className }} object that needs to be remove from the store",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/idMain"
+            }
+          }
+        ],
+        "responses": {
+          "405": {
+            "description": "Invalid input"
+          },
+          "200": {
+            "description": "{{ rootInfo.className }} info",
+            "schema": {
+              "$ref": "#/definitions/SingleCommonResult"
+            }
+          }
+        }
+      }
+    },
+    "/{{ rootInfo.camelCaseName }}Agg/aq":{
+      "post":{
+        "tags": ["{{ rootInfo.className }}Agg"],
+        "summary": "aq {{ rootInfo.className }}",
+        "description": "",
+        "operationId": "aq{{ rootInfo.className }}",
+        "consumes": [
+          "application/json",
+          "application/xml"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "list {{ rootInfo.className }} by condition",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Condition"
+            }
+          }
+        ],
+        "responses": {
+          "405": {
+            "description": "Invalid input"
+          },
+          "200": {
+            "description": "{{ rootInfo.className }} info",
+            "schema": {
+              "$ref": "#/definitions/ListCommonResult"
+            }
+          }
+        }
+      }
+    },
+    "/{{ rootInfo.camelCaseName }}Agg/aqPage":{
+      "post":{
+        "tags": ["{{ rootInfo.className }}Agg"],
+        "summary": "aqPage {{ rootInfo.className }}",
+        "description": "",
+        "operationId": "aqPage{{ rootInfo.className }}",
+        "consumes": [
+          "application/json",
+          "application/xml"
+        ],
+        "produces": [
+          "application/json",
+          "application/xml"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "page {{ rootInfo.className }} by condition",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PageInfoInput"
+            }
+          }
+        ],
+        "responses": {
+          "405": {
+            "description": "Invalid input"
+          },
+          "200": {
+            "description": "{{ rootInfo.className }} info",
+            "schema": {
+              "$ref": "#/definitions/PageCommonResult"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions":{
+    "{{ rootInfo.className }}":{
+      "type": "object",
+      "description": "{{ rootInfo.displayName }}",
+      "properties":{
+        "{{ rootInfo.pkAttributeInfo.camelCaseName }}":{
+          "type": "string",
+          "description": "{{ rootInfo.pkAttributeInfo.displayName }}"
+        },
+{%- for attributeInfo in rootInfo.baseAttributeInfoList %}
+        "{{ attributeInfo.camelCaseName }}":{
+  {%- if attributeInfo.enumInfo %}
+          "enum": [
+    {%- for enumAttributeInfo in attributeInfo.enumInfo.enumAttributeInfoList %}
+            "{{ enumAttributeInfo.enumValue }}"{%- if loop.last %}{%- else %},{%- endif %}
+    {%- endfor %}
+          ],
+  {%- endif %}
+          "type": "string",
+          "description": "{{ attributeInfo.displayName }}"
+        },
+{%- endfor %}
+{%- for attributeInfo in rootInfo.fkAttributeInfoList %}
+        "{{ attributeInfo.camelCaseName }}":{
+          "type": "string",
+          "description": "{{ attributeInfo.displayName }}"
+        },
+{%- endfor %}
+{%- for attributeInfo in rootInfo.aggFkAttributeInfoList %}
+        "{{ attributeInfo.camelCaseName }}":{
+          "type": "string",
+          "description": "{{ attributeInfo.displayName }}"
+        },
+{%- endfor %}
+{%- for attributeInfo in rootInfo.upAttributeInfoList %}
+        "{{ attributeInfo.camelCaseName }}":{
+          "type": "object",
+          "$ref": "#/definitions/{{ attributeInfo.objectType }}",
+          "description": "{{ attributeInfo.displayName }}"
+        },
+{%- endfor %}
+{%- for attributeInfo in rootInfo.upSingleAttributeInfoList %}
+        "{{ attributeInfo.camelCaseName }}":{
+          "type": "object",
+          "$ref": "#/definitions/{{ attributeInfo.objectType }}",
+          "description": "{{ attributeInfo.displayName }}"
+        },
+{%- endfor %}
+{%- for attributeInfo in rootInfo.aggUpAttributeInfoList %}
+        "{{ attributeInfo.camelCaseName }}":{
+          "type": "object",
+          "$ref": "#/definitions/{{ attributeInfo.objectType }}",
+          "description": "{{ attributeInfo.displayName }}"
+        },
+{%- endfor %}
+{%- for attributeInfo in rootInfo.aggUpSingleAttributeInfoList %}
+        "{{ attributeInfo.camelCaseName }}":{
+          "type": "object",
+          "$ref": "#/definitions/{{ attributeInfo.objectType }}",
+          "description": "{{ attributeInfo.displayName }}"
+        },
+{%- endfor %}
+{%- for attributeInfo in rootInfo.aggDownAttributeInfoList %}
+        "{{ attributeInfo.camelCaseName }}":{
+          "type": "array",
+          "$ref": "#/definitions/{{ attributeInfo.objectType }}",
+          "description": "{{ attributeInfo.displayName }}"
+        },
+{%- endfor %}
+{%- for attributeInfo in rootInfo.aggDownSingleAttributeInfoList %}
+        "{{ attributeInfo.camelCaseName }}":{
+          "type": "object",
+          "$ref": "#/definitions/{{ attributeInfo.objectType }}",
+          "description": "{{ attributeInfo.displayName }}"
+        },
+{%- endfor %}
+        "action":{
+          "type": "integer",
+          "description": "动作：1-unchanged,2-updated,3-new,4-deleted",
+          "enum": [1, 2, 3, 4],
+          "default": 1
+        }
+      }
+    },
+{%- for entityInfo in rootInfo.childEntityInfoList %}
+    "{{ entityInfo.className }}":{
+      "type": "object",
+      "description": "{{ entityInfo.pkAttributeInfo.displayName }}",
+      "properties":{
+        "{{ entityInfo.pkAttributeInfo.camelCaseName }}":{
+          "type": "string",
+          "description": "{{ entityInfo.pkAttributeInfo.displayName }}"
+        },
+  {%- for attributeInfo in rootInfo.baseAttributeInfoList %}
+        "{{ attributeInfo.camelCaseName }}":{
+    {%- if attributeInfo.enumInfo %}
+          "enum": [
+      {%- for enumAttributeInfo in attributeInfo.enumInfo.enumAttributeInfoList %}
+            "{{ enumAttributeInfo.enumValue }}"{%- if loop.last %}{%- else %},{%- endif %}
+      {%- endfor %}
+          ],
+    {%- endif %}
+          "type": "string",
+          "description": "{{ attributeInfo.displayName }}"
+        },
+  {%- endfor %}
+  {%- for attributeInfo in rootInfo.fkAttributeInfoList %}
+        "{{ attributeInfo.camelCaseName }}":{
+          "type": "string",
+          "description": "{{ attributeInfo.displayName }}"
+        },
+  {%- endfor %}
+  {%- for attributeInfo in rootInfo.aggFkAttributeInfoList %}
+        "{{ attributeInfo.camelCaseName }}":{
+          "type": "string",
+          "description": "{{ attributeInfo.displayName }}"
+        },
+  {%- endfor %}
+  {%- for attributeInfo in rootInfo.upAttributeInfoList %}
+        "{{ attributeInfo.camelCaseName }}":{
+          "type": "object",
+          "$ref": "#/definitions/{{ attributeInfo.objectType }}",
+          "description": "{{ attributeInfo.displayName }}"
+        },
+  {%- endfor %}
+  {%- for attributeInfo in rootInfo.upSingleAttributeInfoList %}
+        "{{ attributeInfo.camelCaseName }}":{
+          "type": "object",
+          "$ref": "#/definitions/{{ attributeInfo.objectType }}",
+          "description": "{{ attributeInfo.displayName }}"
+        },
+  {%- endfor %}
+  {%- for attributeInfo in rootInfo.aggUpAttributeInfoList %}
+        "{{ attributeInfo.camelCaseName }}":{
+          "type": "object",
+          "$ref": "#/definitions/{{ attributeInfo.objectType }}",
+          "description": "{{ attributeInfo.displayName }}"
+        },
+  {%- endfor %}
+  {%- for attributeInfo in rootInfo.aggUpSingleAttributeInfoList %}
+        "{{ attributeInfo.camelCaseName }}":{
+          "type": "object",
+          "$ref": "#/definitions/{{ attributeInfo.objectType }}",
+          "description": "{{ attributeInfo.displayName }}"
+        },
+  {%- endfor %}
+        "action":{
+          "type": "integer",
+          "description": "动作：1-unchanged,2-updated,3-new,4-deleted",
+          "enum": [1, 2, 3, 4],
+          "default": 1
+        }
+      }
+    },
+{%- endfor %}
+{%- for entityInfo in rootInfo.compInfo.upEntityInfoList %}
+    "{{ entityInfo.className }}":{
+      "type": "object",
+      "description": "{{ entityInfo.displayName }}",
+      "properties":{
+  {%- for attributeInfo in entityInfo.baseAttributeInfoList %}
+        "{{ attributeInfo.camelCaseName }}":{
+    {%- if attributeInfo.enumInfo %}
+          "enum": [
+      {%- for enumAttributeInfo in attributeInfo.enumInfo.enumAttributeInfoList %}
+            "{{ enumAttributeInfo.enumValue }}"{%- if loop.last %}{%- else %},{%- endif %}
+      {%- endfor %}
+          ],
+    {%- endif %}
+          "type": "string",
+          "description": "{{ attributeInfo.displayName }}"
+        },
+  {%- endfor %}
+  {%- for attributeInfo in entityInfo.fkAttributeInfoList %}
+        "{{ attributeInfo.camelCaseName }}":{
+          "type": "string",
+          "description": "{{ attributeInfo.displayName }}"
+        },
+  {%- endfor %}
+        "{{ entityInfo.pkAttributeInfo.camelCaseName }}":{
+          "type": "string",
+          "description": "{{ entityInfo.pkAttributeInfo.displayName }}"
+        }
+      }
+    },
+{%- endfor %}
+    "FilterNode":{
+      "type": "object",
+      "description": "过滤节点",
+      "properties":{
+        "name":{
+          "type": "string",
+          "description": "属性名称"
+        },
+        "operatorCode":{
+          "type": "string",
+          "description": "操作符",
+          "enum": ["equal","likeFull","likeLeft","likeRight","isNull","in","notIn"]
+        },
+        "filterParams":{
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "LogicNode":{
+      "type": "object",
+      "description": "连接节点",
+      "properties":{
+        "logicOperatorCode":{
+          "type": "string",
+          "description": "逻辑操作符",
+          "enum": ["and","or"]
+        },
+        "filterNodes":{
+          "type": "array",
+          "description": "过滤条件",
+          "items": {
+            "$ref": "#/definitions/FilterNode"
+          }
+        },
+        "logicNode":{
+          "type": "null",
+          "description": "连接节点"
+        }
+      }
+    },
+    "Order":{
+      "type": "object",
+      "description": "排序节点",
+      "properties":{
+        "property":{
+          "type": "string",
+          "description": "排序属性"
+        },
+        "direction":{
+          "type": "string",
+          "description": "排序类型",
+          "enum": ["DESC","ASC"]
+        },
+        "ignoreCase":{
+          "type": "boolean"
+        }
+      }
+    },
+    "Condition":{
+      "type": "object",
+      "description": "查询条件",
+      "properties":{
+        "logicNode":{
+          "description": "条件节点",
+          "$ref": "#/definitions/LogicNode"
+        },
+        "orders":{
+          "type": "array",
+          "description": "排序节点",
+          "items":{
+            "$ref": "#/definitions/Order"
+          }
+        }
+      }
+    },
+    "PageInfoInput":{
+      "type": "object",
+      "description": "分页入参",
+      "properties":{
+        "pageIndex":{
+          "type": "integer",
+          "format": "int32",
+          "description": "开始页",
+          "default": 1,
+          "minimum": 1
+        },
+        "pageSize":{
+          "type": "integer",
+          "format": "int32",
+          "description": "每页大小",
+          "default": 10,
+          "minimum": 10
+        },
+        "totalCount":{
+          "type": "integer",
+          "format": "int32",
+          "description": "总记录数",
+          "default": 10,
+          "minimum": 100
+        },
+        "logicNode":{
+          "description": "条件节点",
+          "$ref": "#/definitions/LogicNode"
+        },
+        "orders":{
+          "type": "array",
+          "description": "排序节点",
+          "items":{
+            "$ref": "#/definitions/Order"
+          }
+        }
+      }
+    },
+    "PageInfo":{
+      "type": "object",
+      "description": "分页数据",
+      "properties":{
+        "pageInfoInput":{
+          "description": "分页入参",
+          "$ref": "#/definitions/PageInfoInput"
+        },
+        "dataList":{
+          "type": "array",
+          "description": "结果数据",
+          "items":{
+            "$ref": "#/definitions/{{ rootInfo.className }}"
+          }
+        }
+      }
+    },
+    "SingleCommonResult":{
+      "type": "object",
+      "description": "单数据返回类型",
+      "properties":{
+        "status":{
+          "type": "integer",
+          "description": "状态码",
+          "default": 0,
+          "enum": [0, 1]
+        },
+        "message":{
+          "type": "string",
+          "description": "信息"
+        },
+        "data":{
+          "description": "结果数据",
+          "$ref": "#/definitions/{{ rootInfo.className }}"
+        }
+      }
+
+    },
+    "ListCommonResult":{
+      "type": "object",
+      "description": "列表数据返回类型",
+      "properties":{
+        "status":{
+          "type": "integer",
+          "description": "状态码",
+          "default": 0,
+          "enum": [0, 1]
+        },
+        "message":{
+          "type": "string",
+          "description": "信息"
+        },
+        "data":{
+          "type": "array",
+          "description": "结果数据",
+          "items":{
+            "$ref": "#/definitions/{{ rootInfo.className }}"
+          }
+        }
+      }
+    },
+    "PageCommonResult":{
+      "type": "object",
+      "description": "分页数据返回类型",
+      "properties":{
+        "status":{
+          "type": "integer",
+          "description": "状态码",
+          "default": 0,
+          "enum": [0, 1]
+        },
+        "message":{
+          "type": "string",
+          "description": "信息"
+        },
+        "data":{
+          "description": "结果数据",
+          "$ref": "#/definitions/PageInfo"
+        }
+      }
+    },
+    "idMain":{
+      "description": "The unique identifier of a spacecraft",
+      "type": "string"
+    },
+    "Error":{
+      "type": "object",
+      "required": ["message"],
+      "properties":{
+        "message":{
+          "description": "A human readable error message",
+          "type": "string"
+        }
+      }
+    }
+  },
+  "securityDefinitions":{
+    "api_key": {
+      "type": "apiKey",
+        "in": "header",
+        "name": "X-Api-Key"
+    },
+    "petstore_auth": null
+  },
+  "externalDocs":{
+    "description": "Find out more about Swagger",
+    "url": "http://swagger.io"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "path": "/dynamic/{{ rootInfo.bJson.name }}",
+  "name": "{{ rootInfo.bJson.displayName }}",
+  "component": "~/views/{{ rootInfo.bJson.name }}/index.vue"
+}
