@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize)]
 #[sea_orm(table_name = "{{ rootInfo.tableName }}")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "{{ rootInfo.displayName }}")]
+    #[sea_orm(primary_key, comment = "{{ rootInfo.pkAttributeInfo.displayName }}")]
     pub {{ rootInfo.pkAttributeInfo.columnName }}: String,
 
 {%- for attributeInfo in rootInfo.baseAttributeInfoList %}

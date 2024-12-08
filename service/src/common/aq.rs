@@ -3,27 +3,16 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AqPageInfoInput {
-    /**
-     * 当前页码
-     */
+    /// 当前页码
     pub page_index: u64,
-    /**
-     * 分页大小
-     */
+    /// 分页大小
     pub page_size: u64,
-    /**
-     * 总记录数
-     */
+    /// 总记录数
     #[serde(default)]
     pub total_count: u64,
-    /**
-     * 查询条件
-     */
+    /// 查询条件
     pub logic_node: Option<Box<AqLogicNode>>,
-
-    /**
-     * 排序设置
-     */
+    /// 排序设置
     #[serde(default)]
     pub orders: Vec<AqOrder>,
 }
@@ -42,34 +31,22 @@ pub struct AqCondition {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AqLogicNode {
-    /**
-     * 逻辑操作编码
-     */
+    /// 逻辑操作编码
     pub logic_operator_code: String,
-    /**
-     * 子节点
-     */
+    /// 子节点
     pub logic_node: Option<Box<AqLogicNode>>,
-    /**
-     * 查询条件集合
-     */
+    /// 查询条件集合
     pub filter_nodes: Vec<AqFilterNode>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AqOrder {
-    /**
-     * 排序方向
-     */
+    /// 排序方向
     pub direction: String,
-    /**
-     * 排序属性
-     */
+    /// 排序属性
     pub property: String,
-    /**
-     * 是否忽略
-     */
+    /// 是否忽略
     pub ignore_case: bool,
 }
 
@@ -142,16 +119,10 @@ impl Into<sea_orm::Value> for EFilterParam {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AqFilterNode {
-    /**
-     * 查询条件名称
-     */
+    /// 查询条件名称
     pub name: String,
-    /**
-     * 比较操作符编码
-     */
+    /// 比较操作符编码
     pub operator_code: String,
-    /**
-     * 查询参数
-     */
+    /// 查询参数
     pub filter_params: Vec<EFilterParam>,
 }

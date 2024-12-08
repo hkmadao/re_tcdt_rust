@@ -28,7 +28,7 @@ pub fn md5(input: &str) -> String {
     md5.result_str()
 }
 
-pub fn get_join_names_from_logic_nodes(
+fn get_join_names_from_logic_nodes(
     logic_node_option: Option<Box<AqLogicNode>>,
 ) -> HashMap<String, u32> {
     let mut result_map = HashMap::new();
@@ -48,7 +48,7 @@ pub fn get_join_names_from_logic_nodes(
     result_map
 }
 
-pub fn get_join_names_from_orders(
+fn get_join_names_from_orders(
     mut result_map: HashMap<String, u32>,
     orders: Vec<AqOrder>,
 ) -> HashMap<String, u32> {
@@ -62,7 +62,7 @@ pub fn get_join_names_from_orders(
     result_map
 }
 
-pub fn get_desc_attr(
+fn get_desc_attr(
     attrs: Vec<&str>,
     parent_name: &str,
     index: usize,
@@ -89,7 +89,7 @@ pub fn get_desc_attr(
     }
 }
 
-pub fn make_join_select<T: EntityTrait>(
+fn make_join_select<T: EntityTrait>(
     sql_build: &mut Select<T>,
     attrs: Vec<String>,
     parent_name: &str,
@@ -196,12 +196,12 @@ pub fn make_join_select<T: EntityTrait>(
     );
     let next_index = index + 1;
     if attrs.len() > next_index {
-        make_join_select(sql_build, attrs, &attr_info.name, next_index)?;
+        make_join_select(sql_build, attrs, &attr_info.out_entity_name, next_index)?;
     }
     Ok(())
 }
 
-pub fn make_column_order_by<T: EntityTrait>(
+fn make_column_order_by<T: EntityTrait>(
     sql_build: &mut Select<T>,
     orders: Vec<AqOrder>,
     main_entity_name: &str,
@@ -254,7 +254,7 @@ pub fn make_column_order_by<T: EntityTrait>(
     Ok(())
 }
 
-pub fn make_condition(
+fn make_condition(
     logic_node_option: Option<Box<AqLogicNode>>,
     condition: &mut Condition,
     main_table_alias: &str,
@@ -691,12 +691,12 @@ fn make_right_like_condition(
 
 pub fn make_select_by_condition<T: sea_orm::EntityTrait>(
     _t: T,
-    aq_conditoin: AqCondition,
+    aq_condition: AqCondition,
     main_table_alias: &str,
     main_entity_name: &str,
 ) -> Result<Select<T>, TcdtServiceError> {
-    let root_logic_node = aq_conditoin.logic_node;
-    let orders = aq_conditoin.orders;
+    let root_logic_node = aq_condition.logic_node;
+    let orders = aq_condition.orders;
     let join_name_map = get_join_names_from_logic_nodes(root_logic_node.clone());
     let join_name_map = get_join_names_from_orders(join_name_map, orders.clone());
     let mut join_names: Vec<String> = Vec::new();
