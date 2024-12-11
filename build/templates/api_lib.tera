@@ -18,6 +18,9 @@ mod conf {
 mod api_register;
 
 mod api {
+    pub mod common{
+        pub mod param;
+    }
 {{ recursion_export_mod(name="api_name_info_list_key") }}
 }
 

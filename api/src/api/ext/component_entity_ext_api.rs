@@ -1,3 +1,4 @@
+use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;

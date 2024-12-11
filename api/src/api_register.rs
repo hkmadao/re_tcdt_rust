@@ -44,6 +44,7 @@ use crate::api::{
     base::tree_api as TreeApi,
     base::user_api as UserApi,
     base::user_role_api as UserRoleApi,
+    common::param as Param,
     ext::component_entity_ext_api as ComponentEntityExtApi,
     ext::component_enum_ext_api as ComponentEnumExtApi,
     ext::component_ext_api as ComponentExtApi,

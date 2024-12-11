@@ -7,6 +7,7 @@ use tcdt_service::{
     common::aq::*, dto::vo::ext::menu::menu_vo::MenuVO, service::base::menu_service::MenuQuery,
 };
 
+use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
 #[tcdt_route(ext_get_by_id)]

@@ -11,6 +11,7 @@ use tcdt_service::{
     service::base::dto_entity_service::DtoEntityQuery,
 };
 
+use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
 #[tcdt_route(get_dto_attr_by_ids)]

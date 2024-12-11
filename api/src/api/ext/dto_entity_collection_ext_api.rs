@@ -1,3 +1,4 @@
+use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_service::sea_orm::DatabaseConnection;
@@ -261,7 +262,7 @@ async fn get_data_types(
     id_project: String,
     conn: &DatabaseConnection,
 ) -> Result<Vec<DataTypeVO>, TcdtServiceError> {
-    let aq_conditoin: AqCondition = AqCondition {
+    let aq_condition: AqCondition = AqCondition {
         logic_node: Some(Box::new(AqLogicNode {
             logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_string(),
             logic_node: None,
@@ -278,7 +279,7 @@ async fn get_data_types(
         }],
     };
 
-    let data_types = DataTypeQuery::find_collection_by_condition(conn, aq_conditoin).await?;
+    let data_types = DataTypeQuery::find_collection_by_condition(conn, aq_condition).await?;
 
     let mut data_type_vos: Vec<DataTypeVO> = vec![];
     for data_type in data_types {

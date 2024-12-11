@@ -86,7 +86,7 @@ impl TreeQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<tree::Model>, TcdtServiceError> {
-        let aq_conditoin = AqCondition {
+        let aq_condition = AqCondition {
             logic_node: Some(Box::new(AqLogicNode {
                 logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
                 logic_node: None,
@@ -103,7 +103,7 @@ impl TreeQuery {
         };
         let sql_build = make_select_by_condition(
             tree::Entity::default(),
-            aq_conditoin,
+            aq_condition,
             "ui_tree",
             "Tree",
         )?;
@@ -124,13 +124,13 @@ impl TreeQuery {
     ) -> Result<(Vec<tree::Model>, u64), TcdtServiceError> {
         let page_size = aq_page.page_size;
         let page_index = aq_page.page_index;
-        let aq_conditoin = AqCondition {
+        let aq_condition = AqCondition {
             logic_node: aq_page.logic_node,
             orders: aq_page.orders,
         };
         let sql_build = make_select_by_condition(
             tree::Entity::default(),
-            aq_conditoin,
+            aq_condition,
             "ui_tree",
             "Tree",
         )?;
@@ -155,11 +155,11 @@ impl TreeQuery {
 
     pub async fn find_collection_by_condition(
         db: &DbConn,
-        aq_conditoin: AqCondition,
+        aq_condition: AqCondition,
     ) -> Result<Vec<tree::Model>, TcdtServiceError> {
         let sql_build = make_select_by_condition(
             tree::Entity::default(),
-            aq_conditoin,
+            aq_condition,
             "ui_tree",
             "Tree",
         )?;
@@ -176,11 +176,11 @@ impl TreeQuery {
 
     pub async fn find_one_by_condition(
         db: &DbConn,
-        aq_conditoin: AqCondition,
+        aq_condition: AqCondition,
     ) -> Result<Option<tree::Model>, TcdtServiceError> {
         let sql_build = make_select_by_condition(
             tree::Entity::default(),
-            aq_conditoin,
+            aq_condition,
             "ui_tree",
             "Tree",
         )?;
@@ -196,11 +196,11 @@ impl TreeQuery {
 
     pub async fn count_by_condition(
         db: &DbConn,
-        aq_conditoin: AqCondition,
+        aq_condition: AqCondition,
     ) -> Result<u64, TcdtServiceError> {
         let sql_build = make_select_by_condition(
             tree::Entity::default(),
-            aq_conditoin,
+            aq_condition,
             "ui_tree",
             "Tree",
         )?;
@@ -217,11 +217,11 @@ impl TreeQuery {
 
     pub async fn exists_by_condition(
         db: &DbConn,
-        aq_conditoin: AqCondition,
+        aq_condition: AqCondition,
     ) -> Result<bool, TcdtServiceError> {
         let sql_build = make_select_by_condition(
             tree::Entity::default(),
-            aq_conditoin,
+            aq_condition,
             "ui_tree",
             "Tree",
         )?;

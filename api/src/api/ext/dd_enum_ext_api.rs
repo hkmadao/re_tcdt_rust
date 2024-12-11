@@ -9,6 +9,7 @@ use tcdt_service::{
     service::base::dd_enum_service::DdEnumQuery,
 };
 
+use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
 #[tcdt_route(get_detail_by_enum_ids)]

@@ -69,7 +69,7 @@ impl UserAggQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<user::Model>, TcdtServiceError> {
-        let aq_conditoin = AqCondition {
+        let aq_condition = AqCondition {
             logic_node: Some(Box::new(AqLogicNode {
                 logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
                 logic_node: None,
@@ -85,7 +85,7 @@ impl UserAggQuery {
             orders: vec![],
         };
         let sql_build =
-            make_select_by_condition(user::Entity::default(), aq_conditoin, "sys_user", "User")?;
+            make_select_by_condition(user::Entity::default(), aq_condition, "sys_user", "User")?;
 
         let bill_forms = sql_build.all(db).await.map_err(|err| {
             log::error!("User find_by_ids failed");
@@ -101,12 +101,12 @@ impl UserAggQuery {
     ) -> Result<(Vec<user::Model>, u64), TcdtServiceError> {
         let page_size = aq_page.page_size;
         let page_index = aq_page.page_index;
-        let aq_conditoin = AqCondition {
+        let aq_condition = AqCondition {
             logic_node: aq_page.logic_node,
             orders: aq_page.orders,
         };
         let sql_build =
-            make_select_by_condition(user::Entity::default(), aq_conditoin, "sys_user", "User")?;
+            make_select_by_condition(user::Entity::default(), aq_condition, "sys_user", "User")?;
 
         // Setup paginator
         let paginator: Paginator<DatabaseConnection, SelectModel<user::Model>> =
@@ -124,10 +124,10 @@ impl UserAggQuery {
 
     pub async fn find_collection_by_condition(
         db: &DbConn,
-        aq_conditoin: AqCondition,
+        aq_condition: AqCondition,
     ) -> Result<Vec<user::Model>, TcdtServiceError> {
         let sql_build =
-            make_select_by_condition(user::Entity::default(), aq_conditoin, "sys_user", "User")?;
+            make_select_by_condition(user::Entity::default(), aq_condition, "sys_user", "User")?;
 
         let bill_forms = sql_build.all(db).await.map_err(|err| {
             log::error!("User find_collection_by_condition failed");

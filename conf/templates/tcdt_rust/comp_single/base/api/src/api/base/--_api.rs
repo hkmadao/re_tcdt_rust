@@ -7,7 +7,7 @@ use tcdt_service::{
     dto::{po::base::{{ rootInfo.snakeCaseName }}_po::{{ rootInfo.pascalCaseName }}PO, vo::base::{{ rootInfo.snakeCaseName }}_vo::{{ rootInfo.pascalCaseName }}VO},
     service::base::{{ rootInfo.snakeCaseName }}_service::{{ "{" }}{{ rootInfo.pascalCaseName }}Mutation, {{ rootInfo.pascalCaseName }}Query},
 };
-
+use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
 #[tcdt_route(add)]
@@ -126,15 +126,15 @@ pub async fn get_by_id(data: web::Data<AppState>, id: web::Path<String>) -> Resu
 }
 
 #[tcdt_route(get_by_ids)]
-#[get("/{{ rootInfo.camelCaseName }}/getByIds/{ids}")]
+#[get("/{{ rootInfo.camelCaseName }}/getByIds")]
 pub async fn get_by_ids(
     data: web::Data<AppState>,
-    ids: web::Path<String>,
+    ids_param_form: web::Form<IdsParam>,
 ) -> Result<HttpResponse, Error> {
     let conn = &data.conn;
-    let ids = ids.into_inner();
+    let ids_param = ids_param_form.into_inner();
 
-    let ids = ids.split(",").map(|id| id.to_owned()).collect();
+    let ids = ids_param.ids.split(",").map(|id| id.to_owned()).collect();
 
     let {{ rootInfo.snakeCaseName }}_list = {{ rootInfo.pascalCaseName }}Query::find_by_ids(conn, ids)
         .await
@@ -196,7 +196,7 @@ pub async fn page(
     Ok(HttpResponse::Ok().json(page_info))
 }
 
-#[post("/{{ rootInfo.snakeCaseName }}/aq")]
+#[post("/{{ rootInfo.camelCaseName }}/aq")]
 pub async fn aq(
     _req: HttpRequest,
     data: web::Data<AppState>,

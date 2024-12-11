@@ -18,6 +18,9 @@ mod conf {
 mod api_register;
 
 mod api {
+    pub mod common{
+        pub mod param;
+    }
         pub mod agg {
             pub mod role_agg_api;
             pub mod user_agg_api;
@@ -63,6 +66,9 @@ mod api {
             pub mod tree_api;
             pub mod user_api;
             pub mod user_role_api;
+        }
+        pub mod common {
+            pub mod param;
         }
         pub mod ext {
             pub mod component_entity_ext_api;

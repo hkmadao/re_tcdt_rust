@@ -8,6 +8,7 @@ use tcdt_service::{
     service::base::user_service::{UserMutation, UserQuery},
 };
 
+use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
 #[tcdt_route(add)]
@@ -126,15 +127,15 @@ pub async fn get_by_id(data: web::Data<AppState>, id: web::Path<String>) -> Resu
 }
 
 #[tcdt_route(get_by_ids)]
-#[get("/user/getByIds/{ids}")]
+#[get("/user/getByIds")]
 pub async fn get_by_ids(
     data: web::Data<AppState>,
-    ids: web::Path<String>,
+    ids_param_form: web::Form<IdsParam>,
 ) -> Result<HttpResponse, Error> {
     let conn = &data.conn;
-    let ids = ids.into_inner();
+    let ids_param = ids_param_form.into_inner();
 
-    let ids = ids.split(",").map(|id| id.to_owned()).collect();
+    let ids = ids_param.ids.split(",").map(|id| id.to_owned()).collect();
 
     let user_list = UserQuery::find_by_ids(conn, ids)
         .await

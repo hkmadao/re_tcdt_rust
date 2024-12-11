@@ -11,6 +11,7 @@ use tcdt_service::{
     service::base::component_enum_service::ComponentEnumQuery,
 };
 
+use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
 #[tcdt_route(simple_aq)]

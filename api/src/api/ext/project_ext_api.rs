@@ -19,6 +19,7 @@ use tcdt_service::{
     service::base::project_service::ProjectQuery,
 };
 use tcdt_service::sea_orm::prelude::Expr;
+use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
 #[tcdt_route(aq_detail)]

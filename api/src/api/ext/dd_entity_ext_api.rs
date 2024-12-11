@@ -12,6 +12,7 @@ use tcdt_service::{
     service::base::dd_entity_service::DdEntityQuery,
 };
 
+use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
 #[tcdt_route(get_detail_by_entity_id)]

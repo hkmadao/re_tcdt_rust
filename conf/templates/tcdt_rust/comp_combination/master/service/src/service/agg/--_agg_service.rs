@@ -69,7 +69,7 @@ impl {{ rootInfo.pascalCaseName }}AggQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<{{ rootInfo.snakeCaseName }}::Model>, TcdtServiceError> {
-        let aq_conditoin = AqCondition {
+        let aq_condition = AqCondition {
             logic_node: Some(Box::new(AqLogicNode {
                 logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
                 logic_node: None,
@@ -85,7 +85,7 @@ impl {{ rootInfo.pascalCaseName }}AggQuery {
             orders: vec![],
         };
         let sql_build =
-            make_select_by_condition({{ rootInfo.snakeCaseName }}::Entity::default(), aq_conditoin, "sys_{{ rootInfo.snakeCaseName }}", "{{ rootInfo.pascalCaseName }}")?;
+            make_select_by_condition({{ rootInfo.snakeCaseName }}::Entity::default(), aq_condition, "sys_{{ rootInfo.snakeCaseName }}", "{{ rootInfo.pascalCaseName }}")?;
 
         let bill_forms = sql_build.all(db).await.map_err(|err| {
             log::error!("{{ rootInfo.pascalCaseName }} find_by_ids failed");
@@ -101,12 +101,12 @@ impl {{ rootInfo.pascalCaseName }}AggQuery {
     ) -> Result<(Vec<{{ rootInfo.snakeCaseName }}::Model>, u64), TcdtServiceError> {
         let page_size = aq_page.page_size;
         let page_index = aq_page.page_index;
-        let aq_conditoin = AqCondition {
+        let aq_condition = AqCondition {
             logic_node: aq_page.logic_node,
             orders: aq_page.orders,
         };
         let sql_build =
-            make_select_by_condition({{ rootInfo.snakeCaseName }}::Entity::default(), aq_conditoin, "sys_{{ rootInfo.snakeCaseName }}", "{{ rootInfo.pascalCaseName }}")?;
+            make_select_by_condition({{ rootInfo.snakeCaseName }}::Entity::default(), aq_condition, "sys_{{ rootInfo.snakeCaseName }}", "{{ rootInfo.pascalCaseName }}")?;
 
         // Setup paginator
         let paginator: Paginator<DatabaseConnection, SelectModel<{{ rootInfo.snakeCaseName }}::Model>> =
@@ -124,10 +124,10 @@ impl {{ rootInfo.pascalCaseName }}AggQuery {
 
     pub async fn find_collection_by_condition(
         db: &DbConn,
-        aq_conditoin: AqCondition,
+        aq_condition: AqCondition,
     ) -> Result<Vec<{{ rootInfo.snakeCaseName }}::Model>, TcdtServiceError> {
         let sql_build =
-            make_select_by_condition({{ rootInfo.snakeCaseName }}::Entity::default(), aq_conditoin, "sys_{{ rootInfo.snakeCaseName }}", "{{ rootInfo.pascalCaseName }}")?;
+            make_select_by_condition({{ rootInfo.snakeCaseName }}::Entity::default(), aq_condition, "sys_{{ rootInfo.snakeCaseName }}", "{{ rootInfo.pascalCaseName }}")?;
 
         let bill_forms = sql_build.all(db).await.map_err(|err| {
             log::error!("{{ rootInfo.pascalCaseName }} find_collection_by_condition failed");

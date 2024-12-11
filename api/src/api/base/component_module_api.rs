@@ -8,6 +8,7 @@ use tcdt_service::{
     service::base::component_module_service::{ComponentModuleMutation, ComponentModuleQuery},
 };
 
+use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
 #[tcdt_route(add)]
@@ -108,15 +109,15 @@ pub async fn get_by_id(data: web::Data<AppState>, id: web::Path<String>) -> Resu
 }
 
 #[tcdt_route(get_by_ids)]
-#[get("/componentModule/getByIds/{ids}")]
+#[get("/componentModule/getByIds")]
 pub async fn get_by_ids(
     data: web::Data<AppState>,
-    ids: web::Path<String>,
+    ids_param_form: web::Form<IdsParam>,
 ) -> Result<HttpResponse, Error> {
     let conn = &data.conn;
-    let ids = ids.into_inner();
+    let ids_param = ids_param_form.into_inner();
 
-    let ids = ids.split(",").map(|id| id.to_owned()).collect();
+    let ids = ids_param.ids.split(",").map(|id| id.to_owned()).collect();
 
     let component_module_list = ComponentModuleQuery::find_by_ids(conn, ids)
         .await
@@ -178,7 +179,7 @@ pub async fn page(
     Ok(HttpResponse::Ok().json(page_info))
 }
 
-#[post("/component_module/aq")]
+#[post("/componentModule/aq")]
 pub async fn aq(
     _req: HttpRequest,
     data: web::Data<AppState>,

@@ -1,3 +1,4 @@
+use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 use actix_web::{error, get, post, web, Error, HttpResponse, Result};
 use tcdt_service::sea_orm::DatabaseConnection;

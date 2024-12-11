@@ -6,6 +6,7 @@ use tcdt_service::{
     service::base::dto_enum_service::DtoEnumQuery,
 };
 
+use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
 #[tcdt_route(aq_detail)]
