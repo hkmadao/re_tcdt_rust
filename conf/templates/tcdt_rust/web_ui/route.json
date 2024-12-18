@@ -1,6 +1,6 @@
 {
-  "path": "dynamic/{{ rootInfo.bJson.name }}",
-  "name": "{{ rootInfo.bJson.displayName }}",
-  "component": "@/pages/{{ rootInfo.bJson.name }}",
+  "path": "dynamic/{{ rootInfo.name }}",
+  "name": "{{ rootInfo.displayName }}",
+  "component": "@/pages/{{ rootInfo.name }}",
   "exact": true
 }

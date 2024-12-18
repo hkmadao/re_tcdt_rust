@@ -87,6 +87,24 @@ const FormToolBar: FC<{
     });
   };
 
+{%- if rootInfo.buttonJson and rootInfo.buttonJson.buttons is iterable %}
+  {%- for buttonConf in rootInfo.buttonJson.buttons %}
+    {%- if buttonConf.clickEventName == "handleSave" %}
+
+    {%- elif buttonConf.clickEventName == "handleAddAgain" %}
+
+    {%- elif buttonConf.clickEventName == "handleCancel" %}
+
+    {%- elif buttonConf.clickEventName == "handleReflesh" %}
+
+    {%- else %}
+    const {{ buttonConf.clickEventName }} = () => {
+      // TODO
+    };
+    {%- endif %}
+  {%- endfor %}
+{%- endif %}
+
   return (
     <>
       <div
@@ -114,7 +132,7 @@ const FormToolBar: FC<{
             hidden={{ "{" }}{{ buttonConf.hiddenScript }}{{ "}" }}
     {%- endif %}
           >
-            {'{{ buttonConf.label }}'}
+            {{"{ "}}{{ buttonConf.nameScript }}{{" }"}}
           </Button>
   {%- endfor %}
 {%- endif %}

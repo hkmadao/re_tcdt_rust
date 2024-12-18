@@ -156,7 +156,27 @@ const TableToolBar: FC<{
       data: undefined,
     });
   };
+{%- if rootInfo.vButtonJson and rootInfo.vButtonJson.buttons is iterable %}
+  {%- for buttonConf in rootInfo.vButtonJson.buttons %}
+    {%- if buttonConf.clickEventName == "handleToAdd" %}
 
+    {%- elif buttonConf.clickEventName == "handleToEdit" %}
+
+    {%- elif buttonConf.clickEventName == "handleRowsDelete" %}
+
+    {%- elif buttonConf.clickEventName == "handleRowSelectType" %}
+
+    {%- elif buttonConf.clickEventName == "handleCancel" %}
+
+    {%- elif buttonConf.clickEventName == "handleReflesh" %}
+
+    {%- else %}
+    const {{ buttonConf.clickEventName }} = () => {
+      // TODO
+    };
+    {%- endif %}
+  {%- endfor %}
+{%- endif %}
   return (
     <>
       <div
@@ -184,7 +204,7 @@ const TableToolBar: FC<{
     {%- endif %}
           onClick={{ "{" }}{{ buttonConf.clickEventName }}{{ "}" }}
         >
-          {'{{ buttonConf.label }}'}
+          {{"{ "}}{{ buttonConf.nameScript }}{{" }"}}
         </Button>
   {%- endfor %}
 {%- endif %}

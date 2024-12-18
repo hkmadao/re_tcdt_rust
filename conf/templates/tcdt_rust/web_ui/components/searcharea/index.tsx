@@ -5,6 +5,7 @@ import RefPicker from '@/components/Ref';
 import { Observer, TMessage } from '@/util/observer';
 import { subject, queryConf, } from '../../conf';
 import { usePageCode } from '../../hooks';
+import { getQueryAttributeRef } from '@/util';
 
 const SearchArea: FC<{
   idLayout: string
@@ -62,11 +63,12 @@ const SearchArea: FC<{
     const newValues:any = {};
 {%- if rootInfo.qJson and rootInfo.qJson.searchRefs is iterable %}
   {%- for b in rootInfo.qJson.searchRefs %}
-    {%- if b.defaultValue == false or b.defaultValue | defined %}
+    {%- if b.defaultValue == false or b.defaultValue %}
       {%- if b.htmlInputType and b.htmlInputType  == "Input" %}
     newValues.{{ b.attributeName }} = '{{ b.defaultValue }}';
       {%- endif %}
       {%- if b.htmlInputType and b.htmlInputType == "InputNumber" %}
+    newValues.{{ b.attributeName }} = {{ b.defaultValue }};
       {%- endif %}
       {%- if b.htmlInputType and b.htmlInputType == "Text" %}
     newValues.{{ b.attributeName }} = '{{ b.defaultValue }}';
@@ -83,6 +85,7 @@ const SearchArea: FC<{
       {%- if b.htmlInputType and b.htmlInputType == "Ref" %}
       {%- endif %}
       {%- if b.htmlInputType and b.htmlInputType == "Select" %}
+    newValues.{{ b.attributeName }} = '{{ b.defaultValue }}';
       {%- endif %}
     {%- endif %}
   {%- endfor %}
@@ -109,10 +112,37 @@ const SearchArea: FC<{
   }
 
   const handleSearch = async () => {
+    let searchValues: any = {};
+    searcheRefs?.forEach((searchRef) => {
+      let attributeName = searchRef.attributeName;
+      if (!attributeName) {
+        console.warn('searchRef attributeName is undefind');
+        return;
+      }
+      if (searchRef.htmlInputType === 'Ref') {
+        let refAttributeName = searchRef.refAttributeName;
+        if (!refAttributeName) {
+          console.warn('searchRef refAttributeName is undefind');
+          return;
+        }
+        if (!searchValuesRef.current[refAttributeName]) {
+          return;
+        }
+        let backWriteProp = searchRef.refConfig?.backWriteProp;
+        if (!backWriteProp) {
+          console.warn('searchRef refConfig backWriteProp is undefind');
+          return;
+        }
+        searchValues[attributeName] =
+          searchValuesRef.current[refAttributeName][backWriteProp];
+        return;
+      }
+      searchValues[attributeName] = searchValuesRef.current[attributeName];
+    });
     subject.publish({
       topic: 'search',
       producerId: idLayout,
-      data: searchValuesRef.current,
+      data: searchValues,
     });
   };
 
@@ -253,14 +283,7 @@ const SearchArea: FC<{
             style={{ padding: '5px 0px 5px 0px' }}
 {%- endraw %}
           >
-            <RefPicker
-              {...getRefByAttr(
-                EPartName.Header,
-                '{{ ht.tabCode }}',
-                '{{ b.attributeName }}',
-                billformConf!,
-              )!}
-            />
+            <RefPicker {...getQueryAttributeRef('{{ b.attributeName }}', queryConf)!} />
           </Form.Item>
       {%- endif %}
       {%- if b.htmlInputType and b.htmlInputType == "Select" %}

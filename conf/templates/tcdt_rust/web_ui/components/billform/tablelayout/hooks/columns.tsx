@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { EPartName } from '@/models';
 import { getRefByAttr } from '@/util';
 import { billformConf } from '../../../../conf';
+import CustomDateTimeText from '@/components/CustomDateTimeText';
 import { 
 {%- if rootInfo.bTableJson and rootInfo.bTableJson.configList.header is iterable %}
   {%- for bt in rootInfo.bTableJson.configList.header %}
@@ -113,7 +114,15 @@ export const useMainTableColumns: () => TableColumnType<T{{ ht.tabClassName }}>[
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
           render: (_dom: any, record: any) => {
-            return <>{record.{{ b.name }} ? record.{{ b.name }} : '--'}</>;
+            return (
+              <>
+                <CustomDateTimeText
+                  value={{ "{ " }} record.{{b.name}} {{" }"}}
+                  format="YYYY-MM-DDTHH:mm:ssZ"
+                  displayFormat="YYYY-MM-DD HH:mm:ss"
+                />
+              </>
+            );
           },
         },
       {%- endif %}
@@ -183,7 +192,7 @@ export const useMainTableColumns: () => TableColumnType<T{{ ht.tabClassName }}>[
       {%- endif %}
     {%- endif %}
   {%- endfor %}
-/*[- */
+{#
       {
         width: 150,
         fixed: 'right',
@@ -201,7 +210,7 @@ export const useMainTableColumns: () => TableColumnType<T{{ ht.tabClassName }}>[
           </Dropdown>
         ),
       },
-/* -]*/
+#}
     ];
   };
 

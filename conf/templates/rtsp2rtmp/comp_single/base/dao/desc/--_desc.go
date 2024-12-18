@@ -16,7 +16,7 @@ func Get{{ rootInfo.pascalCaseName }}Desc() *common.EntityDesc {
 {%- if rootInfo.attributeInfoList %}
     {%- for attributeInfo in rootInfo.attributeInfoList %}
     var {{ attributeInfo.camelCaseName }}AttributeInfo = &common.AttributeInfo {
-        ColumnName: "{{ attributeInfo.snakeCaseName }}",
+        ColumnName: "{{ attributeInfo.columnName }}",
         Name: "{{ attributeInfo.camelCaseName }}",
         DisplayName: "{{ attributeInfo.displayName }}",
         DataType: "{{ attributeInfo.attributeTypeCode }}",
