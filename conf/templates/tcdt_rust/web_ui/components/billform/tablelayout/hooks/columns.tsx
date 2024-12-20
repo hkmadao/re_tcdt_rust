@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { EPartName } from '@/models';
 import { getRefByAttr } from '@/util';
 import { billformConf } from '../../../../conf';
-import CustomDateTimeText from '@/components/CustomDateTimeText';
+import CustomDateText from '@/components/CustomDateText';
 import { 
 {%- if rootInfo.bTableJson and rootInfo.bTableJson.configList.header is iterable %}
   {%- for bt in rootInfo.bTableJson.configList.header %}
@@ -116,7 +116,7 @@ export const useMainTableColumns: () => TableColumnType<T{{ ht.tabClassName }}>[
           render: (_dom: any, record: any) => {
             return (
               <>
-                <CustomDateTimeText
+                <CustomDateText
                   value={{ "{ " }} record.{{b.name}} {{" }"}}
                   format="YYYY-MM-DDTHH:mm:ssZ"
                   displayFormat="YYYY-MM-DD HH:mm:ss"
@@ -133,7 +133,15 @@ export const useMainTableColumns: () => TableColumnType<T{{ ht.tabClassName }}>[
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
           render: (_dom: any, record: any) => {
-            return <>{record.{{ b.name }} ? record.{{ b.name }} : '--'}</>;
+            return (
+              <>
+                <CustomDateText
+                  value={{ "{ " }} record.{{b.name}} {{" }"}}
+                  format="YYYY-MM-DDTHH:mm:ssZ"
+                  displayFormat="YYYY-MM-DD HH:mm:ss"
+                />
+              </>
+            );
           },
         },
       {%- endif %}
@@ -278,7 +286,15 @@ export const use{{ bt.firstUpperTabCode }}Columns: () => TableColumnType<T{{ bt.
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
           render: (_dom: any, record: any) => {
-            return <>{record.{{ b.name }} ? record.{{ b.name }} : '--'}</>;
+            return (
+              <>
+                <CustomDateText
+                  value={{ "{ " }} record.{{b.name}} {{" }"}}
+                  format="YYYY-MM-DDTHH:mm:ssZ"
+                  displayFormat="YYYY-MM-DD HH:mm:ss"
+                />
+              </>
+            );
           },
         },
           {%- endif %}
@@ -288,7 +304,15 @@ export const use{{ bt.firstUpperTabCode }}Columns: () => TableColumnType<T{{ bt.
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
           render: (_dom: any, record: any) => {
-            return <>{record.{{ b.name }} ? record.{{ b.name }} : '--'}</>;
+            return (
+              <>
+                <CustomDateText
+                  value={{ "{ " }} record.{{b.name}} {{" }"}}
+                  format="YYYY-MM-DDTHH:mm:ssZ"
+                  displayFormat="YYYY-MM-DD HH:mm:ss"
+                />
+              </>
+            );
           },
         },
           {%- endif %}

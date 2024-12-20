@@ -169,11 +169,10 @@ const MainFormLayout: FC = () => {
   {%- if ht.billFormFields is iterable %}
     {%- for b in ht.billFormFields %}
       {%- if b.inputType and b.inputType == "Ref" %}
-    if (!values.{{ b.refAttributeName }}) {
+    if (!newValues.{{ b.refAttributeName }}) {
       newValues.{{ b.name }} = undefined;
-    }
-    if (changedValues.{{ b.refAttributeName }}) {
-      newValues.{{ b.name }} = changedValues.{{ b.refAttributeName }}.{{ b.refConfig.backWriteProp }};
+    } else {
+      newValues.{{ b.name }} = newValues.{{ b.refAttributeName }}.{{ b.refConfig.backWriteProp }};
     }
       {%- endif %}
     {%- endfor %}
@@ -278,14 +277,9 @@ const MainFormLayout: FC = () => {
             style={{ padding: '5px 0px 5px 0px' }}
 {%- endraw %}
           >
-            {/* <DatePicker
-              format="YYYY-MM-DD HH:mm:ss"
-              showTime={true}
-            /> */}
             <CustomDatePick 
-              format="YYYY-MM-DD HH:mm:ss"
+              format='YYYY-MM-DDTHH:mm:ssZ'
               displayFormat='YYYY-MM-DD HH:mm:ss'
-              showTime={true} 
             />
           </Form.Item>
       {%- endif %}
@@ -297,8 +291,7 @@ const MainFormLayout: FC = () => {
             style={{ padding: '5px 0px 5px 0px' }}
 {%- endraw %}
           >
-            {/* <DatePicker format="YYYY-MM-DD" /> */}
-            <CustomDatePick format="YYYY-MM-DD" />
+            <CustomDatePick displayFormat='YYYY-MM-DDHH:mm:ss' format="YYYY-MM-DD" />
           </Form.Item>
       {%- endif %}
       {%- if b.inputType and b.inputType == "Time" %}
@@ -309,7 +302,6 @@ const MainFormLayout: FC = () => {
             style={{ padding: '5px 0px 5px 0px' }}
 {%- endraw %}
           >
-            {/* <TimePicker format="HH:mm:ss" /> */}
             <CustomTimePicker format="HH:mm:ss" />
           </Form.Item>
       {%- endif %}

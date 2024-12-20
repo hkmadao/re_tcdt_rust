@@ -21,6 +21,20 @@ func ConvertPOTo{{ rootInfo.pascalCaseName }}(po {{ rootInfo.snakeCaseName }}_po
 	return
 }
 
+func ConvertPOListTo{{ rootInfo.pascalCaseName }}(poes []{{ rootInfo.snakeCaseName }}_po.{{ rootInfo.pascalCaseName }}PO) ([]entity.{{ rootInfo.pascalCaseName }}, error) {
+	{{ rootInfo.camelCaseName }}s := make([]entity.{{ rootInfo.pascalCaseName }}, len(poes))
+	for i, po := range poes {
+		{{ rootInfo.camelCaseName }}, err_convert := ConvertPOTo{{ rootInfo.pascalCaseName }}(po)
+		if err_convert != nil {
+			logs.Error("ConvertPOListTo{{ rootInfo.pascalCaseName }} : %v", err_convert)
+			err := fmt.Errorf("ConvertPOListTo{{ rootInfo.pascalCaseName }} : %v", err_convert)
+			return nil, err
+		}
+		{{ rootInfo.camelCaseName }}s[i] = {{ rootInfo.camelCaseName }}
+	}
+	return {{ rootInfo.camelCaseName }}s, nil
+}
+
 func Convert{{ rootInfo.pascalCaseName }}ToVO({{ rootInfo.camelCaseName }} entity.{{ rootInfo.pascalCaseName }}) (vo {{ rootInfo.snakeCaseName }}_vo.{{ rootInfo.pascalCaseName }}VO, err error) {
 	vo = {{ rootInfo.snakeCaseName }}_vo.{{ rootInfo.pascalCaseName }}VO{}
 	err = common.EntityToVO({{ rootInfo.camelCaseName }}, &vo)

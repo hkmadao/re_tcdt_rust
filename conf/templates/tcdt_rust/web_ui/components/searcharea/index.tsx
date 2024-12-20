@@ -3,6 +3,7 @@ import { Button, Checkbox, Form, Input, InputNumber, Select } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
 import RefPicker from '@/components/Ref';
 import { Observer, TMessage } from '@/util/observer';
+import CustomDatePick from '@/components/CustomDatePick';
 import { subject, queryConf, } from '../../conf';
 import { usePageCode } from '../../hooks';
 import { getQueryAttributeRef } from '@/util';
@@ -241,13 +242,9 @@ const SearchArea: FC<{
             style={{ padding: '5px 0px 5px 0px' }}
 {%- endraw %}
           >
-            {/* <DatePicker
-              format="YYYY-MM-DD HH:mm:ss"
-              showTime={true}
-            /> */}
             <CustomDatePick 
-              format="YYYY-MM-DD HH:mm:ss"
-              showTime={true} 
+              format="YYYY-MM-DDTHH:mm:ssZ"
+              displayFormat='YYYY-MM-DD HH:mm:ss'
             />
           </Form.Item>
       {%- endif %}
@@ -259,8 +256,10 @@ const SearchArea: FC<{
             style={{ padding: '5px 0px 5px 0px' }}
 {%- endraw %}
           >
-            {/* <DatePicker format="YYYY-MM-DD" /> */}
-            <CustomDatePick format="YYYY-MM-DD" />
+            <CustomDatePick 
+              format="YYYY-MM-DDTHH:mm:ssZ"
+              displayFormat='YYYY-MM-DD HH:mm:ss' 
+            />
           </Form.Item>
       {%- endif %}
       {%- if b.htmlInputType and b.htmlInputType == "Time" %}

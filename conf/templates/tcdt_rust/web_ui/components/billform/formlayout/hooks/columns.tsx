@@ -3,6 +3,7 @@ import { ProColumns } from '@ant-design/pro-table';
 import { Checkbox } from 'antd';
 import moment from 'moment';
 import RefPicker from '@/components/Ref';
+import CustomDateText from '@/components/CustomDateText';
 import CustomDatePick from '@/components/CustomDatePick';
 import CustomTimePicker from '@/components/CustomTimePicker';
 import { getRefByAttr } from '@/util';
@@ -89,12 +90,20 @@ export const use{{ bt.firstUpperTabCode }}Columns: () => ProColumns<T{{ bt.tabCl
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
           render: (text, record, _, action) => {
-            return <>{record.{{ b.name }} ? record.{{ b.name }} : '--'}</>;
+            return (
+              <>
+                <CustomDateText
+                  value={{ "{ " }} record.{{b.name}} {{" }"}}
+                  format="YYYY-MM-DDTHH:mm:ssZ"
+                  displayFormat="YYYY-MM-DD HH:mm:ss"
+                />
+              </>
+            );
           },
           renderFormItem: (_schema, config, form) => {
             return <CustomDatePick 
-                      format="YYYY-MM-DD HH:mm:ss"
-                      showTime={true} 
+                      format="YYYY-MM-DDTHH:mm:ssZ"
+                      displayFormat="YYYY-MM-DD HH:mm:ss"
                     />;
           },
         },
@@ -105,10 +114,19 @@ export const use{{ bt.firstUpperTabCode }}Columns: () => ProColumns<T{{ bt.tabCl
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
           render: (text, record, _, action) => {
-            return <>{record.{{ b.name }} ? record.{{ b.name }} : '--'}</>;
+            return <>
+              <CustomDateText
+                value={{ "{ " }} record.{{b.name}} {{" }"}}
+                format="YYYY-MM-DDTHH:mm:ssZ"
+                displayFormat="YYYY-MM-DD HH:mm:ss"
+              />
+            </>
           },
           renderFormItem: (_schema, config, form) => {
-            return <CustomDatePick format="YYYY-MM-DD" />;
+            return <CustomDatePick 
+                      format="YYYY-MM-DDTHH:mm:ssZ"
+                      displayFormat="YYYY-MM-DD HH:mm:ss"
+                    />;
           },
         },
           {%- endif %}

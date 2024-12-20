@@ -28,6 +28,7 @@ export const leftTreeSlice = createSlice({
         const treeData = arrToTree(treeConf?.firstTreeRef?.parentIdAttr ?? 'idParent', treeConf?.firstTreeRef?.keyAttr!, treeConf?.firstTreeRef?.labelAttr!, action.payload, true, null);
         state.sourchTreeData = treeData;
         state.treeData = treeData;
+        state.foundKeys = [];
         if (treeData && treeData.length > 0 && state.expandedKeys.length === 0) {
           state.expandedKeys = [treeData[0].key];
         }

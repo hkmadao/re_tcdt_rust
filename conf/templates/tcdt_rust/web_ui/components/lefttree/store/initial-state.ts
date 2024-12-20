@@ -5,4 +5,6 @@ export const initialState: TLeftTreeStore = {
   selectedKeys: [],
   expandedKeys: [],
   foundKeys: [],
+  fgDisabled: false,
+  fgInnerDisabled: false
 };

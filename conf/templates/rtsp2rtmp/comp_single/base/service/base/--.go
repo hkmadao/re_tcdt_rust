@@ -44,6 +44,19 @@ func {{ rootInfo.pascalCaseName }}Delete(e entity.{{ rootInfo.pascalCaseName }})
 	return i, nil
 }
 
+func {{ rootInfo.pascalCaseName }}BatchDelete(es []entity.{{ rootInfo.pascalCaseName }}) (i int64, err error) {
+	o := orm.NewOrm()
+	for _, e := range es {
+		_, err = o.Delete(&e)
+		if err != nil {
+			logs.Error("delete error : %v", err)
+			return 0, err
+		}
+	}
+	i = int64(len(es))
+	return i, nil
+}
+
 func {{ rootInfo.pascalCaseName }}SelectById(id string) (model entity.{{ rootInfo.pascalCaseName }}, err error) {
 	o := orm.NewOrm()
 	model = entity.{{ rootInfo.pascalCaseName }}{{ "{ " }}{{ rootInfo.pkAttributeInfo.pascalCaseName }}: id {{ " }" }}

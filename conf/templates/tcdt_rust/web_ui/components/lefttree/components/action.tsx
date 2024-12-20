@@ -6,7 +6,7 @@ import {
   PlusCircleOutlined,
 } from "@ant-design/icons";
 import { useSelector, useDispatch } from "react-redux";
-import { subject } from "@/pages/Menu/conf";
+import { subject } from "../../../conf";
 import { useFgDisabled, useIdUiConf, useSelectedNode } from "../hooks";
 import { remove } from "../store";
 

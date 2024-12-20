@@ -33,7 +33,7 @@ func {{ rootInfo.pascalCaseName }}Add(ctx *gin.Context) {
 		return
 	}
 
-	id, _ := utils.UUID()
+	id, _ := utils.GenerateId()
 	{{ rootInfo.camelCaseName }}.{{ rootInfo.pkAttributeInfo.pascalCaseName }} = id
 	_, err = base_service.{{ rootInfo.pascalCaseName }}Create({{ rootInfo.camelCaseName}})
 	if err != nil {
@@ -146,6 +146,28 @@ func {{ rootInfo.pascalCaseName }}Remove(ctx *gin.Context) {
 		return
 	}
 	result := common.SuccessResultData({{ rootInfo.camelCaseName }}GetById)
+	ctx.JSON(http.StatusOK, result)
+}
+
+func {{ rootInfo.pascalCaseName }}BatchRemove(ctx *gin.Context) {
+	ctx.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+	poes := []{{ rootInfo.snakeCaseName }}_po.{{ rootInfo.pascalCaseName }}PO{}
+	err := ctx.BindJSON(&poes)
+	if err != nil {
+		logs.Error("param error : %v", err)
+		result := common.ErrorResult(fmt.Sprintf("param error : %v", err))
+		ctx.JSON(http.StatusOK, result)
+		return
+	}
+	{{ rootInfo.camelCaseName }}s, err := dto_convert.ConvertPOListTo{{ rootInfo.pascalCaseName }}(poes)
+	_, err = base_service.{{ rootInfo.pascalCaseName }}BatchDelete({{ rootInfo.camelCaseName }}s)
+	if err != nil {
+		logs.Error("delete error: %v", err)
+		result := common.ErrorResult("internal error")
+		ctx.JSON(http.StatusOK, result)
+		return
+	}
+	result := common.SuccessResultMsg("remove success")
 	ctx.JSON(http.StatusOK, result)
 }
 
