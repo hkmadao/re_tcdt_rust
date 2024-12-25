@@ -232,16 +232,26 @@ export const batchRemove = createAsyncThunk(
     }
     const state: TTableStore = (thunkAPI.getState() as any)[componentName];
     const deleteDatas = state.tableData?.filter(d => state.selectedRowKeys?.includes(d.{{ bt.mainProperty }}!));
-if (!deleteDatas || deleteDatas.length === 0) {
-  return;
-}
-await ListAPI.batchRemove(deleteDatas);
-const fns: TFilterNode[] = [];
-const params: TPageInfoInput = {
-  pageIndex: 1,
-  pageSize: 10,
-  logicNode: andLogicNode(fns)(),
-  orders: [
+    if (!deleteDatas || deleteDatas.length === 0) {
+      return;
+    }
+    await ListAPI.batchRemove(deleteDatas);
+    const fns: TFilterNode[] = [];
+    if (state.selectedTreeNode) {
+      const treeIdFn: TFilterNode = equalFilterNode('cameraId', stringFilterParam(state.selectedTreeNode['id']));
+      fns.push(treeIdFn);
+    }
+    const searchData = state.searchData;
+    const searchFilter = buildFiltersBySearchRef(searchData, searcheRefs);
+    if (!searchFilter) {
+      return;
+    }
+    fns.push(...searchFilter.andFilters);
+    const params: TPageInfoInput = {
+      pageIndex: 1,
+      pageSize: 10,
+      logicNode: andLogicNode(fns)(),
+      orders: [
 {%- if rootInfo.bTableJson and rootInfo.bTableJson.configList.header is iterable %}
   {%- for bt in rootInfo.bTableJson.configList.header %}
     {%- if bt.orderProperty %}
@@ -255,10 +265,10 @@ const params: TPageInfoInput = {
 {%- endif %}
   ],
 };
-const pageInfo: TPageInfo<T{{ bt.tabClassName }}> = await ListAPI.pageList(
-  params,
-);
-return pageInfo;
+    const pageInfo: TPageInfo<T{{ bt.tabClassName }}> = await ListAPI.pageList(
+      params,
+    );
+    return pageInfo;
   },
 );
   {%- endfor %}

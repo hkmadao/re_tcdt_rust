@@ -1,68 +1,101 @@
 use crate::{
     common::{
         aq::*,
-        aq_const::{LOGIC_OPERATOR_CODE_AND, OPERATOR_CODE_IN},
     },
     dto::po::base::{{ rootInfo.snakeCaseName }}_po::{{ rootInfo.pascalCaseName }}PO,
     util::dyn_query::make_select_by_condition,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 use ::entity::entity::{{ rootInfo.snakeCaseName }};
 use sea_orm::*;
+use sea_orm::ActiveValue::Set;
+use sea_orm::sea_query::Expr;
+use crate::util::id_util::generate_id;
 
 pub struct {{ rootInfo.pascalCaseName }}Mutation;
 
 impl {{ rootInfo.pascalCaseName }}Mutation {
     pub async fn create(
         db: &DbConn,
-        {{ rootInfo.snakeCaseName }}_po: {{ rootInfo.pascalCaseName }}PO,
+        {{ rootInfo.snakeCaseName }}_model: {{ rootInfo.snakeCaseName }}::Model,
     ) -> Result<{{ rootInfo.snakeCaseName }}::Model, TcdtServiceError> {
-        let {{ rootInfo.snakeCaseName }}_save = {{ rootInfo.pascalCaseName }}PO::insert({{ rootInfo.snakeCaseName }}_po, db, None)
-            .await
-            .map_err(|err| {
-                log::error!("{{ rootInfo.pascalCaseName }} insert failed");
-                TcdtServiceError::build_internal_msg_error("{{ rootInfo.pascalCaseName }} insert failed", err)
-            })?;
+        let mut {{ rootInfo.snakeCaseName }}_active_model = {{ rootInfo.snakeCaseName }}::convert_model_to_active_model({{ rootInfo.snakeCaseName }}_model);
+        let id = generate_id();
+        {{ rootInfo.snakeCaseName }}_active_model.{{ rootInfo.pkAttributeInfo.snakeCaseName }} = Set(id.clone());
+        let _ = {{ rootInfo.snakeCaseName }}::Entity::insert({{ rootInfo.snakeCaseName }}_active_model).exec(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "{{ rootInfo.pascalCaseName }} insert failed",
+                err,
+            )
+        })?;
+
+        let {{ rootInfo.snakeCaseName }}_save = {{ rootInfo.snakeCaseName }}::Entity::find_by_id(id).one(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "{{ rootInfo.pascalCaseName }} insert after find failed",
+                err,
+            )
+        })?
+            .ok_or(TcdtServiceError::build_internal_msg("{{ rootInfo.pascalCaseName }} insert after cannot find entity"))?;
         Ok({{ rootInfo.snakeCaseName }}_save)
     }
 
     pub async fn update_by_id(
         db: &DbConn,
-        {{ rootInfo.snakeCaseName }}_po: {{ rootInfo.pascalCaseName }}PO,
+        {{ rootInfo.snakeCaseName }}_model: {{ rootInfo.snakeCaseName }}::Model,
     ) -> Result<{{ rootInfo.snakeCaseName }}::Model, TcdtServiceError> {
-        let {{ rootInfo.snakeCaseName }}_save = {{ rootInfo.pascalCaseName }}PO::update({{ rootInfo.snakeCaseName }}_po, db, None)
+        let id = {{ rootInfo.snakeCaseName }}_model.{{ rootInfo.pkAttributeInfo.snakeCaseName }}.clone();
+
+        let {{ rootInfo.snakeCaseName }}_persist_model: {{ rootInfo.snakeCaseName }}::ActiveModel = {{ rootInfo.snakeCaseName }}::Entity::find_by_id(&id)
+            .one(db)
             .await
             .map_err(|err| {
-                log::error!("{{ rootInfo.pascalCaseName }} update failed");
-                TcdtServiceError::build_internal_msg_error("{{ rootInfo.pascalCaseName }} update failed", err)
-            })?;
+                TcdtServiceError::build_internal_msg_error(
+                    "{{ rootInfo.pascalCaseName }} update before find_by_id failed",
+                    err,
+                )
+            })?
+            .ok_or(TcdtServiceError::build_internal_msg(&format!("{{ rootInfo.pascalCaseName }} update before cannot find entity [{}].", stringify!(#entity_name_ident))))?
+            .into_active_model();
+
+        let mut {{ rootInfo.snakeCaseName }}_active_model = {{ rootInfo.snakeCaseName }}::convert_model_to_active_model({{ rootInfo.snakeCaseName }}_model);
+
+        let {{ rootInfo.snakeCaseName }}_save = {{ rootInfo.snakeCaseName }}_active_model
+            .update(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                " {{ rootInfo.pascalCaseName }} update failed",
+                err,
+            )
+        })?;
+
         Ok({{ rootInfo.snakeCaseName }}_save)
     }
 
     pub async fn delete(
         db: &DbConn,
-        {{ rootInfo.snakeCaseName }}_po: {{ rootInfo.pascalCaseName }}PO,
+        {{ rootInfo.snakeCaseName }}_model: {{ rootInfo.snakeCaseName }}::Model,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let delete_result = {{ rootInfo.pascalCaseName }}PO::delete({{ rootInfo.snakeCaseName }}_po, db, None)
+        let delete_result = {{ rootInfo.snakeCaseName }}::Entity::delete({{ rootInfo.snakeCaseName }}_model.into_active_model())
+            .exec(db)
             .await
             .map_err(|err| {
                 log::error!("{{ rootInfo.pascalCaseName }} delete failed");
-                TcdtServiceError::build_internal_msg_error("{{ rootInfo.pascalCaseName }} delete failed", err)
+                TcdtServiceError::build_internal_msg_error("{{ rootInfo.pascalCaseName }} delete_all failed", err)
             })?;
         Ok(delete_result)
     }
 
     pub async fn batch_delete(
         db: &DbConn,
-        {{ rootInfo.snakeCaseName }}_po_list: Vec<{{ rootInfo.pascalCaseName }}PO>,
+        {{ rootInfo.snakeCaseName }}_model_list: Vec<{{ rootInfo.snakeCaseName }}::Model>,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let id_list = {{ rootInfo.snakeCaseName }}_po_list
-            .iter()
-            .map(|po| po.{{ rootInfo.pkAttributeInfo.snakeCaseName }}.clone())
-            .collect::<Vec<_>>();
+        let id_list = {{ rootInfo.snakeCaseName }}_model_list.iter().map(|{{ rootInfo.snakeCaseName }}_model| {
+            {{ rootInfo.snakeCaseName }}_model.{{ rootInfo.pkAttributeInfo.snakeCaseName }}.clone()
+        }).collect::<Vec<String>>();
         let delete_result = {{ rootInfo.snakeCaseName }}::Entity::delete_many()
-            .filter({{ rootInfo.snakeCaseName }}::Column::{{ rootInfo.pkAttributeInfo.pascalCaseName }}.is_in(id_list))
+            .filter(Expr::col({{ rootInfo.snakeCaseName }}::Column::Id{{ rootInfo.pascalCaseName }}).is_in(id_list))
             .exec(db)
             .await
             .map_err(|err| {
@@ -94,9 +127,9 @@ impl {{ rootInfo.pascalCaseName }}Query {
             {{ rootInfo.snakeCaseName }}::Entity::find_by_id(id)
                 .one(db)
                 .await.map_err(|err| {
-                    log::error!("{{ rootInfo.pascalCaseName }} find_by_id failed");
-                    TcdtServiceError::build_internal_msg_error("{{ rootInfo.pascalCaseName }} find_by_id failed", err)
-                })?
+                log::error!("{{ rootInfo.pascalCaseName }} find_by_id failed");
+                TcdtServiceError::build_internal_msg_error("{{ rootInfo.pascalCaseName }} find_by_id failed", err)
+            })?
                 .ok_or(TcdtServiceError::build_internal_msg("{{ rootInfo.pascalCaseName }} cant not find data"))?;
         Ok({{ rootInfo.snakeCaseName }}_entity)
     }
@@ -105,21 +138,11 @@ impl {{ rootInfo.pascalCaseName }}Query {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<{{ rootInfo.snakeCaseName }}::Model>, TcdtServiceError> {
-        let aq_condition = AqCondition {
-            logic_node: Some(Box::new(AqLogicNode {
-                logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
-                logic_node: None,
-                filter_nodes: vec![AqFilterNode {
-                    name: "{{ rootInfo.pkAttributeInfo.camelCaseName }}".to_string(),
-                    operator_code: OPERATOR_CODE_IN.to_owned(),
-                    filter_params: ids
-                        .iter()
-                        .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
-                        .collect(),
-                }],
-            })),
-            orders: vec![],
-        };
+        let aq_condition = AqCondition::build_in_condition("{{ rootInfo.pkAttributeInfo.camelCaseName }}", ids
+            .iter()
+            .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+            .collect());
+
         let sql_build = make_select_by_condition(
             {{ rootInfo.snakeCaseName }}::Entity::default(),
             aq_condition,

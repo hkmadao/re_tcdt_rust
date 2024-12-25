@@ -326,6 +326,7 @@ pub(crate) fn go_register(cfg: &mut web::ServiceConfig) {
     cfg.service(ComponentExtApi::ext_get_by_id);
     cfg.service(ComponentExtApi::save_by_action);
     cfg.service(ComponentExtApi::get_description_data);
+    cfg.service(ComponentExtApi::remove_on_error_tip);
     cfg.service(DdEntityExtApi::get_detail_by_entity_id);
     cfg.service(DdEntityExtApi::get_detail_by_entity_ids);
     cfg.service(DdEntityExtApi::aq_detail);

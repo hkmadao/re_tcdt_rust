@@ -3493,6 +3493,7 @@ dependencies = [
  "flate2",
  "log",
  "nanoid",
+ "rand 0.8.5",
  "rust-crypto",
  "sea-orm",
  "serde",

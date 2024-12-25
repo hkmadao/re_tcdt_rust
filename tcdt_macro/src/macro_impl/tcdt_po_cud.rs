@@ -47,6 +47,7 @@ pub(crate) fn tcdt_po_cud(ast: DeriveInput) -> syn::Result<TokenStream> {
         format_ident!("{}{}", base_snake_case_name.to_lowercase(), "_save");
 
     let mut filed_ast = quote!();
+    let mut model_filed_ast = quote!();
     let mut primary_key_ast = quote!();
     let mut primary_key_ident_option: Option<Ident> = None;
     let single_find_ast = quote!();
@@ -96,15 +97,24 @@ pub(crate) fn tcdt_po_cud(ast: DeriveInput) -> syn::Result<TokenStream> {
                                 filed_ast.extend(quote! {
                                     #field_ident: Set(id_parent.clone()),
                                 });
+                                model_filed_ast.extend(quote! {
+                                    #field_ident: id_parent.clone(),
+                                });
                             } else if anos.contains(&String::from("po_primary_key")) {
                                 primary_key_ast.extend(quote! {
                                     #field_ident: Set(id.clone()),
                                 });
                                 primary_key_ident_option = Some(field_ident.clone());
+                                model_filed_ast.extend(quote! {
+                                    #field_ident: self.#field_ident.clone(),
+                                });
                             } else {
                                 //加了tctd_po标记，但是没参数
                                 filed_ast.extend(quote! {
                                     #field_ident: Set(self.#field_ident.clone()),
+                                });
+                                model_filed_ast.extend(quote! {
+                                    #field_ident: self.#field_ident.clone(),
                                 });
                             }
                         }
@@ -127,6 +137,12 @@ pub(crate) fn tcdt_po_cud(ast: DeriveInput) -> syn::Result<TokenStream> {
     // println!("//{:?}", filed_ast);
     let gen = quote! {
         impl TcdtCudParamObjectTrait<#snake_case_name_ident::Model> for #po_type_name_ident {
+            fn convert_po_to_model(self) -> #snake_case_name_ident::Model {
+                #snake_case_name_ident::Model {
+                    #model_filed_ast
+                    ..Default::default()
+                }
+            }
             async fn insert<C: ConnectionTrait>(self, db: &C, id_parent: Option<String>) -> Result<#snake_case_name_ident::Model, TcdtServiceError> {
                 let id = nanoid::nanoid!();
                 let #entity_save_name_ident = #snake_case_name_ident::ActiveModel {

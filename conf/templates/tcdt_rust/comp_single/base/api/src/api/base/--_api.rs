@@ -1,6 +1,6 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
@@ -20,7 +20,9 @@ pub async fn add(
 
     let form = {{ rootInfo.snakeCaseName }}_form.into_inner();
 
-    let {{ rootInfo.snakeCaseName }}_save = {{ rootInfo.pascalCaseName }}Mutation::create(conn, form)
+    let {{ rootInfo.snakeCaseName }}_model = ComponentNodeUiPO::convert_po_to_model(form);
+
+    let {{ rootInfo.snakeCaseName }}_save = {{ rootInfo.pascalCaseName }}Mutation::create(conn, {{ rootInfo.snakeCaseName }}_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -46,7 +48,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = {{ rootInfo.snakeCaseName }}_form.into_inner();
 
-    let {{ rootInfo.snakeCaseName }}_save = {{ rootInfo.pascalCaseName }}Mutation::update_by_id(conn, form)
+    let {{ rootInfo.snakeCaseName }}_model = ComponentNodeUiPO::convert_po_to_model(form);
+
+    let {{ rootInfo.snakeCaseName }}_save = {{ rootInfo.pascalCaseName }}Mutation::update_by_id(conn, {{ rootInfo.snakeCaseName }}_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -71,7 +75,9 @@ pub async fn remove(
     let conn = &data.conn;
     let form = {{ rootInfo.snakeCaseName }}_form.into_inner();
 
-    let delete_result = {{ rootInfo.pascalCaseName }}Mutation::delete(conn, form)
+    let {{ rootInfo.snakeCaseName }}_model = ComponentNodeUiPO::convert_po_to_model(form);
+
+    let delete_result = {{ rootInfo.pascalCaseName }}Mutation::delete(conn, {{ rootInfo.snakeCaseName }}_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

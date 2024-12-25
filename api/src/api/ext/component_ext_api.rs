@@ -16,10 +16,17 @@ use tcdt_service::{
         vo::ext::component::collection::{ComponentVO as CollComponentVO, DataTypeVO},
     },
     service::{
-        base::{component_service::ComponentQuery, data_type_service::DataTypeQuery},
+        base::{component_service::ComponentQuery, data_type_service::DataTypeQuery,
+               component_entity_service::ComponentEntityQuery, component_enum_service::ComponentEnumQuery,
+               component_node_ui_service::ComponentNodeUiMutation,
+               component_node_ui_service::ComponentNodeUiQuery},
         ext::component_ext_service::ComponentExtMutation,
     },
 };
+use tcdt_service::common::result::DeleteRefErrorMessageVO;
+use tcdt_service::dto::po::base::component_po::ComponentPO;
+use tcdt_service::service::base::component_service::ComponentMutation;
+use tcdt_service::util::id_util::generate_id;
 
 #[tcdt_route(ext_get_by_id)]
 #[get("/component/extGetById/{id}")]
@@ -176,4 +183,71 @@ pub async fn get_description_data(
             error::ErrorInternalServerError("internal server error")
         })?;
     Ok(HttpResponse::Ok().json(description))
+}
+
+#[tcdt_route(remove_on_error_tip)]
+#[post("/component/removeOnErrorTip")]
+pub async fn remove_on_error_tip(
+    data: web::Data<AppState>,
+    component_form: web::Json<ComponentPO>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let form = component_form.into_inner();
+
+    let condition = AqCondition::build_equal_condition("idComponent", EFilterParam::String(Some(Box::new(form.id_component.clone()))));
+    let exists = ComponentEnumQuery::exists_by_condition(conn, condition.clone())
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    let mut err_msg_list: Vec<DeleteRefErrorMessageVO> = vec![];
+    if exists {
+        let err_msg_vo = DeleteRefErrorMessageVO {
+            id_data: generate_id(),
+            message: "ref by ComponentEnum".to_string(),
+            source_class_name: "".to_string(),
+            ref_class_name: "".to_string(),
+        };
+        err_msg_list.push(err_msg_vo);
+    }
+    let exists = ComponentEntityQuery::exists_by_condition(conn, condition.clone())
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    if exists {
+        let err_msg_vo = DeleteRefErrorMessageVO {
+            id_data: generate_id(),
+            message: "ref by ComponentEntity".to_string(),
+            source_class_name: "".to_string(),
+            ref_class_name: "".to_string(),
+        };
+        err_msg_list.push(err_msg_vo);
+    }
+    if !err_msg_list.is_empty() {
+        let result = AppResult::<Vec<DeleteRefErrorMessageVO>>::failed_msg_and_data("".to_string(), err_msg_list);
+        return Ok(HttpResponse::Ok().json(result));
+    }
+    let node_ui_list = ComponentNodeUiQuery::find_collection_by_condition(conn, condition)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    ComponentNodeUiMutation::batch_delete(conn, node_ui_list)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    ComponentMutation::delete(conn, form)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    let result = AppResult::<i32>::success_not_data();
+    Ok(HttpResponse::Ok().json(result))
 }

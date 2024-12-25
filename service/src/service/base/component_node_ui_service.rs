@@ -1,54 +1,106 @@
 use crate::{
     common::{
         aq::*,
-        aq_const::{LOGIC_OPERATOR_CODE_AND, OPERATOR_CODE_IN},
     },
     dto::po::base::component_node_ui_po::ComponentNodeUiPO,
     util::dyn_query::make_select_by_condition,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 use ::entity::entity::component_node_ui;
 use sea_orm::*;
+use sea_orm::ActiveValue::Set;
+use sea_orm::sea_query::Expr;
+use crate::util::id_util::generate_id;
 
 pub struct ComponentNodeUiMutation;
 
 impl ComponentNodeUiMutation {
     pub async fn create(
         db: &DbConn,
-        component_node_ui_po: ComponentNodeUiPO,
+        component_node_ui_model: component_node_ui::Model,
     ) -> Result<component_node_ui::Model, TcdtServiceError> {
-        let component_node_ui_save = ComponentNodeUiPO::insert(component_node_ui_po, db, None)
-            .await
-            .map_err(|err| {
-                log::error!("ComponentNodeUi insert failed");
-                TcdtServiceError::build_internal_msg_error("ComponentNodeUi insert failed", err)
-            })?;
+        let mut component_node_ui_active_model = component_node_ui::convert_model_to_active_model(component_node_ui_model);
+        let id = generate_id();
+        component_node_ui_active_model.id_component_node_ui = Set(id.clone());
+        let _ = component_node_ui::Entity::insert(component_node_ui_active_model).exec(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "ComponentNodeUi insert failed",
+                err,
+            )
+        })?;
+
+        let component_node_ui_save = component_node_ui::Entity::find_by_id(id).one(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "ComponentNodeUi insert after find failed",
+                err,
+            )
+        })?
+            .ok_or(TcdtServiceError::build_internal_msg("ComponentNodeUi insert after cannot find entity"))?;
         Ok(component_node_ui_save)
     }
 
     pub async fn update_by_id(
         db: &DbConn,
-        component_node_ui_po: ComponentNodeUiPO,
+        component_node_ui_model: component_node_ui::Model,
     ) -> Result<component_node_ui::Model, TcdtServiceError> {
-        let component_node_ui_save = ComponentNodeUiPO::update(component_node_ui_po, db, None)
+        let id = component_node_ui_model.id_component_node_ui.clone();
+
+        let component_node_ui_persist_model: component_node_ui::ActiveModel = component_node_ui::Entity::find_by_id(&id)
+            .one(db)
             .await
             .map_err(|err| {
-                log::error!("ComponentNodeUi update failed");
-                TcdtServiceError::build_internal_msg_error("ComponentNodeUi update failed", err)
-            })?;
+                TcdtServiceError::build_internal_msg_error(
+                    "ComponentNodeUi update before find_by_id failed",
+                    err,
+                )
+            })?
+            .ok_or(TcdtServiceError::build_internal_msg(&format!("ComponentNodeUi update before cannot find entity [{}].", stringify!(#entity_name_ident))))?
+            .into_active_model();
+
+        let mut component_node_ui_active_model = component_node_ui::convert_model_to_active_model(component_node_ui_model);
+
+        let component_node_ui_save = component_node_ui_active_model
+            .update(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                " ComponentNodeUi update failed",
+                err,
+            )
+        })?;
+
         Ok(component_node_ui_save)
     }
 
     pub async fn delete(
         db: &DbConn,
-        component_node_ui_po: ComponentNodeUiPO,
+        component_node_ui_model: component_node_ui::Model,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let delete_result = ComponentNodeUiPO::delete(component_node_ui_po, db, None)
+        let delete_result = component_node_ui::Entity::delete(component_node_ui_model.into_active_model())
+            .exec(db)
             .await
             .map_err(|err| {
                 log::error!("ComponentNodeUi delete failed");
-                TcdtServiceError::build_internal_msg_error("ComponentNodeUi delete failed", err)
+                TcdtServiceError::build_internal_msg_error("ComponentNodeUi delete_all failed", err)
+            })?;
+        Ok(delete_result)
+    }
+
+    pub async fn batch_delete(
+        db: &DbConn,
+        component_node_ui_model_list: Vec<component_node_ui::Model>,
+    ) -> Result<DeleteResult, TcdtServiceError> {
+        let id_list = component_node_ui_model_list.iter().map(|component_node_ui_model| {
+            component_node_ui_model.id_component_node_ui.clone()
+        }).collect::<Vec<String>>();
+        let delete_result = component_node_ui::Entity::delete_many()
+            .filter(Expr::col(component_node_ui::Column::IdComponentNodeUi).is_in(id_list))
+            .exec(db)
+            .await
+            .map_err(|err| {
+                log::error!("ComponentNodeUi batch_delete failed");
+                TcdtServiceError::build_internal_msg_error("ComponentNodeUi batch_delete failed", err)
             })?;
         Ok(delete_result)
     }
@@ -75,9 +127,9 @@ impl ComponentNodeUiQuery {
             component_node_ui::Entity::find_by_id(id)
                 .one(db)
                 .await.map_err(|err| {
-                    log::error!("ComponentNodeUi find_by_id failed");
-                    TcdtServiceError::build_internal_msg_error("ComponentNodeUi find_by_id failed", err)
-                })?
+                log::error!("ComponentNodeUi find_by_id failed");
+                TcdtServiceError::build_internal_msg_error("ComponentNodeUi find_by_id failed", err)
+            })?
                 .ok_or(TcdtServiceError::build_internal_msg("ComponentNodeUi cant not find data"))?;
         Ok(component_node_ui_entity)
     }
@@ -86,21 +138,11 @@ impl ComponentNodeUiQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<component_node_ui::Model>, TcdtServiceError> {
-        let aq_condition = AqCondition {
-            logic_node: Some(Box::new(AqLogicNode {
-                logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
-                logic_node: None,
-                filter_nodes: vec![AqFilterNode {
-                    name: "idComponentNodeUi".to_string(),
-                    operator_code: OPERATOR_CODE_IN.to_owned(),
-                    filter_params: ids
-                        .iter()
-                        .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
-                        .collect(),
-                }],
-            })),
-            orders: vec![],
-        };
+        let aq_condition = AqCondition::build_in_condition("idComponentNodeUi", ids
+            .iter()
+            .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+            .collect());
+
         let sql_build = make_select_by_condition(
             component_node_ui::Entity::default(),
             aq_condition,

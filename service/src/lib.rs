@@ -10,6 +10,7 @@ pub mod common {
 pub mod util {
     pub mod dyn_query;
     pub mod file_util;
+    pub mod id_util;
 }
 
 pub mod service {

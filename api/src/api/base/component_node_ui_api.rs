@@ -1,6 +1,6 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
@@ -21,7 +21,9 @@ pub async fn add(
 
     let form = component_node_ui_form.into_inner();
 
-    let component_node_ui_save = ComponentNodeUiMutation::create(conn, form)
+    let component_node_ui_model = ComponentNodeUiPO::convert_po_to_model(form);
+
+    let component_node_ui_save = ComponentNodeUiMutation::create(conn, component_node_ui_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -47,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = component_node_ui_form.into_inner();
 
-    let component_node_ui_save = ComponentNodeUiMutation::update_by_id(conn, form)
+    let component_node_ui_model = ComponentNodeUiPO::convert_po_to_model(form);
+
+    let component_node_ui_save = ComponentNodeUiMutation::update_by_id(conn, component_node_ui_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -72,7 +76,9 @@ pub async fn remove(
     let conn = &data.conn;
     let form = component_node_ui_form.into_inner();
 
-    let delete_result = ComponentNodeUiMutation::delete(conn, form)
+    let component_node_ui_model = ComponentNodeUiPO::convert_po_to_model(form);
+
+    let delete_result = ComponentNodeUiMutation::delete(conn, component_node_ui_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

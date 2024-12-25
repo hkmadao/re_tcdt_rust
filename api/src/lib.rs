@@ -12,15 +12,12 @@ pub fn main() {
 
 mod conf {
     pub(crate) mod error_handle;
-    pub(crate) mod reponse_handle;
+    pub(crate) mod response_handle;
 }
 
 mod api_register;
 
 mod api {
-    pub mod common{
-        pub mod param;
-    }
         pub mod agg {
             pub mod role_agg_api;
             pub mod user_agg_api;

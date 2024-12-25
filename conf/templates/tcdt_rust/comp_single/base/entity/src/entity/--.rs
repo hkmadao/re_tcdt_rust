@@ -1,7 +1,8 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "{{ rootInfo.tableName }}")]
 pub struct Model {
     #[sea_orm(primary_key, comment = "{{ rootInfo.pkAttributeInfo.displayName }}")]
@@ -89,3 +90,16 @@ impl Linked for {{ attributeInfo.pascalCaseName }}Linked {
 {%- endfor %}
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model({{ rootInfo.snakeCaseName }}_model: Model) -> ActiveModel {
+    ActiveModel {
+        {{ rootInfo.pkAttributeInfo.columnName }}: Set({{ rootInfo.snakeCaseName }}_model.{{ attributeInfo.columnName }}.clone()),
+    
+    {%- for attributeInfo in rootInfo.baseAttributeInfoList %}
+        {{ attributeInfo.columnName }}: Set({{ rootInfo.snakeCaseName }}_model.{{ attributeInfo.columnName }}.clone()),
+    {%- endfor %}
+    {%- for attributeInfo in rootInfo.fkAttributeInfoList %}
+        {{ attributeInfo.columnName }}: Set({{ rootInfo.snakeCaseName }}_model.{{ attributeInfo.columnName }}.clone()),
+    {%- endfor %}
+    }
+}

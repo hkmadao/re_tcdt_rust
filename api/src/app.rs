@@ -8,7 +8,7 @@ use listenfd::ListenFd;
 use tcdt_common::tcdt_conf::TCDT_CONF;
 use tcdt_service::sea_orm::{Database, DatabaseConnection};
 
-use crate::{api_register::go_register, conf::reponse_handle::ResponseHandler};
+use crate::{api_register::go_register, conf::response_handle::ResponseHandler};
 
 #[derive(Debug)]
 pub struct AppState {
