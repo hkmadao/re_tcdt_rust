@@ -1,10 +1,11 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "dd_enum_associate")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "实体枚举关系")]
+    #[sea_orm(primary_key, comment = "枚举关系id")]
     pub id_enum_associate: String,
     /// 两个相同实体和枚举多条连线时，连线的序号:
     #[sea_orm(comment = "两个相同实体和枚举多条连线时，连线的序号")]
@@ -83,3 +84,14 @@ impl Linked for DdEntityLinked {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model(enum_associate_model: Model) -> ActiveModel {
+    ActiveModel {
+        id_enum_associate: Set(enum_associate_model.id_enum_associate.clone()),
+        group_order: Set(enum_associate_model.group_order.clone()),
+        id_attribute: Set(enum_associate_model.id_attribute.clone()),
+        id_entity_collection: Set(enum_associate_model.id_entity_collection.clone()),
+        id_enum: Set(enum_associate_model.id_enum.clone()),
+        id_entity: Set(enum_associate_model.id_entity.clone()),
+    }
+}

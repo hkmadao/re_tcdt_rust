@@ -1,10 +1,11 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "dto_entity_attribute")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "DTO实体属性")]
+    #[sea_orm(primary_key, comment = "DTO实体属性id")]
     pub id_dto_entity_attribute: String,
     /// 属性名称:
     #[sea_orm(comment = "属性名称")]
@@ -110,3 +111,23 @@ impl Linked for DtoEnumAssociatesLinked {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model(dto_entity_attribute_model: Model) -> ActiveModel {
+    ActiveModel {
+        id_dto_entity_attribute: Set(dto_entity_attribute_model.id_dto_entity_attribute.clone()),
+        attribute_name: Set(dto_entity_attribute_model.attribute_name.clone()),
+        display_name: Set(dto_entity_attribute_model.display_name.clone()),
+        column_name: Set(dto_entity_attribute_model.column_name.clone()),
+        fg_primary_key: Set(dto_entity_attribute_model.fg_primary_key.clone()),
+        fg_mandatory: Set(dto_entity_attribute_model.fg_mandatory.clone()),
+        default_value: Set(dto_entity_attribute_model.default_value.clone()),
+        len: Set(dto_entity_attribute_model.len.clone()),
+        pcs: Set(dto_entity_attribute_model.pcs.clone()),
+        sn: Set(dto_entity_attribute_model.sn.clone()),
+        note: Set(dto_entity_attribute_model.note.clone()),
+        category: Set(dto_entity_attribute_model.category.clone()),
+        id_attribute_type: Set(dto_entity_attribute_model.id_attribute_type.clone()),
+        id_ref_attribute: Set(dto_entity_attribute_model.id_ref_attribute.clone()),
+        id_dto_entity: Set(dto_entity_attribute_model.id_dto_entity.clone()),
+    }
+}

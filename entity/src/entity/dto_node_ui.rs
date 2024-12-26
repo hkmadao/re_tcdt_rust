@@ -1,10 +1,11 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "dto_node_ui")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "DTO实体集ui信息")]
+    #[sea_orm(primary_key, comment = "DTO实体集ui信息id")]
     pub id_dto_node_ui: String,
     /// x坐标:
     #[sea_orm(comment = "x坐标")]
@@ -44,3 +45,15 @@ impl Linked for DtoEntityCollectionLinked {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model(dto_node_ui_model: Model) -> ActiveModel {
+    ActiveModel {
+        id_dto_node_ui: Set(dto_node_ui_model.id_dto_node_ui.clone()),
+        x: Set(dto_node_ui_model.x.clone()),
+        y: Set(dto_node_ui_model.y.clone()),
+        width: Set(dto_node_ui_model.width.clone()),
+        height: Set(dto_node_ui_model.height.clone()),
+        id_element: Set(dto_node_ui_model.id_element.clone()),
+        id_dto_entity_collection: Set(dto_node_ui_model.id_dto_entity_collection.clone()),
+    }
+}

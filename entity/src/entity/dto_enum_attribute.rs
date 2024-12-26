@@ -1,10 +1,11 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "dto_enum_attribute")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "DTO枚举属性")]
+    #[sea_orm(primary_key, comment = "DTO枚举属性id")]
     pub id_dto_enum_attribute: String,
     /// 枚举属性显示名称:
     #[sea_orm(comment = "枚举属性显示名称")]
@@ -44,3 +45,15 @@ impl Linked for DtoEnumLinked {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model(dto_enum_attribute_model: Model) -> ActiveModel {
+    ActiveModel {
+        id_dto_enum_attribute: Set(dto_enum_attribute_model.id_dto_enum_attribute.clone()),
+        display_name: Set(dto_enum_attribute_model.display_name.clone()),
+        code: Set(dto_enum_attribute_model.code.clone()),
+        enum_value: Set(dto_enum_attribute_model.enum_value.clone()),
+        sn: Set(dto_enum_attribute_model.sn.clone()),
+        id_ref: Set(dto_enum_attribute_model.id_ref.clone()),
+        id_dto_enum: Set(dto_enum_attribute_model.id_dto_enum.clone()),
+    }
+}

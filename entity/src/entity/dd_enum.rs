@@ -1,10 +1,11 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "dd_enum")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "枚举实体")]
+    #[sea_orm(primary_key, comment = "枚举id")]
     pub id_enum: String,
     /// 名称:
     #[sea_orm(comment = "名称")]
@@ -80,3 +81,13 @@ impl Linked for AttributesLinked {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model(dd_enum_model: Model) -> ActiveModel {
+    ActiveModel {
+        id_enum: Set(dd_enum_model.id_enum.clone()),
+        class_name: Set(dd_enum_model.class_name.clone()),
+        display_name: Set(dd_enum_model.display_name.clone()),
+        enum_value_type: Set(dd_enum_model.enum_value_type.clone()),
+        id_entity_collection: Set(dd_enum_model.id_entity_collection.clone()),
+    }
+}

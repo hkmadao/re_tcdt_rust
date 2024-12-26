@@ -1,10 +1,11 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "dto_module")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "DTO模块")]
+    #[sea_orm(primary_key, comment = "DTO模块id")]
     pub id_dto_module: String,
     /// DTO模块名称:
     #[sea_orm(comment = "DTO模块名称")]
@@ -52,3 +53,13 @@ impl Linked for DeCollectionsLinked {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model(dto_module_model: Model) -> ActiveModel {
+    ActiveModel {
+        id_dto_module: Set(dto_module_model.id_dto_module.clone()),
+        name: Set(dto_module_model.name.clone()),
+        display_name: Set(dto_module_model.display_name.clone()),
+        path: Set(dto_module_model.path.clone()),
+        id_sub_project: Set(dto_module_model.id_sub_project.clone()),
+    }
+}

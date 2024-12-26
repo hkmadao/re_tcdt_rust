@@ -1,54 +1,106 @@
 use crate::{
     common::{
         aq::*,
-        aq_const::{LOGIC_OPERATOR_CODE_AND, OPERATOR_CODE_IN},
     },
     dto::po::base::node_ui_po::NodeUiPO,
     util::dyn_query::make_select_by_condition,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 use ::entity::entity::node_ui;
 use sea_orm::*;
+use sea_orm::ActiveValue::Set;
+use sea_orm::sea_query::Expr;
+use crate::util::id_util::generate_id;
 
 pub struct NodeUiMutation;
 
 impl NodeUiMutation {
     pub async fn create(
         db: &DbConn,
-        node_ui_po: NodeUiPO,
+        node_ui_model: node_ui::Model,
     ) -> Result<node_ui::Model, TcdtServiceError> {
-        let node_ui_save = NodeUiPO::insert(node_ui_po, db, None)
-            .await
-            .map_err(|err| {
-                log::error!("NodeUi insert failed");
-                TcdtServiceError::build_internal_msg_error("NodeUi insert failed", err)
-            })?;
+        let mut node_ui_active_model = node_ui::convert_model_to_active_model(node_ui_model);
+        let id = generate_id();
+        node_ui_active_model.id_node_ui = Set(id.clone());
+        let _ = node_ui::Entity::insert(node_ui_active_model).exec(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "NodeUi insert failed",
+                err,
+            )
+        })?;
+
+        let node_ui_save = node_ui::Entity::find_by_id(id).one(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "NodeUi insert after find failed",
+                err,
+            )
+        })?
+            .ok_or(TcdtServiceError::build_internal_msg("NodeUi insert after cannot find entity"))?;
         Ok(node_ui_save)
     }
 
     pub async fn update_by_id(
         db: &DbConn,
-        node_ui_po: NodeUiPO,
+        node_ui_model: node_ui::Model,
     ) -> Result<node_ui::Model, TcdtServiceError> {
-        let node_ui_save = NodeUiPO::update(node_ui_po, db, None)
+        let id = node_ui_model.id_node_ui.clone();
+
+        let node_ui_persist_model: node_ui::ActiveModel = node_ui::Entity::find_by_id(&id)
+            .one(db)
             .await
             .map_err(|err| {
-                log::error!("NodeUi update failed");
-                TcdtServiceError::build_internal_msg_error("NodeUi update failed", err)
-            })?;
+                TcdtServiceError::build_internal_msg_error(
+                    "NodeUi update before find_by_id failed",
+                    err,
+                )
+            })?
+            .ok_or(TcdtServiceError::build_internal_msg(&format!("NodeUi update before cannot find entity [{}].", stringify!(#entity_name_ident))))?
+            .into_active_model();
+
+        let mut node_ui_active_model = node_ui::convert_model_to_active_model(node_ui_model);
+
+        let node_ui_save = node_ui_active_model
+            .update(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                " NodeUi update failed",
+                err,
+            )
+        })?;
+
         Ok(node_ui_save)
     }
 
     pub async fn delete(
         db: &DbConn,
-        node_ui_po: NodeUiPO,
+        node_ui_model: node_ui::Model,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let delete_result = NodeUiPO::delete(node_ui_po, db, None)
+        let delete_result = node_ui::Entity::delete(node_ui_model.into_active_model())
+            .exec(db)
             .await
             .map_err(|err| {
                 log::error!("NodeUi delete failed");
-                TcdtServiceError::build_internal_msg_error("NodeUi delete failed", err)
+                TcdtServiceError::build_internal_msg_error("NodeUi delete_all failed", err)
+            })?;
+        Ok(delete_result)
+    }
+
+    pub async fn batch_delete(
+        db: &DbConn,
+        node_ui_model_list: Vec<node_ui::Model>,
+    ) -> Result<DeleteResult, TcdtServiceError> {
+        let id_list = node_ui_model_list.iter().map(|node_ui_model| {
+            node_ui_model.id_node_ui.clone()
+        }).collect::<Vec<String>>();
+        let delete_result = node_ui::Entity::delete_many()
+            .filter(Expr::col(node_ui::Column::IdNodeUi).is_in(id_list))
+            .exec(db)
+            .await
+            .map_err(|err| {
+                log::error!("NodeUi batch_delete failed");
+                TcdtServiceError::build_internal_msg_error("NodeUi batch_delete failed", err)
             })?;
         Ok(delete_result)
     }
@@ -75,9 +127,9 @@ impl NodeUiQuery {
             node_ui::Entity::find_by_id(id)
                 .one(db)
                 .await.map_err(|err| {
-                    log::error!("NodeUi find_by_id failed");
-                    TcdtServiceError::build_internal_msg_error("NodeUi find_by_id failed", err)
-                })?
+                log::error!("NodeUi find_by_id failed");
+                TcdtServiceError::build_internal_msg_error("NodeUi find_by_id failed", err)
+            })?
                 .ok_or(TcdtServiceError::build_internal_msg("NodeUi cant not find data"))?;
         Ok(node_ui_entity)
     }
@@ -86,21 +138,11 @@ impl NodeUiQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<node_ui::Model>, TcdtServiceError> {
-        let aq_condition = AqCondition {
-            logic_node: Some(Box::new(AqLogicNode {
-                logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
-                logic_node: None,
-                filter_nodes: vec![AqFilterNode {
-                    name: "idNodeUi".to_string(),
-                    operator_code: OPERATOR_CODE_IN.to_owned(),
-                    filter_params: ids
-                        .iter()
-                        .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
-                        .collect(),
-                }],
-            })),
-            orders: vec![],
-        };
+        let aq_condition = AqCondition::build_in_condition("idNodeUi", ids
+            .iter()
+            .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+            .collect());
+
         let sql_build = make_select_by_condition(
             node_ui::Entity::default(),
             aq_condition,

@@ -1,10 +1,11 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "sys_user")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "系统用户")]
+    #[sea_orm(primary_key, comment = "系统用户id")]
     pub id_user: String,
     /// 登录账号 :
     #[sea_orm(comment = "登录账号 ")]
@@ -50,3 +51,17 @@ impl Linked for UserRolesLinked {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model(user_model: Model) -> ActiveModel {
+    ActiveModel {
+        id_user: Set(user_model.id_user.clone()),
+        account: Set(user_model.account.clone()),
+        user_pwd: Set(user_model.user_pwd.clone()),
+        phone: Set(user_model.phone.clone()),
+        email: Set(user_model.email.clone()),
+        name: Set(user_model.name.clone()),
+        nick_name: Set(user_model.nick_name.clone()),
+        gender: Set(user_model.gender.clone()),
+        fg_active: Set(user_model.fg_active.clone()),
+    }
+}

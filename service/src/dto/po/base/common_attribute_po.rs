@@ -7,7 +7,6 @@ use ::entity::entity::{
 };
 use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 // use sea_orm::prelude::Json;
-use sea_orm::ConnectionTrait;
 use sea_orm::*;
 use serde::{Deserialize, Serialize};
 use tcdt_macro::ParamObjectCud;
@@ -56,7 +55,7 @@ pub struct CommonAttributePO {
     pub category: Option<String>,
     /// 系统预置数据标识:
     #[serde(default)]
-    pub fg_preset: bool,
+    pub fg_preset: Option<bool>,
     #[serde(default)]
     pub id_ref_entity: Option<String>,
     #[serde(default)]

@@ -1,13 +1,13 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
     dto::{po::base::user_po::UserPO, vo::base::user_vo::UserVO},
     service::base::user_service::{UserMutation, UserQuery},
 };
-
+use entity::entity::user;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -21,7 +21,9 @@ pub async fn add(
 
     let form = user_form.into_inner();
 
-    let user_save = UserMutation::create(conn, form)
+    let user_model = UserPO::convert_po_to_model(form);
+
+    let user_save = UserMutation::create(conn, user_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -47,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = user_form.into_inner();
 
-    let user_save = UserMutation::update_by_id(conn, form)
+    let user_model = UserPO::convert_po_to_model(form);
+
+    let user_save = UserMutation::update_by_id(conn, user_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -72,7 +76,9 @@ pub async fn remove(
     let conn = &data.conn;
     let form = user_form.into_inner();
 
-    let delete_result = UserMutation::delete(conn, form)
+    let user_model = UserPO::convert_po_to_model(form);
+
+    let delete_result = UserMutation::delete(conn, user_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -90,7 +96,12 @@ pub async fn batch_remove(
     let conn = &data.conn;
     let po_list = user_form.into_inner();
 
-    let delete_result = UserMutation::batch_delete(conn, po_list)
+    let mut model_list:Vec<user::Model>  = vec![];
+    for po in po_list {
+        model_list.push(UserPO::convert_po_to_model(po));
+    }
+    
+    let delete_result = UserMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

@@ -1,13 +1,13 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
     dto::{po::base::component_po::ComponentPO, vo::base::component_vo::ComponentVO},
     service::base::component_service::{ComponentMutation, ComponentQuery},
 };
-
+use entity::entity::component;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -21,7 +21,9 @@ pub async fn add(
 
     let form = component_form.into_inner();
 
-    let component_save = ComponentMutation::create(conn, form)
+    let component_model = ComponentPO::convert_po_to_model(form);
+
+    let component_save = ComponentMutation::create(conn, component_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -47,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = component_form.into_inner();
 
-    let component_save = ComponentMutation::update_by_id(conn, form)
+    let component_model = ComponentPO::convert_po_to_model(form);
+
+    let component_save = ComponentMutation::update_by_id(conn, component_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -72,7 +76,32 @@ pub async fn remove(
     let conn = &data.conn;
     let form = component_form.into_inner();
 
-    let delete_result = ComponentMutation::delete(conn, form)
+    let component_model = ComponentPO::convert_po_to_model(form);
+
+    let delete_result = ComponentMutation::delete(conn, component_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    Ok(HttpResponse::Ok().json(delete_result.rows_affected))
+}
+
+#[tcdt_route(batch_remove)]
+#[post("/component/batchRemove")]
+pub async fn batch_remove(
+    data: web::Data<AppState>,
+    component_form: web::Json<Vec<ComponentPO>>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let po_list = component_form.into_inner();
+
+    let mut model_list:Vec<component::Model>  = vec![];
+    for po in po_list {
+        model_list.push(ComponentPO::convert_po_to_model(po));
+    }
+    
+    let delete_result = ComponentMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

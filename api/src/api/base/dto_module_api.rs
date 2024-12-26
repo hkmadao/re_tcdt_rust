@@ -1,13 +1,13 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
     dto::{po::base::dto_module_po::DtoModulePO, vo::base::dto_module_vo::DtoModuleVO},
     service::base::dto_module_service::{DtoModuleMutation, DtoModuleQuery},
 };
-
+use entity::entity::dto_module;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -21,7 +21,9 @@ pub async fn add(
 
     let form = dto_module_form.into_inner();
 
-    let dto_module_save = DtoModuleMutation::create(conn, form)
+    let dto_module_model = DtoModulePO::convert_po_to_model(form);
+
+    let dto_module_save = DtoModuleMutation::create(conn, dto_module_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -47,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = dto_module_form.into_inner();
 
-    let dto_module_save = DtoModuleMutation::update_by_id(conn, form)
+    let dto_module_model = DtoModulePO::convert_po_to_model(form);
+
+    let dto_module_save = DtoModuleMutation::update_by_id(conn, dto_module_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -72,7 +76,32 @@ pub async fn remove(
     let conn = &data.conn;
     let form = dto_module_form.into_inner();
 
-    let delete_result = DtoModuleMutation::delete(conn, form)
+    let dto_module_model = DtoModulePO::convert_po_to_model(form);
+
+    let delete_result = DtoModuleMutation::delete(conn, dto_module_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    Ok(HttpResponse::Ok().json(delete_result.rows_affected))
+}
+
+#[tcdt_route(batch_remove)]
+#[post("/dtoModule/batchRemove")]
+pub async fn batch_remove(
+    data: web::Data<AppState>,
+    dto_module_form: web::Json<Vec<DtoModulePO>>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let po_list = dto_module_form.into_inner();
+
+    let mut model_list:Vec<dto_module::Model>  = vec![];
+    for po in po_list {
+        model_list.push(DtoModulePO::convert_po_to_model(po));
+    }
+    
+    let delete_result = DtoModuleMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

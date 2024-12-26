@@ -1,54 +1,106 @@
 use crate::{
     common::{
         aq::*,
-        aq_const::{LOGIC_OPERATOR_CODE_AND, OPERATOR_CODE_IN},
     },
     dto::po::base::dto_entity_collection_po::DtoEntityCollectionPO,
     util::dyn_query::make_select_by_condition,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 use ::entity::entity::dto_entity_collection;
 use sea_orm::*;
+use sea_orm::ActiveValue::Set;
+use sea_orm::sea_query::Expr;
+use crate::util::id_util::generate_id;
 
 pub struct DtoEntityCollectionMutation;
 
 impl DtoEntityCollectionMutation {
     pub async fn create(
         db: &DbConn,
-        dto_entity_collection_po: DtoEntityCollectionPO,
+        dto_entity_collection_model: dto_entity_collection::Model,
     ) -> Result<dto_entity_collection::Model, TcdtServiceError> {
-        let dto_entity_collection_save = DtoEntityCollectionPO::insert(dto_entity_collection_po, db, None)
-            .await
-            .map_err(|err| {
-                log::error!("DtoEntityCollection insert failed");
-                TcdtServiceError::build_internal_msg_error("DtoEntityCollection insert failed", err)
-            })?;
+        let mut dto_entity_collection_active_model = dto_entity_collection::convert_model_to_active_model(dto_entity_collection_model);
+        let id = generate_id();
+        dto_entity_collection_active_model.id_dto_entity_collection = Set(id.clone());
+        let _ = dto_entity_collection::Entity::insert(dto_entity_collection_active_model).exec(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "DtoEntityCollection insert failed",
+                err,
+            )
+        })?;
+
+        let dto_entity_collection_save = dto_entity_collection::Entity::find_by_id(id).one(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "DtoEntityCollection insert after find failed",
+                err,
+            )
+        })?
+            .ok_or(TcdtServiceError::build_internal_msg("DtoEntityCollection insert after cannot find entity"))?;
         Ok(dto_entity_collection_save)
     }
 
     pub async fn update_by_id(
         db: &DbConn,
-        dto_entity_collection_po: DtoEntityCollectionPO,
+        dto_entity_collection_model: dto_entity_collection::Model,
     ) -> Result<dto_entity_collection::Model, TcdtServiceError> {
-        let dto_entity_collection_save = DtoEntityCollectionPO::update(dto_entity_collection_po, db, None)
+        let id = dto_entity_collection_model.id_dto_entity_collection.clone();
+
+        let dto_entity_collection_persist_model: dto_entity_collection::ActiveModel = dto_entity_collection::Entity::find_by_id(&id)
+            .one(db)
             .await
             .map_err(|err| {
-                log::error!("DtoEntityCollection update failed");
-                TcdtServiceError::build_internal_msg_error("DtoEntityCollection update failed", err)
-            })?;
+                TcdtServiceError::build_internal_msg_error(
+                    "DtoEntityCollection update before find_by_id failed",
+                    err,
+                )
+            })?
+            .ok_or(TcdtServiceError::build_internal_msg(&format!("DtoEntityCollection update before cannot find entity [{}].", stringify!(#entity_name_ident))))?
+            .into_active_model();
+
+        let mut dto_entity_collection_active_model = dto_entity_collection::convert_model_to_active_model(dto_entity_collection_model);
+
+        let dto_entity_collection_save = dto_entity_collection_active_model
+            .update(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                " DtoEntityCollection update failed",
+                err,
+            )
+        })?;
+
         Ok(dto_entity_collection_save)
     }
 
     pub async fn delete(
         db: &DbConn,
-        dto_entity_collection_po: DtoEntityCollectionPO,
+        dto_entity_collection_model: dto_entity_collection::Model,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let delete_result = DtoEntityCollectionPO::delete(dto_entity_collection_po, db, None)
+        let delete_result = dto_entity_collection::Entity::delete(dto_entity_collection_model.into_active_model())
+            .exec(db)
             .await
             .map_err(|err| {
                 log::error!("DtoEntityCollection delete failed");
-                TcdtServiceError::build_internal_msg_error("DtoEntityCollection delete failed", err)
+                TcdtServiceError::build_internal_msg_error("DtoEntityCollection delete_all failed", err)
+            })?;
+        Ok(delete_result)
+    }
+
+    pub async fn batch_delete(
+        db: &DbConn,
+        dto_entity_collection_model_list: Vec<dto_entity_collection::Model>,
+    ) -> Result<DeleteResult, TcdtServiceError> {
+        let id_list = dto_entity_collection_model_list.iter().map(|dto_entity_collection_model| {
+            dto_entity_collection_model.id_dto_entity_collection.clone()
+        }).collect::<Vec<String>>();
+        let delete_result = dto_entity_collection::Entity::delete_many()
+            .filter(Expr::col(dto_entity_collection::Column::IdDtoEntityCollection).is_in(id_list))
+            .exec(db)
+            .await
+            .map_err(|err| {
+                log::error!("DtoEntityCollection batch_delete failed");
+                TcdtServiceError::build_internal_msg_error("DtoEntityCollection batch_delete failed", err)
             })?;
         Ok(delete_result)
     }
@@ -75,9 +127,9 @@ impl DtoEntityCollectionQuery {
             dto_entity_collection::Entity::find_by_id(id)
                 .one(db)
                 .await.map_err(|err| {
-                    log::error!("DtoEntityCollection find_by_id failed");
-                    TcdtServiceError::build_internal_msg_error("DtoEntityCollection find_by_id failed", err)
-                })?
+                log::error!("DtoEntityCollection find_by_id failed");
+                TcdtServiceError::build_internal_msg_error("DtoEntityCollection find_by_id failed", err)
+            })?
                 .ok_or(TcdtServiceError::build_internal_msg("DtoEntityCollection cant not find data"))?;
         Ok(dto_entity_collection_entity)
     }
@@ -86,21 +138,11 @@ impl DtoEntityCollectionQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<dto_entity_collection::Model>, TcdtServiceError> {
-        let aq_condition = AqCondition {
-            logic_node: Some(Box::new(AqLogicNode {
-                logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
-                logic_node: None,
-                filter_nodes: vec![AqFilterNode {
-                    name: "idDtoEntityCollection".to_string(),
-                    operator_code: OPERATOR_CODE_IN.to_owned(),
-                    filter_params: ids
-                        .iter()
-                        .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
-                        .collect(),
-                }],
-            })),
-            orders: vec![],
-        };
+        let aq_condition = AqCondition::build_in_condition("idDtoEntityCollection", ids
+            .iter()
+            .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+            .collect());
+
         let sql_build = make_select_by_condition(
             dto_entity_collection::Entity::default(),
             aq_condition,

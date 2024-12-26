@@ -1,12 +1,13 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
     dto::{po::base::bill_form_po::BillFormPO, vo::base::bill_form_vo::BillFormVO},
     service::base::bill_form_service::{BillFormMutation, BillFormQuery},
 };
+use entity::entity::bill_form;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -20,7 +21,9 @@ pub async fn add(
 
     let form = bill_form_form.into_inner();
 
-    let bill_form_save = BillFormMutation::create(conn, form)
+    let bill_form_model = BillFormPO::convert_po_to_model(form);
+
+    let bill_form_save = BillFormMutation::create(conn, bill_form_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -46,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = bill_form_form.into_inner();
 
-    let bill_form_save = BillFormMutation::update_by_id(conn, form)
+    let bill_form_model = BillFormPO::convert_po_to_model(form);
+
+    let bill_form_save = BillFormMutation::update_by_id(conn, bill_form_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -71,7 +76,32 @@ pub async fn remove(
     let conn = &data.conn;
     let form = bill_form_form.into_inner();
 
-    let delete_result = BillFormMutation::delete(conn, form)
+    let bill_form_model = BillFormPO::convert_po_to_model(form);
+
+    let delete_result = BillFormMutation::delete(conn, bill_form_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    Ok(HttpResponse::Ok().json(delete_result.rows_affected))
+}
+
+#[tcdt_route(batch_remove)]
+#[post("/billForm/batchRemove")]
+pub async fn batch_remove(
+    data: web::Data<AppState>,
+    bill_form_form: web::Json<Vec<BillFormPO>>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let po_list = bill_form_form.into_inner();
+
+    let mut model_list:Vec<bill_form::Model>  = vec![];
+    for po in po_list {
+        model_list.push(BillFormPO::convert_po_to_model(po));
+    }
+    
+    let delete_result = BillFormMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

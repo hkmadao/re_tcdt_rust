@@ -1,10 +1,11 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "dto_entity")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "DTO实体信息")]
+    #[sea_orm(primary_key, comment = " DTO实体信息id")]
     pub id_dto_entity: String,
     /// 显示名称:
     #[sea_orm(comment = "显示名称")]
@@ -134,3 +135,17 @@ impl Linked for DeAttributesLinked {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model(dto_entity_model: Model) -> ActiveModel {
+    ActiveModel {
+        id_dto_entity: Set(dto_entity_model.id_dto_entity.clone()),
+        display_name: Set(dto_entity_model.display_name.clone()),
+        class_name: Set(dto_entity_model.class_name.clone()),
+        table_name: Set(dto_entity_model.table_name.clone()),
+        pk_attribute_code: Set(dto_entity_model.pk_attribute_code.clone()),
+        pk_attribute_name: Set(dto_entity_model.pk_attribute_name.clone()),
+        pk_attribute_type_name: Set(dto_entity_model.pk_attribute_type_name.clone()),
+        id_ref: Set(dto_entity_model.id_ref.clone()),
+        id_dto_entity_collection: Set(dto_entity_model.id_dto_entity_collection.clone()),
+    }
+}

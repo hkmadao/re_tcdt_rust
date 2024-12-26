@@ -1,54 +1,106 @@
 use crate::{
     common::{
         aq::*,
-        aq_const::{LOGIC_OPERATOR_CODE_AND, OPERATOR_CODE_IN},
     },
     dto::po::base::dd_entity_po::DdEntityPO,
     util::dyn_query::make_select_by_condition,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 use ::entity::entity::dd_entity;
 use sea_orm::*;
+use sea_orm::ActiveValue::Set;
+use sea_orm::sea_query::Expr;
+use crate::util::id_util::generate_id;
 
 pub struct DdEntityMutation;
 
 impl DdEntityMutation {
     pub async fn create(
         db: &DbConn,
-        dd_entity_po: DdEntityPO,
+        dd_entity_model: dd_entity::Model,
     ) -> Result<dd_entity::Model, TcdtServiceError> {
-        let dd_entity_save = DdEntityPO::insert(dd_entity_po, db, None)
-            .await
-            .map_err(|err| {
-                log::error!("DdEntity insert failed");
-                TcdtServiceError::build_internal_msg_error("DdEntity insert failed", err)
-            })?;
+        let mut dd_entity_active_model = dd_entity::convert_model_to_active_model(dd_entity_model);
+        let id = generate_id();
+        dd_entity_active_model.id_entity = Set(id.clone());
+        let _ = dd_entity::Entity::insert(dd_entity_active_model).exec(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "DdEntity insert failed",
+                err,
+            )
+        })?;
+
+        let dd_entity_save = dd_entity::Entity::find_by_id(id).one(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "DdEntity insert after find failed",
+                err,
+            )
+        })?
+            .ok_or(TcdtServiceError::build_internal_msg("DdEntity insert after cannot find entity"))?;
         Ok(dd_entity_save)
     }
 
     pub async fn update_by_id(
         db: &DbConn,
-        dd_entity_po: DdEntityPO,
+        dd_entity_model: dd_entity::Model,
     ) -> Result<dd_entity::Model, TcdtServiceError> {
-        let dd_entity_save = DdEntityPO::update(dd_entity_po, db, None)
+        let id = dd_entity_model.id_entity.clone();
+
+        let dd_entity_persist_model: dd_entity::ActiveModel = dd_entity::Entity::find_by_id(&id)
+            .one(db)
             .await
             .map_err(|err| {
-                log::error!("DdEntity update failed");
-                TcdtServiceError::build_internal_msg_error("DdEntity update failed", err)
-            })?;
+                TcdtServiceError::build_internal_msg_error(
+                    "DdEntity update before find_by_id failed",
+                    err,
+                )
+            })?
+            .ok_or(TcdtServiceError::build_internal_msg(&format!("DdEntity update before cannot find entity [{}].", stringify!(#entity_name_ident))))?
+            .into_active_model();
+
+        let mut dd_entity_active_model = dd_entity::convert_model_to_active_model(dd_entity_model);
+
+        let dd_entity_save = dd_entity_active_model
+            .update(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                " DdEntity update failed",
+                err,
+            )
+        })?;
+
         Ok(dd_entity_save)
     }
 
     pub async fn delete(
         db: &DbConn,
-        dd_entity_po: DdEntityPO,
+        dd_entity_model: dd_entity::Model,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let delete_result = DdEntityPO::delete(dd_entity_po, db, None)
+        let delete_result = dd_entity::Entity::delete(dd_entity_model.into_active_model())
+            .exec(db)
             .await
             .map_err(|err| {
                 log::error!("DdEntity delete failed");
-                TcdtServiceError::build_internal_msg_error("DdEntity delete failed", err)
+                TcdtServiceError::build_internal_msg_error("DdEntity delete_all failed", err)
+            })?;
+        Ok(delete_result)
+    }
+
+    pub async fn batch_delete(
+        db: &DbConn,
+        dd_entity_model_list: Vec<dd_entity::Model>,
+    ) -> Result<DeleteResult, TcdtServiceError> {
+        let id_list = dd_entity_model_list.iter().map(|dd_entity_model| {
+            dd_entity_model.id_entity.clone()
+        }).collect::<Vec<String>>();
+        let delete_result = dd_entity::Entity::delete_many()
+            .filter(Expr::col(dd_entity::Column::IdEntity).is_in(id_list))
+            .exec(db)
+            .await
+            .map_err(|err| {
+                log::error!("DdEntity batch_delete failed");
+                TcdtServiceError::build_internal_msg_error("DdEntity batch_delete failed", err)
             })?;
         Ok(delete_result)
     }
@@ -75,9 +127,9 @@ impl DdEntityQuery {
             dd_entity::Entity::find_by_id(id)
                 .one(db)
                 .await.map_err(|err| {
-                    log::error!("DdEntity find_by_id failed");
-                    TcdtServiceError::build_internal_msg_error("DdEntity find_by_id failed", err)
-                })?
+                log::error!("DdEntity find_by_id failed");
+                TcdtServiceError::build_internal_msg_error("DdEntity find_by_id failed", err)
+            })?
                 .ok_or(TcdtServiceError::build_internal_msg("DdEntity cant not find data"))?;
         Ok(dd_entity_entity)
     }
@@ -86,21 +138,11 @@ impl DdEntityQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<dd_entity::Model>, TcdtServiceError> {
-        let aq_condition = AqCondition {
-            logic_node: Some(Box::new(AqLogicNode {
-                logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
-                logic_node: None,
-                filter_nodes: vec![AqFilterNode {
-                    name: "idEntity".to_string(),
-                    operator_code: OPERATOR_CODE_IN.to_owned(),
-                    filter_params: ids
-                        .iter()
-                        .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
-                        .collect(),
-                }],
-            })),
-            orders: vec![],
-        };
+        let aq_condition = AqCondition::build_in_condition("idEntity", ids
+            .iter()
+            .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+            .collect());
+
         let sql_build = make_select_by_condition(
             dd_entity::Entity::default(),
             aq_condition,

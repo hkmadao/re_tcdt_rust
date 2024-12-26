@@ -1,13 +1,13 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
     dto::{po::base::dd_enum_po::DdEnumPO, vo::base::dd_enum_vo::DdEnumVO},
     service::base::dd_enum_service::{DdEnumMutation, DdEnumQuery},
 };
-
+use entity::entity::dd_enum;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -21,7 +21,9 @@ pub async fn add(
 
     let form = dd_enum_form.into_inner();
 
-    let dd_enum_save = DdEnumMutation::create(conn, form)
+    let dd_enum_model = DdEnumPO::convert_po_to_model(form);
+
+    let dd_enum_save = DdEnumMutation::create(conn, dd_enum_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -47,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = dd_enum_form.into_inner();
 
-    let dd_enum_save = DdEnumMutation::update_by_id(conn, form)
+    let dd_enum_model = DdEnumPO::convert_po_to_model(form);
+
+    let dd_enum_save = DdEnumMutation::update_by_id(conn, dd_enum_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -72,7 +76,32 @@ pub async fn remove(
     let conn = &data.conn;
     let form = dd_enum_form.into_inner();
 
-    let delete_result = DdEnumMutation::delete(conn, form)
+    let dd_enum_model = DdEnumPO::convert_po_to_model(form);
+
+    let delete_result = DdEnumMutation::delete(conn, dd_enum_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    Ok(HttpResponse::Ok().json(delete_result.rows_affected))
+}
+
+#[tcdt_route(batch_remove)]
+#[post("/ddEnum/batchRemove")]
+pub async fn batch_remove(
+    data: web::Data<AppState>,
+    dd_enum_form: web::Json<Vec<DdEnumPO>>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let po_list = dd_enum_form.into_inner();
+
+    let mut model_list:Vec<dd_enum::Model>  = vec![];
+    for po in po_list {
+        model_list.push(DdEnumPO::convert_po_to_model(po));
+    }
+    
+    let delete_result = DdEnumMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

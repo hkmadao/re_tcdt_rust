@@ -1,13 +1,13 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
     dto::{po::base::dto_entity_collection_po::DtoEntityCollectionPO, vo::base::dto_entity_collection_vo::DtoEntityCollectionVO},
     service::base::dto_entity_collection_service::{DtoEntityCollectionMutation, DtoEntityCollectionQuery},
 };
-
+use entity::entity::dto_entity_collection;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -21,7 +21,9 @@ pub async fn add(
 
     let form = dto_entity_collection_form.into_inner();
 
-    let dto_entity_collection_save = DtoEntityCollectionMutation::create(conn, form)
+    let dto_entity_collection_model = DtoEntityCollectionPO::convert_po_to_model(form);
+
+    let dto_entity_collection_save = DtoEntityCollectionMutation::create(conn, dto_entity_collection_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -47,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = dto_entity_collection_form.into_inner();
 
-    let dto_entity_collection_save = DtoEntityCollectionMutation::update_by_id(conn, form)
+    let dto_entity_collection_model = DtoEntityCollectionPO::convert_po_to_model(form);
+
+    let dto_entity_collection_save = DtoEntityCollectionMutation::update_by_id(conn, dto_entity_collection_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -72,7 +76,32 @@ pub async fn remove(
     let conn = &data.conn;
     let form = dto_entity_collection_form.into_inner();
 
-    let delete_result = DtoEntityCollectionMutation::delete(conn, form)
+    let dto_entity_collection_model = DtoEntityCollectionPO::convert_po_to_model(form);
+
+    let delete_result = DtoEntityCollectionMutation::delete(conn, dto_entity_collection_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    Ok(HttpResponse::Ok().json(delete_result.rows_affected))
+}
+
+#[tcdt_route(batch_remove)]
+#[post("/dtoEntityCollection/batchRemove")]
+pub async fn batch_remove(
+    data: web::Data<AppState>,
+    dto_entity_collection_form: web::Json<Vec<DtoEntityCollectionPO>>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let po_list = dto_entity_collection_form.into_inner();
+
+    let mut model_list:Vec<dto_entity_collection::Model>  = vec![];
+    for po in po_list {
+        model_list.push(DtoEntityCollectionPO::convert_po_to_model(po));
+    }
+    
+    let delete_result = DtoEntityCollectionMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

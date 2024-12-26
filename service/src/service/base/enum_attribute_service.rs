@@ -1,54 +1,106 @@
 use crate::{
     common::{
         aq::*,
-        aq_const::{LOGIC_OPERATOR_CODE_AND, OPERATOR_CODE_IN},
     },
     dto::po::base::enum_attribute_po::EnumAttributePO,
     util::dyn_query::make_select_by_condition,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 use ::entity::entity::enum_attribute;
 use sea_orm::*;
+use sea_orm::ActiveValue::Set;
+use sea_orm::sea_query::Expr;
+use crate::util::id_util::generate_id;
 
 pub struct EnumAttributeMutation;
 
 impl EnumAttributeMutation {
     pub async fn create(
         db: &DbConn,
-        enum_attribute_po: EnumAttributePO,
+        enum_attribute_model: enum_attribute::Model,
     ) -> Result<enum_attribute::Model, TcdtServiceError> {
-        let enum_attribute_save = EnumAttributePO::insert(enum_attribute_po, db, None)
-            .await
-            .map_err(|err| {
-                log::error!("EnumAttribute insert failed");
-                TcdtServiceError::build_internal_msg_error("EnumAttribute insert failed", err)
-            })?;
+        let mut enum_attribute_active_model = enum_attribute::convert_model_to_active_model(enum_attribute_model);
+        let id = generate_id();
+        enum_attribute_active_model.id_enum_attribute = Set(id.clone());
+        let _ = enum_attribute::Entity::insert(enum_attribute_active_model).exec(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "EnumAttribute insert failed",
+                err,
+            )
+        })?;
+
+        let enum_attribute_save = enum_attribute::Entity::find_by_id(id).one(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "EnumAttribute insert after find failed",
+                err,
+            )
+        })?
+            .ok_or(TcdtServiceError::build_internal_msg("EnumAttribute insert after cannot find entity"))?;
         Ok(enum_attribute_save)
     }
 
     pub async fn update_by_id(
         db: &DbConn,
-        enum_attribute_po: EnumAttributePO,
+        enum_attribute_model: enum_attribute::Model,
     ) -> Result<enum_attribute::Model, TcdtServiceError> {
-        let enum_attribute_save = EnumAttributePO::update(enum_attribute_po, db, None)
+        let id = enum_attribute_model.id_enum_attribute.clone();
+
+        let enum_attribute_persist_model: enum_attribute::ActiveModel = enum_attribute::Entity::find_by_id(&id)
+            .one(db)
             .await
             .map_err(|err| {
-                log::error!("EnumAttribute update failed");
-                TcdtServiceError::build_internal_msg_error("EnumAttribute update failed", err)
-            })?;
+                TcdtServiceError::build_internal_msg_error(
+                    "EnumAttribute update before find_by_id failed",
+                    err,
+                )
+            })?
+            .ok_or(TcdtServiceError::build_internal_msg(&format!("EnumAttribute update before cannot find entity [{}].", stringify!(#entity_name_ident))))?
+            .into_active_model();
+
+        let mut enum_attribute_active_model = enum_attribute::convert_model_to_active_model(enum_attribute_model);
+
+        let enum_attribute_save = enum_attribute_active_model
+            .update(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                " EnumAttribute update failed",
+                err,
+            )
+        })?;
+
         Ok(enum_attribute_save)
     }
 
     pub async fn delete(
         db: &DbConn,
-        enum_attribute_po: EnumAttributePO,
+        enum_attribute_model: enum_attribute::Model,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let delete_result = EnumAttributePO::delete(enum_attribute_po, db, None)
+        let delete_result = enum_attribute::Entity::delete(enum_attribute_model.into_active_model())
+            .exec(db)
             .await
             .map_err(|err| {
                 log::error!("EnumAttribute delete failed");
-                TcdtServiceError::build_internal_msg_error("EnumAttribute delete failed", err)
+                TcdtServiceError::build_internal_msg_error("EnumAttribute delete_all failed", err)
+            })?;
+        Ok(delete_result)
+    }
+
+    pub async fn batch_delete(
+        db: &DbConn,
+        enum_attribute_model_list: Vec<enum_attribute::Model>,
+    ) -> Result<DeleteResult, TcdtServiceError> {
+        let id_list = enum_attribute_model_list.iter().map(|enum_attribute_model| {
+            enum_attribute_model.id_enum_attribute.clone()
+        }).collect::<Vec<String>>();
+        let delete_result = enum_attribute::Entity::delete_many()
+            .filter(Expr::col(enum_attribute::Column::IdEnumAttribute).is_in(id_list))
+            .exec(db)
+            .await
+            .map_err(|err| {
+                log::error!("EnumAttribute batch_delete failed");
+                TcdtServiceError::build_internal_msg_error("EnumAttribute batch_delete failed", err)
             })?;
         Ok(delete_result)
     }
@@ -75,9 +127,9 @@ impl EnumAttributeQuery {
             enum_attribute::Entity::find_by_id(id)
                 .one(db)
                 .await.map_err(|err| {
-                    log::error!("EnumAttribute find_by_id failed");
-                    TcdtServiceError::build_internal_msg_error("EnumAttribute find_by_id failed", err)
-                })?
+                log::error!("EnumAttribute find_by_id failed");
+                TcdtServiceError::build_internal_msg_error("EnumAttribute find_by_id failed", err)
+            })?
                 .ok_or(TcdtServiceError::build_internal_msg("EnumAttribute cant not find data"))?;
         Ok(enum_attribute_entity)
     }
@@ -86,21 +138,11 @@ impl EnumAttributeQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<enum_attribute::Model>, TcdtServiceError> {
-        let aq_condition = AqCondition {
-            logic_node: Some(Box::new(AqLogicNode {
-                logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
-                logic_node: None,
-                filter_nodes: vec![AqFilterNode {
-                    name: "idEnumAttribute".to_string(),
-                    operator_code: OPERATOR_CODE_IN.to_owned(),
-                    filter_params: ids
-                        .iter()
-                        .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
-                        .collect(),
-                }],
-            })),
-            orders: vec![],
-        };
+        let aq_condition = AqCondition::build_in_condition("idEnumAttribute", ids
+            .iter()
+            .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+            .collect());
+
         let sql_build = make_select_by_condition(
             enum_attribute::Entity::default(),
             aq_condition,

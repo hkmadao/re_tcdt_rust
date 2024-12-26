@@ -1,54 +1,106 @@
 use crate::{
     common::{
         aq::*,
-        aq_const::{LOGIC_OPERATOR_CODE_AND, OPERATOR_CODE_IN},
     },
     dto::po::base::tree_po::TreePO,
     util::dyn_query::make_select_by_condition,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 use ::entity::entity::tree;
 use sea_orm::*;
+use sea_orm::ActiveValue::Set;
+use sea_orm::sea_query::Expr;
+use crate::util::id_util::generate_id;
 
 pub struct TreeMutation;
 
 impl TreeMutation {
     pub async fn create(
         db: &DbConn,
-        tree_po: TreePO,
+        tree_model: tree::Model,
     ) -> Result<tree::Model, TcdtServiceError> {
-        let tree_save = TreePO::insert(tree_po, db, None)
-            .await
-            .map_err(|err| {
-                log::error!("Tree insert failed");
-                TcdtServiceError::build_internal_msg_error("Tree insert failed", err)
-            })?;
+        let mut tree_active_model = tree::convert_model_to_active_model(tree_model);
+        let id = generate_id();
+        tree_active_model.id_tree = Set(id.clone());
+        let _ = tree::Entity::insert(tree_active_model).exec(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "Tree insert failed",
+                err,
+            )
+        })?;
+
+        let tree_save = tree::Entity::find_by_id(id).one(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "Tree insert after find failed",
+                err,
+            )
+        })?
+            .ok_or(TcdtServiceError::build_internal_msg("Tree insert after cannot find entity"))?;
         Ok(tree_save)
     }
 
     pub async fn update_by_id(
         db: &DbConn,
-        tree_po: TreePO,
+        tree_model: tree::Model,
     ) -> Result<tree::Model, TcdtServiceError> {
-        let tree_save = TreePO::update(tree_po, db, None)
+        let id = tree_model.id_tree.clone();
+
+        let tree_persist_model: tree::ActiveModel = tree::Entity::find_by_id(&id)
+            .one(db)
             .await
             .map_err(|err| {
-                log::error!("Tree update failed");
-                TcdtServiceError::build_internal_msg_error("Tree update failed", err)
-            })?;
+                TcdtServiceError::build_internal_msg_error(
+                    "Tree update before find_by_id failed",
+                    err,
+                )
+            })?
+            .ok_or(TcdtServiceError::build_internal_msg(&format!("Tree update before cannot find entity [{}].", stringify!(#entity_name_ident))))?
+            .into_active_model();
+
+        let mut tree_active_model = tree::convert_model_to_active_model(tree_model);
+
+        let tree_save = tree_active_model
+            .update(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                " Tree update failed",
+                err,
+            )
+        })?;
+
         Ok(tree_save)
     }
 
     pub async fn delete(
         db: &DbConn,
-        tree_po: TreePO,
+        tree_model: tree::Model,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let delete_result = TreePO::delete(tree_po, db, None)
+        let delete_result = tree::Entity::delete(tree_model.into_active_model())
+            .exec(db)
             .await
             .map_err(|err| {
                 log::error!("Tree delete failed");
-                TcdtServiceError::build_internal_msg_error("Tree delete failed", err)
+                TcdtServiceError::build_internal_msg_error("Tree delete_all failed", err)
+            })?;
+        Ok(delete_result)
+    }
+
+    pub async fn batch_delete(
+        db: &DbConn,
+        tree_model_list: Vec<tree::Model>,
+    ) -> Result<DeleteResult, TcdtServiceError> {
+        let id_list = tree_model_list.iter().map(|tree_model| {
+            tree_model.id_tree.clone()
+        }).collect::<Vec<String>>();
+        let delete_result = tree::Entity::delete_many()
+            .filter(Expr::col(tree::Column::IdTree).is_in(id_list))
+            .exec(db)
+            .await
+            .map_err(|err| {
+                log::error!("Tree batch_delete failed");
+                TcdtServiceError::build_internal_msg_error("Tree batch_delete failed", err)
             })?;
         Ok(delete_result)
     }
@@ -75,9 +127,9 @@ impl TreeQuery {
             tree::Entity::find_by_id(id)
                 .one(db)
                 .await.map_err(|err| {
-                    log::error!("Tree find_by_id failed");
-                    TcdtServiceError::build_internal_msg_error("Tree find_by_id failed", err)
-                })?
+                log::error!("Tree find_by_id failed");
+                TcdtServiceError::build_internal_msg_error("Tree find_by_id failed", err)
+            })?
                 .ok_or(TcdtServiceError::build_internal_msg("Tree cant not find data"))?;
         Ok(tree_entity)
     }
@@ -86,21 +138,11 @@ impl TreeQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<tree::Model>, TcdtServiceError> {
-        let aq_condition = AqCondition {
-            logic_node: Some(Box::new(AqLogicNode {
-                logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
-                logic_node: None,
-                filter_nodes: vec![AqFilterNode {
-                    name: "idTree".to_string(),
-                    operator_code: OPERATOR_CODE_IN.to_owned(),
-                    filter_params: ids
-                        .iter()
-                        .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
-                        .collect(),
-                }],
-            })),
-            orders: vec![],
-        };
+        let aq_condition = AqCondition::build_in_condition("idTree", ids
+            .iter()
+            .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+            .collect());
+
         let sql_build = make_select_by_condition(
             tree::Entity::default(),
             aq_condition,

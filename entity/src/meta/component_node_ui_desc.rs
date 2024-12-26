@@ -68,7 +68,7 @@ pub fn get_component_node_ui_desc() ->  EntityDesc {
         name: "component".to_owned(),
         display_name: "组件".to_owned(),
         data_type: "InternalRef".to_owned(),
-        inner_attribute_name: "id_component".to_owned(),
+        inner_attribute_name: "idComponent".to_owned(),
         out_entity_name: "Component".to_owned(),
         out_entity_pk_attribute_name: "idComponent".to_owned(),
         out_entity_reversal_attribute_name: "componentNodeUis".to_owned(),

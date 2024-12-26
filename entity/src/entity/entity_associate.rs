@@ -1,10 +1,11 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "dd_entity_associate")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "关系连线")]
+    #[sea_orm(primary_key, comment = "实体连线id")]
     pub id_entity_associate: String,
     /// 两个实体多条连线时，连线的序号:
     #[sea_orm(comment = "两个实体多条连线时，连线的序号")]
@@ -116,3 +117,25 @@ impl Linked for ComponentEntityAssociatesLinked {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model(entity_associate_model: Model) -> ActiveModel {
+    ActiveModel {
+        id_entity_associate: Set(entity_associate_model.id_entity_associate.clone()),
+        group_order: Set(entity_associate_model.group_order.clone()),
+        up_associate_type: Set(entity_associate_model.up_associate_type.clone()),
+        down_associate_type: Set(entity_associate_model.down_associate_type.clone()),
+        down_attribute_name: Set(entity_associate_model.down_attribute_name.clone()),
+        down_attribute_display_name: Set(entity_associate_model.down_attribute_display_name.clone()),
+        ref_attribute_name: Set(entity_associate_model.ref_attribute_name.clone()),
+        ref_attribute_display_name: Set(entity_associate_model.ref_attribute_display_name.clone()),
+        fk_column_name: Set(entity_associate_model.fk_column_name.clone()),
+        fk_attribute_name: Set(entity_associate_model.fk_attribute_name.clone()),
+        fk_attribute_display_name: Set(entity_associate_model.fk_attribute_display_name.clone()),
+        fg_foreign_key: Set(entity_associate_model.fg_foreign_key.clone()),
+        down_order_str: Set(entity_associate_model.down_order_str.clone()),
+        down_batch_size: Set(entity_associate_model.down_batch_size.clone()),
+        id_entity_collection: Set(entity_associate_model.id_entity_collection.clone()),
+        id_up: Set(entity_associate_model.id_up.clone()),
+        id_down: Set(entity_associate_model.id_down.clone()),
+    }
+}

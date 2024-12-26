@@ -1,68 +1,101 @@
 use crate::{
     common::{
         aq::*,
-        aq_const::{LOGIC_OPERATOR_CODE_AND, OPERATOR_CODE_IN},
     },
     dto::po::base::user_role_po::UserRolePO,
     util::dyn_query::make_select_by_condition,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 use ::entity::entity::user_role;
 use sea_orm::*;
+use sea_orm::ActiveValue::Set;
+use sea_orm::sea_query::Expr;
+use crate::util::id_util::generate_id;
 
 pub struct UserRoleMutation;
 
 impl UserRoleMutation {
     pub async fn create(
         db: &DbConn,
-        user_role_po: UserRolePO,
+        user_role_model: user_role::Model,
     ) -> Result<user_role::Model, TcdtServiceError> {
-        let user_role_save = UserRolePO::insert(user_role_po, db, None)
-            .await
-            .map_err(|err| {
-                log::error!("UserRole insert failed");
-                TcdtServiceError::build_internal_msg_error("UserRole insert failed", err)
-            })?;
+        let mut user_role_active_model = user_role::convert_model_to_active_model(user_role_model);
+        let id = generate_id();
+        user_role_active_model.id_sys_user_role = Set(id.clone());
+        let _ = user_role::Entity::insert(user_role_active_model).exec(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "UserRole insert failed",
+                err,
+            )
+        })?;
+
+        let user_role_save = user_role::Entity::find_by_id(id).one(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "UserRole insert after find failed",
+                err,
+            )
+        })?
+            .ok_or(TcdtServiceError::build_internal_msg("UserRole insert after cannot find entity"))?;
         Ok(user_role_save)
     }
 
     pub async fn update_by_id(
         db: &DbConn,
-        user_role_po: UserRolePO,
+        user_role_model: user_role::Model,
     ) -> Result<user_role::Model, TcdtServiceError> {
-        let user_role_save = UserRolePO::update(user_role_po, db, None)
+        let id = user_role_model.id_sys_user_role.clone();
+
+        let user_role_persist_model: user_role::ActiveModel = user_role::Entity::find_by_id(&id)
+            .one(db)
             .await
             .map_err(|err| {
-                log::error!("UserRole update failed");
-                TcdtServiceError::build_internal_msg_error("UserRole update failed", err)
-            })?;
+                TcdtServiceError::build_internal_msg_error(
+                    "UserRole update before find_by_id failed",
+                    err,
+                )
+            })?
+            .ok_or(TcdtServiceError::build_internal_msg(&format!("UserRole update before cannot find entity [{}].", stringify!(#entity_name_ident))))?
+            .into_active_model();
+
+        let mut user_role_active_model = user_role::convert_model_to_active_model(user_role_model);
+
+        let user_role_save = user_role_active_model
+            .update(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                " UserRole update failed",
+                err,
+            )
+        })?;
+
         Ok(user_role_save)
     }
 
     pub async fn delete(
         db: &DbConn,
-        user_role_po: UserRolePO,
+        user_role_model: user_role::Model,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let delete_result = UserRolePO::delete(user_role_po, db, None)
+        let delete_result = user_role::Entity::delete(user_role_model.into_active_model())
+            .exec(db)
             .await
             .map_err(|err| {
                 log::error!("UserRole delete failed");
-                TcdtServiceError::build_internal_msg_error("UserRole delete failed", err)
+                TcdtServiceError::build_internal_msg_error("UserRole delete_all failed", err)
             })?;
         Ok(delete_result)
     }
 
     pub async fn batch_delete(
         db: &DbConn,
-        user_role_po_list: Vec<UserRolePO>,
+        user_role_model_list: Vec<user_role::Model>,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let id_list = user_role_po_list
-            .iter()
-            .map(|po| po.id_sys_user_role.clone())
-            .collect::<Vec<_>>();
+        let id_list = user_role_model_list.iter().map(|user_role_model| {
+            user_role_model.id_sys_user_role.clone()
+        }).collect::<Vec<String>>();
         let delete_result = user_role::Entity::delete_many()
-            .filter(user_role::Column::IdSysUserRole.is_in(id_list))
+            .filter(Expr::col(user_role::Column::IdSysUserRole).is_in(id_list))
             .exec(db)
             .await
             .map_err(|err| {
@@ -94,9 +127,9 @@ impl UserRoleQuery {
             user_role::Entity::find_by_id(id)
                 .one(db)
                 .await.map_err(|err| {
-                    log::error!("UserRole find_by_id failed");
-                    TcdtServiceError::build_internal_msg_error("UserRole find_by_id failed", err)
-                })?
+                log::error!("UserRole find_by_id failed");
+                TcdtServiceError::build_internal_msg_error("UserRole find_by_id failed", err)
+            })?
                 .ok_or(TcdtServiceError::build_internal_msg("UserRole cant not find data"))?;
         Ok(user_role_entity)
     }
@@ -105,21 +138,11 @@ impl UserRoleQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<user_role::Model>, TcdtServiceError> {
-        let aq_condition = AqCondition {
-            logic_node: Some(Box::new(AqLogicNode {
-                logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
-                logic_node: None,
-                filter_nodes: vec![AqFilterNode {
-                    name: "idSysUserRole".to_string(),
-                    operator_code: OPERATOR_CODE_IN.to_owned(),
-                    filter_params: ids
-                        .iter()
-                        .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
-                        .collect(),
-                }],
-            })),
-            orders: vec![],
-        };
+        let aq_condition = AqCondition::build_in_condition("idSysUserRole", ids
+            .iter()
+            .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+            .collect());
+
         let sql_build = make_select_by_condition(
             user_role::Entity::default(),
             aq_condition,

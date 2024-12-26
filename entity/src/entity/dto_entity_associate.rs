@@ -1,10 +1,11 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "dto_entity_associate")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "DTO关系连线")]
+    #[sea_orm(primary_key, comment = "DTO关系连线id")]
     pub id_dto_entity_associate: String,
     /// 两个实体多条连线时，连线的序号:
     #[sea_orm(comment = "两个实体多条连线时，连线的序号")]
@@ -93,3 +94,22 @@ impl Linked for DownEntityLinked {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model(dto_entity_associate_model: Model) -> ActiveModel {
+    ActiveModel {
+        id_dto_entity_associate: Set(dto_entity_associate_model.id_dto_entity_associate.clone()),
+        group_order: Set(dto_entity_associate_model.group_order.clone()),
+        up_associate_type: Set(dto_entity_associate_model.up_associate_type.clone()),
+        down_associate_type: Set(dto_entity_associate_model.down_associate_type.clone()),
+        down_attribute_name: Set(dto_entity_associate_model.down_attribute_name.clone()),
+        down_attribute_display_name: Set(dto_entity_associate_model.down_attribute_display_name.clone()),
+        ref_attribute_name: Set(dto_entity_associate_model.ref_attribute_name.clone()),
+        ref_attribute_display_name: Set(dto_entity_associate_model.ref_attribute_display_name.clone()),
+        fk_column_name: Set(dto_entity_associate_model.fk_column_name.clone()),
+        fk_attribute_name: Set(dto_entity_associate_model.fk_attribute_name.clone()),
+        fk_attribute_display_name: Set(dto_entity_associate_model.fk_attribute_display_name.clone()),
+        id_dto_entity_collection: Set(dto_entity_associate_model.id_dto_entity_collection.clone()),
+        id_up: Set(dto_entity_associate_model.id_up.clone()),
+        id_down: Set(dto_entity_associate_model.id_down.clone()),
+    }
+}

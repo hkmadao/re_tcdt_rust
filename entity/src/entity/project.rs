@@ -1,10 +1,11 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "dd_project")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "项目")]
+    #[sea_orm(primary_key, comment = "项目id")]
     pub id_project: String,
     /// 项目编号:
     #[sea_orm(comment = "项目编号")]
@@ -72,3 +73,15 @@ impl Linked for DataTypesLinked {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model(project_model: Model) -> ActiveModel {
+    ActiveModel {
+        id_project: Set(project_model.id_project.clone()),
+        code: Set(project_model.code.clone()),
+        display_name: Set(project_model.display_name.clone()),
+        path: Set(project_model.path.clone()),
+        template_code: Set(project_model.template_code.clone()),
+        note: Set(project_model.note.clone()),
+        file_name_type: Set(project_model.file_name_type.clone()),
+    }
+}

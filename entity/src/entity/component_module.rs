@@ -1,10 +1,11 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "dd_component_module")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "组件模块")]
+    #[sea_orm(primary_key, comment = "组件模块id")]
     pub id_component_module: String,
     /// 显示名称:
     #[sea_orm(comment = "显示名称")]
@@ -52,3 +53,13 @@ impl Linked for ComponentsLinked {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model(component_module_model: Model) -> ActiveModel {
+    ActiveModel {
+        id_component_module: Set(component_module_model.id_component_module.clone()),
+        display_name: Set(component_module_model.display_name.clone()),
+        path: Set(component_module_model.path.clone()),
+        name: Set(component_module_model.name.clone()),
+        id_sub_project: Set(component_module_model.id_sub_project.clone()),
+    }
+}

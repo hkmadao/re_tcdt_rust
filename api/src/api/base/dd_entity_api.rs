@@ -1,13 +1,13 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
     dto::{po::base::dd_entity_po::DdEntityPO, vo::base::dd_entity_vo::DdEntityVO},
     service::base::dd_entity_service::{DdEntityMutation, DdEntityQuery},
 };
-
+use entity::entity::dd_entity;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -21,7 +21,9 @@ pub async fn add(
 
     let form = dd_entity_form.into_inner();
 
-    let dd_entity_save = DdEntityMutation::create(conn, form)
+    let dd_entity_model = DdEntityPO::convert_po_to_model(form);
+
+    let dd_entity_save = DdEntityMutation::create(conn, dd_entity_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -47,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = dd_entity_form.into_inner();
 
-    let dd_entity_save = DdEntityMutation::update_by_id(conn, form)
+    let dd_entity_model = DdEntityPO::convert_po_to_model(form);
+
+    let dd_entity_save = DdEntityMutation::update_by_id(conn, dd_entity_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -72,7 +76,32 @@ pub async fn remove(
     let conn = &data.conn;
     let form = dd_entity_form.into_inner();
 
-    let delete_result = DdEntityMutation::delete(conn, form)
+    let dd_entity_model = DdEntityPO::convert_po_to_model(form);
+
+    let delete_result = DdEntityMutation::delete(conn, dd_entity_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    Ok(HttpResponse::Ok().json(delete_result.rows_affected))
+}
+
+#[tcdt_route(batch_remove)]
+#[post("/ddEntity/batchRemove")]
+pub async fn batch_remove(
+    data: web::Data<AppState>,
+    dd_entity_form: web::Json<Vec<DdEntityPO>>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let po_list = dd_entity_form.into_inner();
+
+    let mut model_list:Vec<dd_entity::Model>  = vec![];
+    for po in po_list {
+        model_list.push(DdEntityPO::convert_po_to_model(po));
+    }
+    
+    let delete_result = DdEntityMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

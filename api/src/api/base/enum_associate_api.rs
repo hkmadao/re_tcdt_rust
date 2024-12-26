@@ -1,13 +1,13 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
     dto::{po::base::enum_associate_po::EnumAssociatePO, vo::base::enum_associate_vo::EnumAssociateVO},
     service::base::enum_associate_service::{EnumAssociateMutation, EnumAssociateQuery},
 };
-
+use entity::entity::enum_associate;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -21,7 +21,9 @@ pub async fn add(
 
     let form = enum_associate_form.into_inner();
 
-    let enum_associate_save = EnumAssociateMutation::create(conn, form)
+    let enum_associate_model = EnumAssociatePO::convert_po_to_model(form);
+
+    let enum_associate_save = EnumAssociateMutation::create(conn, enum_associate_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -47,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = enum_associate_form.into_inner();
 
-    let enum_associate_save = EnumAssociateMutation::update_by_id(conn, form)
+    let enum_associate_model = EnumAssociatePO::convert_po_to_model(form);
+
+    let enum_associate_save = EnumAssociateMutation::update_by_id(conn, enum_associate_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -72,7 +76,32 @@ pub async fn remove(
     let conn = &data.conn;
     let form = enum_associate_form.into_inner();
 
-    let delete_result = EnumAssociateMutation::delete(conn, form)
+    let enum_associate_model = EnumAssociatePO::convert_po_to_model(form);
+
+    let delete_result = EnumAssociateMutation::delete(conn, enum_associate_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    Ok(HttpResponse::Ok().json(delete_result.rows_affected))
+}
+
+#[tcdt_route(batch_remove)]
+#[post("/enumAssociate/batchRemove")]
+pub async fn batch_remove(
+    data: web::Data<AppState>,
+    enum_associate_form: web::Json<Vec<EnumAssociatePO>>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let po_list = enum_associate_form.into_inner();
+
+    let mut model_list:Vec<enum_associate::Model>  = vec![];
+    for po in po_list {
+        model_list.push(EnumAssociatePO::convert_po_to_model(po));
+    }
+    
+    let delete_result = EnumAssociateMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

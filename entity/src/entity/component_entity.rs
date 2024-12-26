@@ -1,10 +1,11 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "dd_component_entity")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "组件实体")]
+    #[sea_orm(primary_key, comment = "组件实体id")]
     pub id_component_entity: String,
     /// 虚拟实体标志
     #[sea_orm(comment = "虚拟实体标志")]
@@ -77,3 +78,12 @@ impl Linked for ExtAttributesLinked {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model(component_entity_model: Model) -> ActiveModel {
+    ActiveModel {
+        id_component_entity: Set(component_entity_model.id_component_entity.clone()),
+        fg_virtual: Set(component_entity_model.fg_virtual.clone()),
+        id_entity: Set(component_entity_model.id_entity.clone()),
+        id_component: Set(component_entity_model.id_component.clone()),
+    }
+}

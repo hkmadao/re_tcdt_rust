@@ -1,54 +1,106 @@
 use crate::{
     common::{
         aq::*,
-        aq_const::{LOGIC_OPERATOR_CODE_AND, OPERATOR_CODE_IN},
     },
     dto::po::base::query_po::QueryPO,
     util::dyn_query::make_select_by_condition,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 use ::entity::entity::query;
 use sea_orm::*;
+use sea_orm::ActiveValue::Set;
+use sea_orm::sea_query::Expr;
+use crate::util::id_util::generate_id;
 
 pub struct QueryMutation;
 
 impl QueryMutation {
     pub async fn create(
         db: &DbConn,
-        query_po: QueryPO,
+        query_model: query::Model,
     ) -> Result<query::Model, TcdtServiceError> {
-        let query_save = QueryPO::insert(query_po, db, None)
-            .await
-            .map_err(|err| {
-                log::error!("Query insert failed");
-                TcdtServiceError::build_internal_msg_error("Query insert failed", err)
-            })?;
+        let mut query_active_model = query::convert_model_to_active_model(query_model);
+        let id = generate_id();
+        query_active_model.id_query = Set(id.clone());
+        let _ = query::Entity::insert(query_active_model).exec(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "Query insert failed",
+                err,
+            )
+        })?;
+
+        let query_save = query::Entity::find_by_id(id).one(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "Query insert after find failed",
+                err,
+            )
+        })?
+            .ok_or(TcdtServiceError::build_internal_msg("Query insert after cannot find entity"))?;
         Ok(query_save)
     }
 
     pub async fn update_by_id(
         db: &DbConn,
-        query_po: QueryPO,
+        query_model: query::Model,
     ) -> Result<query::Model, TcdtServiceError> {
-        let query_save = QueryPO::update(query_po, db, None)
+        let id = query_model.id_query.clone();
+
+        let query_persist_model: query::ActiveModel = query::Entity::find_by_id(&id)
+            .one(db)
             .await
             .map_err(|err| {
-                log::error!("Query update failed");
-                TcdtServiceError::build_internal_msg_error("Query update failed", err)
-            })?;
+                TcdtServiceError::build_internal_msg_error(
+                    "Query update before find_by_id failed",
+                    err,
+                )
+            })?
+            .ok_or(TcdtServiceError::build_internal_msg(&format!("Query update before cannot find entity [{}].", stringify!(#entity_name_ident))))?
+            .into_active_model();
+
+        let mut query_active_model = query::convert_model_to_active_model(query_model);
+
+        let query_save = query_active_model
+            .update(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                " Query update failed",
+                err,
+            )
+        })?;
+
         Ok(query_save)
     }
 
     pub async fn delete(
         db: &DbConn,
-        query_po: QueryPO,
+        query_model: query::Model,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let delete_result = QueryPO::delete(query_po, db, None)
+        let delete_result = query::Entity::delete(query_model.into_active_model())
+            .exec(db)
             .await
             .map_err(|err| {
                 log::error!("Query delete failed");
-                TcdtServiceError::build_internal_msg_error("Query delete failed", err)
+                TcdtServiceError::build_internal_msg_error("Query delete_all failed", err)
+            })?;
+        Ok(delete_result)
+    }
+
+    pub async fn batch_delete(
+        db: &DbConn,
+        query_model_list: Vec<query::Model>,
+    ) -> Result<DeleteResult, TcdtServiceError> {
+        let id_list = query_model_list.iter().map(|query_model| {
+            query_model.id_query.clone()
+        }).collect::<Vec<String>>();
+        let delete_result = query::Entity::delete_many()
+            .filter(Expr::col(query::Column::IdQuery).is_in(id_list))
+            .exec(db)
+            .await
+            .map_err(|err| {
+                log::error!("Query batch_delete failed");
+                TcdtServiceError::build_internal_msg_error("Query batch_delete failed", err)
             })?;
         Ok(delete_result)
     }
@@ -75,9 +127,9 @@ impl QueryQuery {
             query::Entity::find_by_id(id)
                 .one(db)
                 .await.map_err(|err| {
-                    log::error!("Query find_by_id failed");
-                    TcdtServiceError::build_internal_msg_error("Query find_by_id failed", err)
-                })?
+                log::error!("Query find_by_id failed");
+                TcdtServiceError::build_internal_msg_error("Query find_by_id failed", err)
+            })?
                 .ok_or(TcdtServiceError::build_internal_msg("Query cant not find data"))?;
         Ok(query_entity)
     }
@@ -86,21 +138,11 @@ impl QueryQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<query::Model>, TcdtServiceError> {
-        let aq_condition = AqCondition {
-            logic_node: Some(Box::new(AqLogicNode {
-                logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
-                logic_node: None,
-                filter_nodes: vec![AqFilterNode {
-                    name: "idQuery".to_string(),
-                    operator_code: OPERATOR_CODE_IN.to_owned(),
-                    filter_params: ids
-                        .iter()
-                        .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
-                        .collect(),
-                }],
-            })),
-            orders: vec![],
-        };
+        let aq_condition = AqCondition::build_in_condition("idQuery", ids
+            .iter()
+            .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+            .collect());
+
         let sql_build = make_select_by_condition(
             query::Entity::default(),
             aq_condition,

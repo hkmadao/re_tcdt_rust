@@ -1,13 +1,13 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
     dto::{po::base::component_entity_po::ComponentEntityPO, vo::base::component_entity_vo::ComponentEntityVO},
     service::base::component_entity_service::{ComponentEntityMutation, ComponentEntityQuery},
 };
-
+use entity::entity::component_entity;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -21,7 +21,9 @@ pub async fn add(
 
     let form = component_entity_form.into_inner();
 
-    let component_entity_save = ComponentEntityMutation::create(conn, form)
+    let component_entity_model = ComponentEntityPO::convert_po_to_model(form);
+
+    let component_entity_save = ComponentEntityMutation::create(conn, component_entity_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -47,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = component_entity_form.into_inner();
 
-    let component_entity_save = ComponentEntityMutation::update_by_id(conn, form)
+    let component_entity_model = ComponentEntityPO::convert_po_to_model(form);
+
+    let component_entity_save = ComponentEntityMutation::update_by_id(conn, component_entity_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -72,7 +76,32 @@ pub async fn remove(
     let conn = &data.conn;
     let form = component_entity_form.into_inner();
 
-    let delete_result = ComponentEntityMutation::delete(conn, form)
+    let component_entity_model = ComponentEntityPO::convert_po_to_model(form);
+
+    let delete_result = ComponentEntityMutation::delete(conn, component_entity_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    Ok(HttpResponse::Ok().json(delete_result.rows_affected))
+}
+
+#[tcdt_route(batch_remove)]
+#[post("/componentEntity/batchRemove")]
+pub async fn batch_remove(
+    data: web::Data<AppState>,
+    component_entity_form: web::Json<Vec<ComponentEntityPO>>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let po_list = component_entity_form.into_inner();
+
+    let mut model_list:Vec<component_entity::Model>  = vec![];
+    for po in po_list {
+        model_list.push(ComponentEntityPO::convert_po_to_model(po));
+    }
+    
+    let delete_result = ComponentEntityMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

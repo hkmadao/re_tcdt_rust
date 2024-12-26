@@ -95,7 +95,7 @@ impl {{ rootInfo.pascalCaseName }}Mutation {
             {{ rootInfo.snakeCaseName }}_model.{{ rootInfo.pkAttributeInfo.snakeCaseName }}.clone()
         }).collect::<Vec<String>>();
         let delete_result = {{ rootInfo.snakeCaseName }}::Entity::delete_many()
-            .filter(Expr::col({{ rootInfo.snakeCaseName }}::Column::Id{{ rootInfo.pascalCaseName }}).is_in(id_list))
+            .filter(Expr::col({{ rootInfo.snakeCaseName }}::Column::{{ rootInfo.pkAttributeInfo.pascalCaseName }}).is_in(id_list))
             .exec(db)
             .await
             .map_err(|err| {

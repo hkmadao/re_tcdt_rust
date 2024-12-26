@@ -1,68 +1,101 @@
 use crate::{
     common::{
         aq::*,
-        aq_const::{LOGIC_OPERATOR_CODE_AND, OPERATOR_CODE_IN},
     },
     dto::po::base::common_attribute_po::CommonAttributePO,
     util::dyn_query::make_select_by_condition,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 use ::entity::entity::common_attribute;
 use sea_orm::*;
+use sea_orm::ActiveValue::Set;
+use sea_orm::sea_query::Expr;
+use crate::util::id_util::generate_id;
 
 pub struct CommonAttributeMutation;
 
 impl CommonAttributeMutation {
     pub async fn create(
         db: &DbConn,
-        common_attribute_po: CommonAttributePO,
+        common_attribute_model: common_attribute::Model,
     ) -> Result<common_attribute::Model, TcdtServiceError> {
-        let common_attribute_save = CommonAttributePO::insert(common_attribute_po, db, None)
-            .await
-            .map_err(|err| {
-                log::error!("CommonAttribute insert failed");
-                TcdtServiceError::build_internal_msg_error("CommonAttribute insert failed", err)
-            })?;
+        let mut common_attribute_active_model = common_attribute::convert_model_to_active_model(common_attribute_model);
+        let id = generate_id();
+        common_attribute_active_model.id_common_attribute = Set(id.clone());
+        let _ = common_attribute::Entity::insert(common_attribute_active_model).exec(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "CommonAttribute insert failed",
+                err,
+            )
+        })?;
+
+        let common_attribute_save = common_attribute::Entity::find_by_id(id).one(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "CommonAttribute insert after find failed",
+                err,
+            )
+        })?
+            .ok_or(TcdtServiceError::build_internal_msg("CommonAttribute insert after cannot find entity"))?;
         Ok(common_attribute_save)
     }
 
     pub async fn update_by_id(
         db: &DbConn,
-        common_attribute_po: CommonAttributePO,
+        common_attribute_model: common_attribute::Model,
     ) -> Result<common_attribute::Model, TcdtServiceError> {
-        let common_attribute_save = CommonAttributePO::update(common_attribute_po, db, None)
+        let id = common_attribute_model.id_common_attribute.clone();
+
+        let common_attribute_persist_model: common_attribute::ActiveModel = common_attribute::Entity::find_by_id(&id)
+            .one(db)
             .await
             .map_err(|err| {
-                log::error!("CommonAttribute update failed");
-                TcdtServiceError::build_internal_msg_error("CommonAttribute update failed", err)
-            })?;
+                TcdtServiceError::build_internal_msg_error(
+                    "CommonAttribute update before find_by_id failed",
+                    err,
+                )
+            })?
+            .ok_or(TcdtServiceError::build_internal_msg(&format!("CommonAttribute update before cannot find entity [{}].", stringify!(#entity_name_ident))))?
+            .into_active_model();
+
+        let mut common_attribute_active_model = common_attribute::convert_model_to_active_model(common_attribute_model);
+
+        let common_attribute_save = common_attribute_active_model
+            .update(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                " CommonAttribute update failed",
+                err,
+            )
+        })?;
+
         Ok(common_attribute_save)
     }
 
     pub async fn delete(
         db: &DbConn,
-        common_attribute_po: CommonAttributePO,
+        common_attribute_model: common_attribute::Model,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let delete_result = CommonAttributePO::delete(common_attribute_po, db, None)
+        let delete_result = common_attribute::Entity::delete(common_attribute_model.into_active_model())
+            .exec(db)
             .await
             .map_err(|err| {
                 log::error!("CommonAttribute delete failed");
-                TcdtServiceError::build_internal_msg_error("CommonAttribute delete failed", err)
+                TcdtServiceError::build_internal_msg_error("CommonAttribute delete_all failed", err)
             })?;
         Ok(delete_result)
     }
 
     pub async fn batch_delete(
         db: &DbConn,
-        data_type_po_list: Vec<CommonAttributePO>,
+        common_attribute_model_list: Vec<common_attribute::Model>,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let id_list = data_type_po_list
-            .iter()
-            .map(|po| po.id_data_type.clone())
-            .collect::<Vec<_>>();
+        let id_list = common_attribute_model_list.iter().map(|common_attribute_model| {
+            common_attribute_model.id_common_attribute.clone()
+        }).collect::<Vec<String>>();
         let delete_result = common_attribute::Entity::delete_many()
-            .filter(common_attribute::Column::IdCommonAttribute.is_in(id_list))
+            .filter(Expr::col(common_attribute::Column::IdCommonAttribute).is_in(id_list))
             .exec(db)
             .await
             .map_err(|err| {
@@ -94,9 +127,9 @@ impl CommonAttributeQuery {
             common_attribute::Entity::find_by_id(id)
                 .one(db)
                 .await.map_err(|err| {
-                    log::error!("CommonAttribute find_by_id failed");
-                    TcdtServiceError::build_internal_msg_error("CommonAttribute find_by_id failed", err)
-                })?
+                log::error!("CommonAttribute find_by_id failed");
+                TcdtServiceError::build_internal_msg_error("CommonAttribute find_by_id failed", err)
+            })?
                 .ok_or(TcdtServiceError::build_internal_msg("CommonAttribute cant not find data"))?;
         Ok(common_attribute_entity)
     }
@@ -105,21 +138,11 @@ impl CommonAttributeQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<common_attribute::Model>, TcdtServiceError> {
-        let aq_condition = AqCondition {
-            logic_node: Some(Box::new(AqLogicNode {
-                logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
-                logic_node: None,
-                filter_nodes: vec![AqFilterNode {
-                    name: "idCommonAttribute".to_string(),
-                    operator_code: OPERATOR_CODE_IN.to_owned(),
-                    filter_params: ids
-                        .iter()
-                        .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
-                        .collect(),
-                }],
-            })),
-            orders: vec![],
-        };
+        let aq_condition = AqCondition::build_in_condition("idCommonAttribute", ids
+            .iter()
+            .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+            .collect());
+
         let sql_build = make_select_by_condition(
             common_attribute::Entity::default(),
             aq_condition,

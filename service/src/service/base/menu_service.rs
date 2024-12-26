@@ -1,68 +1,101 @@
 use crate::{
     common::{
         aq::*,
-        aq_const::{LOGIC_OPERATOR_CODE_AND, OPERATOR_CODE_IN},
     },
     dto::po::base::menu_po::MenuPO,
     util::dyn_query::make_select_by_condition,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 use ::entity::entity::menu;
 use sea_orm::*;
+use sea_orm::ActiveValue::Set;
+use sea_orm::sea_query::Expr;
+use crate::util::id_util::generate_id;
 
 pub struct MenuMutation;
 
 impl MenuMutation {
     pub async fn create(
         db: &DbConn,
-        menu_po: MenuPO,
+        menu_model: menu::Model,
     ) -> Result<menu::Model, TcdtServiceError> {
-        let menu_save = MenuPO::insert(menu_po, db, None)
-            .await
-            .map_err(|err| {
-                log::error!("Menu insert failed");
-                TcdtServiceError::build_internal_msg_error("Menu insert failed", err)
-            })?;
+        let mut menu_active_model = menu::convert_model_to_active_model(menu_model);
+        let id = generate_id();
+        menu_active_model.id_menu = Set(id.clone());
+        let _ = menu::Entity::insert(menu_active_model).exec(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "Menu insert failed",
+                err,
+            )
+        })?;
+
+        let menu_save = menu::Entity::find_by_id(id).one(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "Menu insert after find failed",
+                err,
+            )
+        })?
+            .ok_or(TcdtServiceError::build_internal_msg("Menu insert after cannot find entity"))?;
         Ok(menu_save)
     }
 
     pub async fn update_by_id(
         db: &DbConn,
-        menu_po: MenuPO,
+        menu_model: menu::Model,
     ) -> Result<menu::Model, TcdtServiceError> {
-        let menu_save = MenuPO::update(menu_po, db, None)
+        let id = menu_model.id_menu.clone();
+
+        let menu_persist_model: menu::ActiveModel = menu::Entity::find_by_id(&id)
+            .one(db)
             .await
             .map_err(|err| {
-                log::error!("Menu update failed");
-                TcdtServiceError::build_internal_msg_error("Menu update failed", err)
-            })?;
+                TcdtServiceError::build_internal_msg_error(
+                    "Menu update before find_by_id failed",
+                    err,
+                )
+            })?
+            .ok_or(TcdtServiceError::build_internal_msg(&format!("Menu update before cannot find entity [{}].", stringify!(#entity_name_ident))))?
+            .into_active_model();
+
+        let mut menu_active_model = menu::convert_model_to_active_model(menu_model);
+
+        let menu_save = menu_active_model
+            .update(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                " Menu update failed",
+                err,
+            )
+        })?;
+
         Ok(menu_save)
     }
 
     pub async fn delete(
         db: &DbConn,
-        menu_po: MenuPO,
+        menu_model: menu::Model,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let delete_result = MenuPO::delete(menu_po, db, None)
+        let delete_result = menu::Entity::delete(menu_model.into_active_model())
+            .exec(db)
             .await
             .map_err(|err| {
                 log::error!("Menu delete failed");
-                TcdtServiceError::build_internal_msg_error("Menu delete failed", err)
+                TcdtServiceError::build_internal_msg_error("Menu delete_all failed", err)
             })?;
         Ok(delete_result)
     }
 
     pub async fn batch_delete(
         db: &DbConn,
-        menu_po_list: Vec<MenuPO>,
+        menu_model_list: Vec<menu::Model>,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let id_list = menu_po_list
-            .iter()
-            .map(|po| po.id_menu.clone())
-            .collect::<Vec<_>>();
+        let id_list = menu_model_list.iter().map(|menu_model| {
+            menu_model.id_menu.clone()
+        }).collect::<Vec<String>>();
         let delete_result = menu::Entity::delete_many()
-            .filter(menu::Column::IdMenu.is_in(id_list))
+            .filter(Expr::col(menu::Column::IdMenu).is_in(id_list))
             .exec(db)
             .await
             .map_err(|err| {
@@ -94,9 +127,9 @@ impl MenuQuery {
             menu::Entity::find_by_id(id)
                 .one(db)
                 .await.map_err(|err| {
-                    log::error!("Menu find_by_id failed");
-                    TcdtServiceError::build_internal_msg_error("Menu find_by_id failed", err)
-                })?
+                log::error!("Menu find_by_id failed");
+                TcdtServiceError::build_internal_msg_error("Menu find_by_id failed", err)
+            })?
                 .ok_or(TcdtServiceError::build_internal_msg("Menu cant not find data"))?;
         Ok(menu_entity)
     }
@@ -105,21 +138,11 @@ impl MenuQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<menu::Model>, TcdtServiceError> {
-        let aq_condition = AqCondition {
-            logic_node: Some(Box::new(AqLogicNode {
-                logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
-                logic_node: None,
-                filter_nodes: vec![AqFilterNode {
-                    name: "idMenu".to_string(),
-                    operator_code: OPERATOR_CODE_IN.to_owned(),
-                    filter_params: ids
-                        .iter()
-                        .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
-                        .collect(),
-                }],
-            })),
-            orders: vec![],
-        };
+        let aq_condition = AqCondition::build_in_condition("idMenu", ids
+            .iter()
+            .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+            .collect());
+
         let sql_build = make_select_by_condition(
             menu::Entity::default(),
             aq_condition,

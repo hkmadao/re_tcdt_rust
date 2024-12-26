@@ -1,10 +1,11 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "dto_enum_associate")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "DTO实体枚举关系")]
+    #[sea_orm(primary_key, comment = "DTO枚举关系id")]
     pub id_dto_enum_associate: String,
     /// 两个相同实体和枚举多条连线时，连线的序号:
     #[sea_orm(comment = "两个相同实体和枚举多条连线时，连线的序号")]
@@ -83,3 +84,14 @@ impl Linked for DtoEntityAttributeLinked {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model(dto_enum_associate_model: Model) -> ActiveModel {
+    ActiveModel {
+        id_dto_enum_associate: Set(dto_enum_associate_model.id_dto_enum_associate.clone()),
+        group_order: Set(dto_enum_associate_model.group_order.clone()),
+        id_dto_enum: Set(dto_enum_associate_model.id_dto_enum.clone()),
+        id_dto_entity_collection: Set(dto_enum_associate_model.id_dto_entity_collection.clone()),
+        id_dto_entity: Set(dto_enum_associate_model.id_dto_entity.clone()),
+        id_dto_entity_attribute: Set(dto_enum_associate_model.id_dto_entity_attribute.clone()),
+    }
+}

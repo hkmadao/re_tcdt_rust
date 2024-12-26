@@ -1,54 +1,106 @@
 use crate::{
     common::{
         aq::*,
-        aq_const::{LOGIC_OPERATOR_CODE_AND, OPERATOR_CODE_IN},
     },
     dto::po::base::bill_form_po::BillFormPO,
     util::dyn_query::make_select_by_condition,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 use ::entity::entity::bill_form;
 use sea_orm::*;
+use sea_orm::ActiveValue::Set;
+use sea_orm::sea_query::Expr;
+use crate::util::id_util::generate_id;
 
 pub struct BillFormMutation;
 
 impl BillFormMutation {
     pub async fn create(
         db: &DbConn,
-        bill_form_po: BillFormPO,
+        bill_form_model: bill_form::Model,
     ) -> Result<bill_form::Model, TcdtServiceError> {
-        let bill_form_save = BillFormPO::insert(bill_form_po, db, None)
-            .await
-            .map_err(|err| {
-                log::error!("BillForm insert failed");
-                TcdtServiceError::build_internal_msg_error("BillForm insert failed", err)
-            })?;
+        let mut bill_form_active_model = bill_form::convert_model_to_active_model(bill_form_model);
+        let id = generate_id();
+        bill_form_active_model.id_bill_form = Set(id.clone());
+        let _ = bill_form::Entity::insert(bill_form_active_model).exec(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "BillForm insert failed",
+                err,
+            )
+        })?;
+
+        let bill_form_save = bill_form::Entity::find_by_id(id).one(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "BillForm insert after find failed",
+                err,
+            )
+        })?
+            .ok_or(TcdtServiceError::build_internal_msg("BillForm insert after cannot find entity"))?;
         Ok(bill_form_save)
     }
 
     pub async fn update_by_id(
         db: &DbConn,
-        bill_form_po: BillFormPO,
+        bill_form_model: bill_form::Model,
     ) -> Result<bill_form::Model, TcdtServiceError> {
-        let bill_form_save = BillFormPO::update(bill_form_po, db, None)
+        let id = bill_form_model.id_bill_form.clone();
+
+        let bill_form_persist_model: bill_form::ActiveModel = bill_form::Entity::find_by_id(&id)
+            .one(db)
             .await
             .map_err(|err| {
-                log::error!("BillForm update failed");
-                TcdtServiceError::build_internal_msg_error("BillForm update failed", err)
-            })?;
+                TcdtServiceError::build_internal_msg_error(
+                    "BillForm update before find_by_id failed",
+                    err,
+                )
+            })?
+            .ok_or(TcdtServiceError::build_internal_msg(&format!("BillForm update before cannot find entity [{}].", stringify!(#entity_name_ident))))?
+            .into_active_model();
+
+        let mut bill_form_active_model = bill_form::convert_model_to_active_model(bill_form_model);
+
+        let bill_form_save = bill_form_active_model
+            .update(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                " BillForm update failed",
+                err,
+            )
+        })?;
+
         Ok(bill_form_save)
     }
 
     pub async fn delete(
         db: &DbConn,
-        bill_form_po: BillFormPO,
+        bill_form_model: bill_form::Model,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let delete_result = BillFormPO::delete(bill_form_po, db, None)
+        let delete_result = bill_form::Entity::delete(bill_form_model.into_active_model())
+            .exec(db)
             .await
             .map_err(|err| {
                 log::error!("BillForm delete failed");
-                TcdtServiceError::build_internal_msg_error("BillForm delete failed", err)
+                TcdtServiceError::build_internal_msg_error("BillForm delete_all failed", err)
+            })?;
+        Ok(delete_result)
+    }
+
+    pub async fn batch_delete(
+        db: &DbConn,
+        bill_form_model_list: Vec<bill_form::Model>,
+    ) -> Result<DeleteResult, TcdtServiceError> {
+        let id_list = bill_form_model_list.iter().map(|bill_form_model| {
+            bill_form_model.id_bill_form.clone()
+        }).collect::<Vec<String>>();
+        let delete_result = bill_form::Entity::delete_many()
+            .filter(Expr::col(bill_form::Column::IdBillForm).is_in(id_list))
+            .exec(db)
+            .await
+            .map_err(|err| {
+                log::error!("BillForm batch_delete failed");
+                TcdtServiceError::build_internal_msg_error("BillForm batch_delete failed", err)
             })?;
         Ok(delete_result)
     }
@@ -75,9 +127,9 @@ impl BillFormQuery {
             bill_form::Entity::find_by_id(id)
                 .one(db)
                 .await.map_err(|err| {
-                    log::error!("BillForm find_by_id failed");
-                    TcdtServiceError::build_internal_msg_error("BillForm find_by_id failed", err)
-                })?
+                log::error!("BillForm find_by_id failed");
+                TcdtServiceError::build_internal_msg_error("BillForm find_by_id failed", err)
+            })?
                 .ok_or(TcdtServiceError::build_internal_msg("BillForm cant not find data"))?;
         Ok(bill_form_entity)
     }
@@ -86,21 +138,11 @@ impl BillFormQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<bill_form::Model>, TcdtServiceError> {
-        let aq_condition = AqCondition {
-            logic_node: Some(Box::new(AqLogicNode {
-                logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
-                logic_node: None,
-                filter_nodes: vec![AqFilterNode {
-                    name: "idBillForm".to_string(),
-                    operator_code: OPERATOR_CODE_IN.to_owned(),
-                    filter_params: ids
-                        .iter()
-                        .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
-                        .collect(),
-                }],
-            })),
-            orders: vec![],
-        };
+        let aq_condition = AqCondition::build_in_condition("idBillForm", ids
+            .iter()
+            .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+            .collect());
+
         let sql_build = make_select_by_condition(
             bill_form::Entity::default(),
             aq_condition,

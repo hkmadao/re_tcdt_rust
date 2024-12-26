@@ -54,7 +54,7 @@ pub fn get_sub_project_desc() ->  EntityDesc {
         name: "project".to_owned(),
         display_name: "项目".to_owned(),
         data_type: "InternalRef".to_owned(),
-        inner_attribute_name: "id_project".to_owned(),
+        inner_attribute_name: "idProject".to_owned(),
         out_entity_name: "Project".to_owned(),
         out_entity_pk_attribute_name: "idProject".to_owned(),
         out_entity_reversal_attribute_name: "subProjects".to_owned(),

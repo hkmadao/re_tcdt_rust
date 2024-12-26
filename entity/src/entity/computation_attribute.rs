@@ -1,10 +1,11 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "dd_computation_attribute")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "计算属性")]
+    #[sea_orm(primary_key, comment = "计算属性id")]
     pub id_computation_attribute: String,
     /// 属性名称:
     #[sea_orm(comment = "属性名称")]
@@ -67,3 +68,18 @@ impl Linked for AttributeTypeLinked {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model(computation_attribute_model: Model) -> ActiveModel {
+    ActiveModel {
+        id_computation_attribute: Set(computation_attribute_model.id_computation_attribute.clone()),
+        attribute_name: Set(computation_attribute_model.attribute_name.clone()),
+        display_name: Set(computation_attribute_model.display_name.clone()),
+        len: Set(computation_attribute_model.len.clone()),
+        fg_mandatory: Set(computation_attribute_model.fg_mandatory.clone()),
+        default_value: Set(computation_attribute_model.default_value.clone()),
+        pcs: Set(computation_attribute_model.pcs.clone()),
+        sn: Set(computation_attribute_model.sn.clone()),
+        id_component_entity: Set(computation_attribute_model.id_component_entity.clone()),
+        id_attribute_type: Set(computation_attribute_model.id_attribute_type.clone()),
+    }
+}

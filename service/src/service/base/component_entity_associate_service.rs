@@ -1,54 +1,106 @@
 use crate::{
     common::{
         aq::*,
-        aq_const::{LOGIC_OPERATOR_CODE_AND, OPERATOR_CODE_IN},
     },
     dto::po::base::component_entity_associate_po::ComponentEntityAssociatePO,
     util::dyn_query::make_select_by_condition,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 use ::entity::entity::component_entity_associate;
 use sea_orm::*;
+use sea_orm::ActiveValue::Set;
+use sea_orm::sea_query::Expr;
+use crate::util::id_util::generate_id;
 
 pub struct ComponentEntityAssociateMutation;
 
 impl ComponentEntityAssociateMutation {
     pub async fn create(
         db: &DbConn,
-        component_entity_associate_po: ComponentEntityAssociatePO,
+        component_entity_associate_model: component_entity_associate::Model,
     ) -> Result<component_entity_associate::Model, TcdtServiceError> {
-        let component_entity_associate_save = ComponentEntityAssociatePO::insert(component_entity_associate_po, db, None)
-            .await
-            .map_err(|err| {
-                log::error!("ComponentEntityAssociate insert failed");
-                TcdtServiceError::build_internal_msg_error("ComponentEntityAssociate insert failed", err)
-            })?;
+        let mut component_entity_associate_active_model = component_entity_associate::convert_model_to_active_model(component_entity_associate_model);
+        let id = generate_id();
+        component_entity_associate_active_model.id_component_entity_associate = Set(id.clone());
+        let _ = component_entity_associate::Entity::insert(component_entity_associate_active_model).exec(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "ComponentEntityAssociate insert failed",
+                err,
+            )
+        })?;
+
+        let component_entity_associate_save = component_entity_associate::Entity::find_by_id(id).one(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "ComponentEntityAssociate insert after find failed",
+                err,
+            )
+        })?
+            .ok_or(TcdtServiceError::build_internal_msg("ComponentEntityAssociate insert after cannot find entity"))?;
         Ok(component_entity_associate_save)
     }
 
     pub async fn update_by_id(
         db: &DbConn,
-        component_entity_associate_po: ComponentEntityAssociatePO,
+        component_entity_associate_model: component_entity_associate::Model,
     ) -> Result<component_entity_associate::Model, TcdtServiceError> {
-        let component_entity_associate_save = ComponentEntityAssociatePO::update(component_entity_associate_po, db, None)
+        let id = component_entity_associate_model.id_component_entity_associate.clone();
+
+        let component_entity_associate_persist_model: component_entity_associate::ActiveModel = component_entity_associate::Entity::find_by_id(&id)
+            .one(db)
             .await
             .map_err(|err| {
-                log::error!("ComponentEntityAssociate update failed");
-                TcdtServiceError::build_internal_msg_error("ComponentEntityAssociate update failed", err)
-            })?;
+                TcdtServiceError::build_internal_msg_error(
+                    "ComponentEntityAssociate update before find_by_id failed",
+                    err,
+                )
+            })?
+            .ok_or(TcdtServiceError::build_internal_msg(&format!("ComponentEntityAssociate update before cannot find entity [{}].", stringify!(#entity_name_ident))))?
+            .into_active_model();
+
+        let mut component_entity_associate_active_model = component_entity_associate::convert_model_to_active_model(component_entity_associate_model);
+
+        let component_entity_associate_save = component_entity_associate_active_model
+            .update(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                " ComponentEntityAssociate update failed",
+                err,
+            )
+        })?;
+
         Ok(component_entity_associate_save)
     }
 
     pub async fn delete(
         db: &DbConn,
-        component_entity_associate_po: ComponentEntityAssociatePO,
+        component_entity_associate_model: component_entity_associate::Model,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let delete_result = ComponentEntityAssociatePO::delete(component_entity_associate_po, db, None)
+        let delete_result = component_entity_associate::Entity::delete(component_entity_associate_model.into_active_model())
+            .exec(db)
             .await
             .map_err(|err| {
                 log::error!("ComponentEntityAssociate delete failed");
-                TcdtServiceError::build_internal_msg_error("ComponentEntityAssociate delete failed", err)
+                TcdtServiceError::build_internal_msg_error("ComponentEntityAssociate delete_all failed", err)
+            })?;
+        Ok(delete_result)
+    }
+
+    pub async fn batch_delete(
+        db: &DbConn,
+        component_entity_associate_model_list: Vec<component_entity_associate::Model>,
+    ) -> Result<DeleteResult, TcdtServiceError> {
+        let id_list = component_entity_associate_model_list.iter().map(|component_entity_associate_model| {
+            component_entity_associate_model.id_component_entity_associate.clone()
+        }).collect::<Vec<String>>();
+        let delete_result = component_entity_associate::Entity::delete_many()
+            .filter(Expr::col(component_entity_associate::Column::IdComponentEntityAssociate).is_in(id_list))
+            .exec(db)
+            .await
+            .map_err(|err| {
+                log::error!("ComponentEntityAssociate batch_delete failed");
+                TcdtServiceError::build_internal_msg_error("ComponentEntityAssociate batch_delete failed", err)
             })?;
         Ok(delete_result)
     }
@@ -75,9 +127,9 @@ impl ComponentEntityAssociateQuery {
             component_entity_associate::Entity::find_by_id(id)
                 .one(db)
                 .await.map_err(|err| {
-                    log::error!("ComponentEntityAssociate find_by_id failed");
-                    TcdtServiceError::build_internal_msg_error("ComponentEntityAssociate find_by_id failed", err)
-                })?
+                log::error!("ComponentEntityAssociate find_by_id failed");
+                TcdtServiceError::build_internal_msg_error("ComponentEntityAssociate find_by_id failed", err)
+            })?
                 .ok_or(TcdtServiceError::build_internal_msg("ComponentEntityAssociate cant not find data"))?;
         Ok(component_entity_associate_entity)
     }
@@ -86,21 +138,11 @@ impl ComponentEntityAssociateQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<component_entity_associate::Model>, TcdtServiceError> {
-        let aq_condition = AqCondition {
-            logic_node: Some(Box::new(AqLogicNode {
-                logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
-                logic_node: None,
-                filter_nodes: vec![AqFilterNode {
-                    name: "idComponentEntityAssociate".to_string(),
-                    operator_code: OPERATOR_CODE_IN.to_owned(),
-                    filter_params: ids
-                        .iter()
-                        .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
-                        .collect(),
-                }],
-            })),
-            orders: vec![],
-        };
+        let aq_condition = AqCondition::build_in_condition("idComponentEntityAssociate", ids
+            .iter()
+            .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+            .collect());
+
         let sql_build = make_select_by_condition(
             component_entity_associate::Entity::default(),
             aq_condition,

@@ -1,54 +1,106 @@
 use crate::{
     common::{
         aq::*,
-        aq_const::{LOGIC_OPERATOR_CODE_AND, OPERATOR_CODE_IN},
     },
     dto::po::base::sub_project_po::SubProjectPO,
     util::dyn_query::make_select_by_condition,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 use ::entity::entity::sub_project;
 use sea_orm::*;
+use sea_orm::ActiveValue::Set;
+use sea_orm::sea_query::Expr;
+use crate::util::id_util::generate_id;
 
 pub struct SubProjectMutation;
 
 impl SubProjectMutation {
     pub async fn create(
         db: &DbConn,
-        sub_project_po: SubProjectPO,
+        sub_project_model: sub_project::Model,
     ) -> Result<sub_project::Model, TcdtServiceError> {
-        let sub_project_save = SubProjectPO::insert(sub_project_po, db, None)
-            .await
-            .map_err(|err| {
-                log::error!("SubProject insert failed");
-                TcdtServiceError::build_internal_msg_error("SubProject insert failed", err)
-            })?;
+        let mut sub_project_active_model = sub_project::convert_model_to_active_model(sub_project_model);
+        let id = generate_id();
+        sub_project_active_model.id_sub_project = Set(id.clone());
+        let _ = sub_project::Entity::insert(sub_project_active_model).exec(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "SubProject insert failed",
+                err,
+            )
+        })?;
+
+        let sub_project_save = sub_project::Entity::find_by_id(id).one(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "SubProject insert after find failed",
+                err,
+            )
+        })?
+            .ok_or(TcdtServiceError::build_internal_msg("SubProject insert after cannot find entity"))?;
         Ok(sub_project_save)
     }
 
     pub async fn update_by_id(
         db: &DbConn,
-        sub_project_po: SubProjectPO,
+        sub_project_model: sub_project::Model,
     ) -> Result<sub_project::Model, TcdtServiceError> {
-        let sub_project_save = SubProjectPO::update(sub_project_po, db, None)
+        let id = sub_project_model.id_sub_project.clone();
+
+        let sub_project_persist_model: sub_project::ActiveModel = sub_project::Entity::find_by_id(&id)
+            .one(db)
             .await
             .map_err(|err| {
-                log::error!("SubProject update failed");
-                TcdtServiceError::build_internal_msg_error("SubProject update failed", err)
-            })?;
+                TcdtServiceError::build_internal_msg_error(
+                    "SubProject update before find_by_id failed",
+                    err,
+                )
+            })?
+            .ok_or(TcdtServiceError::build_internal_msg(&format!("SubProject update before cannot find entity [{}].", stringify!(#entity_name_ident))))?
+            .into_active_model();
+
+        let mut sub_project_active_model = sub_project::convert_model_to_active_model(sub_project_model);
+
+        let sub_project_save = sub_project_active_model
+            .update(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                " SubProject update failed",
+                err,
+            )
+        })?;
+
         Ok(sub_project_save)
     }
 
     pub async fn delete(
         db: &DbConn,
-        sub_project_po: SubProjectPO,
+        sub_project_model: sub_project::Model,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let delete_result = SubProjectPO::delete(sub_project_po, db, None)
+        let delete_result = sub_project::Entity::delete(sub_project_model.into_active_model())
+            .exec(db)
             .await
             .map_err(|err| {
                 log::error!("SubProject delete failed");
-                TcdtServiceError::build_internal_msg_error("SubProject delete failed", err)
+                TcdtServiceError::build_internal_msg_error("SubProject delete_all failed", err)
+            })?;
+        Ok(delete_result)
+    }
+
+    pub async fn batch_delete(
+        db: &DbConn,
+        sub_project_model_list: Vec<sub_project::Model>,
+    ) -> Result<DeleteResult, TcdtServiceError> {
+        let id_list = sub_project_model_list.iter().map(|sub_project_model| {
+            sub_project_model.id_sub_project.clone()
+        }).collect::<Vec<String>>();
+        let delete_result = sub_project::Entity::delete_many()
+            .filter(Expr::col(sub_project::Column::IdSubProject).is_in(id_list))
+            .exec(db)
+            .await
+            .map_err(|err| {
+                log::error!("SubProject batch_delete failed");
+                TcdtServiceError::build_internal_msg_error("SubProject batch_delete failed", err)
             })?;
         Ok(delete_result)
     }
@@ -75,9 +127,9 @@ impl SubProjectQuery {
             sub_project::Entity::find_by_id(id)
                 .one(db)
                 .await.map_err(|err| {
-                    log::error!("SubProject find_by_id failed");
-                    TcdtServiceError::build_internal_msg_error("SubProject find_by_id failed", err)
-                })?
+                log::error!("SubProject find_by_id failed");
+                TcdtServiceError::build_internal_msg_error("SubProject find_by_id failed", err)
+            })?
                 .ok_or(TcdtServiceError::build_internal_msg("SubProject cant not find data"))?;
         Ok(sub_project_entity)
     }
@@ -86,21 +138,11 @@ impl SubProjectQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<sub_project::Model>, TcdtServiceError> {
-        let aq_condition = AqCondition {
-            logic_node: Some(Box::new(AqLogicNode {
-                logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
-                logic_node: None,
-                filter_nodes: vec![AqFilterNode {
-                    name: "idSubProject".to_string(),
-                    operator_code: OPERATOR_CODE_IN.to_owned(),
-                    filter_params: ids
-                        .iter()
-                        .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
-                        .collect(),
-                }],
-            })),
-            orders: vec![],
-        };
+        let aq_condition = AqCondition::build_in_condition("idSubProject", ids
+            .iter()
+            .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+            .collect());
+
         let sql_build = make_select_by_condition(
             sub_project::Entity::default(),
             aq_condition,

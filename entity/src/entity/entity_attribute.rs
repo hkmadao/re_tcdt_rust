@@ -1,10 +1,11 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "dd_entity_attribute")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "属性")]
+    #[sea_orm(primary_key, comment = "属性id")]
     pub id_attribute: String,
     /// 属性名称:
     #[sea_orm(comment = "属性名称")]
@@ -121,3 +122,22 @@ impl Linked for ExtAttributesLinked {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model(entity_attribute_model: Model) -> ActiveModel {
+    ActiveModel {
+        id_attribute: Set(entity_attribute_model.id_attribute.clone()),
+        attribute_name: Set(entity_attribute_model.attribute_name.clone()),
+        display_name: Set(entity_attribute_model.display_name.clone()),
+        column_name: Set(entity_attribute_model.column_name.clone()),
+        fg_primary_key: Set(entity_attribute_model.fg_primary_key.clone()),
+        fg_mandatory: Set(entity_attribute_model.fg_mandatory.clone()),
+        default_value: Set(entity_attribute_model.default_value.clone()),
+        len: Set(entity_attribute_model.len.clone()),
+        pcs: Set(entity_attribute_model.pcs.clone()),
+        sn: Set(entity_attribute_model.sn.clone()),
+        note: Set(entity_attribute_model.note.clone()),
+        category: Set(entity_attribute_model.category.clone()),
+        id_attribute_type: Set(entity_attribute_model.id_attribute_type.clone()),
+        id_entity: Set(entity_attribute_model.id_entity.clone()),
+    }
+}

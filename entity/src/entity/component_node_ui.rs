@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "dd_component_node_ui")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "ui信息")]
+    #[sea_orm(primary_key, comment = "id")]
     pub id_component_node_ui: String,
     /// x坐标:
     #[sea_orm(comment = "x坐标")]

@@ -1,13 +1,13 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
     dto::{po::base::query_po::QueryPO, vo::base::query_vo::QueryVO},
     service::base::query_service::{QueryMutation, QueryQuery},
 };
-
+use entity::entity::query;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -21,7 +21,9 @@ pub async fn add(
 
     let form = query_form.into_inner();
 
-    let query_save = QueryMutation::create(conn, form)
+    let query_model = QueryPO::convert_po_to_model(form);
+
+    let query_save = QueryMutation::create(conn, query_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -47,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = query_form.into_inner();
 
-    let query_save = QueryMutation::update_by_id(conn, form)
+    let query_model = QueryPO::convert_po_to_model(form);
+
+    let query_save = QueryMutation::update_by_id(conn, query_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -72,7 +76,32 @@ pub async fn remove(
     let conn = &data.conn;
     let form = query_form.into_inner();
 
-    let delete_result = QueryMutation::delete(conn, form)
+    let query_model = QueryPO::convert_po_to_model(form);
+
+    let delete_result = QueryMutation::delete(conn, query_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    Ok(HttpResponse::Ok().json(delete_result.rows_affected))
+}
+
+#[tcdt_route(batch_remove)]
+#[post("/query/batchRemove")]
+pub async fn batch_remove(
+    data: web::Data<AppState>,
+    query_form: web::Json<Vec<QueryPO>>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let po_list = query_form.into_inner();
+
+    let mut model_list:Vec<query::Model>  = vec![];
+    for po in po_list {
+        model_list.push(QueryPO::convert_po_to_model(po));
+    }
+    
+    let delete_result = QueryMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

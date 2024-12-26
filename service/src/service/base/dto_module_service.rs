@@ -1,54 +1,106 @@
 use crate::{
     common::{
         aq::*,
-        aq_const::{LOGIC_OPERATOR_CODE_AND, OPERATOR_CODE_IN},
     },
     dto::po::base::dto_module_po::DtoModulePO,
     util::dyn_query::make_select_by_condition,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 use ::entity::entity::dto_module;
 use sea_orm::*;
+use sea_orm::ActiveValue::Set;
+use sea_orm::sea_query::Expr;
+use crate::util::id_util::generate_id;
 
 pub struct DtoModuleMutation;
 
 impl DtoModuleMutation {
     pub async fn create(
         db: &DbConn,
-        dto_module_po: DtoModulePO,
+        dto_module_model: dto_module::Model,
     ) -> Result<dto_module::Model, TcdtServiceError> {
-        let dto_module_save = DtoModulePO::insert(dto_module_po, db, None)
-            .await
-            .map_err(|err| {
-                log::error!("DtoModule insert failed");
-                TcdtServiceError::build_internal_msg_error("DtoModule insert failed", err)
-            })?;
+        let mut dto_module_active_model = dto_module::convert_model_to_active_model(dto_module_model);
+        let id = generate_id();
+        dto_module_active_model.id_dto_module = Set(id.clone());
+        let _ = dto_module::Entity::insert(dto_module_active_model).exec(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "DtoModule insert failed",
+                err,
+            )
+        })?;
+
+        let dto_module_save = dto_module::Entity::find_by_id(id).one(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "DtoModule insert after find failed",
+                err,
+            )
+        })?
+            .ok_or(TcdtServiceError::build_internal_msg("DtoModule insert after cannot find entity"))?;
         Ok(dto_module_save)
     }
 
     pub async fn update_by_id(
         db: &DbConn,
-        dto_module_po: DtoModulePO,
+        dto_module_model: dto_module::Model,
     ) -> Result<dto_module::Model, TcdtServiceError> {
-        let dto_module_save = DtoModulePO::update(dto_module_po, db, None)
+        let id = dto_module_model.id_dto_module.clone();
+
+        let dto_module_persist_model: dto_module::ActiveModel = dto_module::Entity::find_by_id(&id)
+            .one(db)
             .await
             .map_err(|err| {
-                log::error!("DtoModule update failed");
-                TcdtServiceError::build_internal_msg_error("DtoModule update failed", err)
-            })?;
+                TcdtServiceError::build_internal_msg_error(
+                    "DtoModule update before find_by_id failed",
+                    err,
+                )
+            })?
+            .ok_or(TcdtServiceError::build_internal_msg(&format!("DtoModule update before cannot find entity [{}].", stringify!(#entity_name_ident))))?
+            .into_active_model();
+
+        let mut dto_module_active_model = dto_module::convert_model_to_active_model(dto_module_model);
+
+        let dto_module_save = dto_module_active_model
+            .update(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                " DtoModule update failed",
+                err,
+            )
+        })?;
+
         Ok(dto_module_save)
     }
 
     pub async fn delete(
         db: &DbConn,
-        dto_module_po: DtoModulePO,
+        dto_module_model: dto_module::Model,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let delete_result = DtoModulePO::delete(dto_module_po, db, None)
+        let delete_result = dto_module::Entity::delete(dto_module_model.into_active_model())
+            .exec(db)
             .await
             .map_err(|err| {
                 log::error!("DtoModule delete failed");
-                TcdtServiceError::build_internal_msg_error("DtoModule delete failed", err)
+                TcdtServiceError::build_internal_msg_error("DtoModule delete_all failed", err)
+            })?;
+        Ok(delete_result)
+    }
+
+    pub async fn batch_delete(
+        db: &DbConn,
+        dto_module_model_list: Vec<dto_module::Model>,
+    ) -> Result<DeleteResult, TcdtServiceError> {
+        let id_list = dto_module_model_list.iter().map(|dto_module_model| {
+            dto_module_model.id_dto_module.clone()
+        }).collect::<Vec<String>>();
+        let delete_result = dto_module::Entity::delete_many()
+            .filter(Expr::col(dto_module::Column::IdDtoModule).is_in(id_list))
+            .exec(db)
+            .await
+            .map_err(|err| {
+                log::error!("DtoModule batch_delete failed");
+                TcdtServiceError::build_internal_msg_error("DtoModule batch_delete failed", err)
             })?;
         Ok(delete_result)
     }
@@ -75,9 +127,9 @@ impl DtoModuleQuery {
             dto_module::Entity::find_by_id(id)
                 .one(db)
                 .await.map_err(|err| {
-                    log::error!("DtoModule find_by_id failed");
-                    TcdtServiceError::build_internal_msg_error("DtoModule find_by_id failed", err)
-                })?
+                log::error!("DtoModule find_by_id failed");
+                TcdtServiceError::build_internal_msg_error("DtoModule find_by_id failed", err)
+            })?
                 .ok_or(TcdtServiceError::build_internal_msg("DtoModule cant not find data"))?;
         Ok(dto_module_entity)
     }
@@ -86,21 +138,11 @@ impl DtoModuleQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<dto_module::Model>, TcdtServiceError> {
-        let aq_condition = AqCondition {
-            logic_node: Some(Box::new(AqLogicNode {
-                logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
-                logic_node: None,
-                filter_nodes: vec![AqFilterNode {
-                    name: "idDtoModule".to_string(),
-                    operator_code: OPERATOR_CODE_IN.to_owned(),
-                    filter_params: ids
-                        .iter()
-                        .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
-                        .collect(),
-                }],
-            })),
-            orders: vec![],
-        };
+        let aq_condition = AqCondition::build_in_condition("idDtoModule", ids
+            .iter()
+            .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+            .collect());
+
         let sql_build = make_select_by_condition(
             dto_module::Entity::default(),
             aq_condition,

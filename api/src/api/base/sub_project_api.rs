@@ -1,13 +1,13 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
     dto::{po::base::sub_project_po::SubProjectPO, vo::base::sub_project_vo::SubProjectVO},
     service::base::sub_project_service::{SubProjectMutation, SubProjectQuery},
 };
-
+use entity::entity::sub_project;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -21,7 +21,9 @@ pub async fn add(
 
     let form = sub_project_form.into_inner();
 
-    let sub_project_save = SubProjectMutation::create(conn, form)
+    let sub_project_model = SubProjectPO::convert_po_to_model(form);
+
+    let sub_project_save = SubProjectMutation::create(conn, sub_project_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -47,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = sub_project_form.into_inner();
 
-    let sub_project_save = SubProjectMutation::update_by_id(conn, form)
+    let sub_project_model = SubProjectPO::convert_po_to_model(form);
+
+    let sub_project_save = SubProjectMutation::update_by_id(conn, sub_project_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -72,7 +76,32 @@ pub async fn remove(
     let conn = &data.conn;
     let form = sub_project_form.into_inner();
 
-    let delete_result = SubProjectMutation::delete(conn, form)
+    let sub_project_model = SubProjectPO::convert_po_to_model(form);
+
+    let delete_result = SubProjectMutation::delete(conn, sub_project_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    Ok(HttpResponse::Ok().json(delete_result.rows_affected))
+}
+
+#[tcdt_route(batch_remove)]
+#[post("/subProject/batchRemove")]
+pub async fn batch_remove(
+    data: web::Data<AppState>,
+    sub_project_form: web::Json<Vec<SubProjectPO>>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let po_list = sub_project_form.into_inner();
+
+    let mut model_list:Vec<sub_project::Model>  = vec![];
+    for po in po_list {
+        model_list.push(SubProjectPO::convert_po_to_model(po));
+    }
+    
+    let delete_result = SubProjectMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

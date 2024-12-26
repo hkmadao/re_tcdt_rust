@@ -1,13 +1,13 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
     dto::{po::base::menu_po::MenuPO, vo::base::menu_vo::MenuVO},
     service::base::menu_service::{MenuMutation, MenuQuery},
 };
-
+use entity::entity::menu;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -21,7 +21,9 @@ pub async fn add(
 
     let form = menu_form.into_inner();
 
-    let menu_save = MenuMutation::create(conn, form)
+    let menu_model = MenuPO::convert_po_to_model(form);
+
+    let menu_save = MenuMutation::create(conn, menu_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -47,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = menu_form.into_inner();
 
-    let menu_save = MenuMutation::update_by_id(conn, form)
+    let menu_model = MenuPO::convert_po_to_model(form);
+
+    let menu_save = MenuMutation::update_by_id(conn, menu_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -72,7 +76,9 @@ pub async fn remove(
     let conn = &data.conn;
     let form = menu_form.into_inner();
 
-    let delete_result = MenuMutation::delete(conn, form)
+    let menu_model = MenuPO::convert_po_to_model(form);
+
+    let delete_result = MenuMutation::delete(conn, menu_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -90,7 +96,12 @@ pub async fn batch_remove(
     let conn = &data.conn;
     let po_list = menu_form.into_inner();
 
-    let delete_result = MenuMutation::batch_delete(conn, po_list)
+    let mut model_list:Vec<menu::Model>  = vec![];
+    for po in po_list {
+        model_list.push(MenuPO::convert_po_to_model(po));
+    }
+    
+    let delete_result = MenuMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -197,7 +208,6 @@ pub async fn page(
     Ok(HttpResponse::Ok().json(page_info))
 }
 
-#[tcdt_route(aq)]
 #[post("/menu/aq")]
 pub async fn aq(
     _req: HttpRequest,

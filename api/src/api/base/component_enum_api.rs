@@ -1,13 +1,13 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
     dto::{po::base::component_enum_po::ComponentEnumPO, vo::base::component_enum_vo::ComponentEnumVO},
     service::base::component_enum_service::{ComponentEnumMutation, ComponentEnumQuery},
 };
-
+use entity::entity::component_enum;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -21,7 +21,9 @@ pub async fn add(
 
     let form = component_enum_form.into_inner();
 
-    let component_enum_save = ComponentEnumMutation::create(conn, form)
+    let component_enum_model = ComponentEnumPO::convert_po_to_model(form);
+
+    let component_enum_save = ComponentEnumMutation::create(conn, component_enum_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -47,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = component_enum_form.into_inner();
 
-    let component_enum_save = ComponentEnumMutation::update_by_id(conn, form)
+    let component_enum_model = ComponentEnumPO::convert_po_to_model(form);
+
+    let component_enum_save = ComponentEnumMutation::update_by_id(conn, component_enum_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -72,7 +76,32 @@ pub async fn remove(
     let conn = &data.conn;
     let form = component_enum_form.into_inner();
 
-    let delete_result = ComponentEnumMutation::delete(conn, form)
+    let component_enum_model = ComponentEnumPO::convert_po_to_model(form);
+
+    let delete_result = ComponentEnumMutation::delete(conn, component_enum_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    Ok(HttpResponse::Ok().json(delete_result.rows_affected))
+}
+
+#[tcdt_route(batch_remove)]
+#[post("/componentEnum/batchRemove")]
+pub async fn batch_remove(
+    data: web::Data<AppState>,
+    component_enum_form: web::Json<Vec<ComponentEnumPO>>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let po_list = component_enum_form.into_inner();
+
+    let mut model_list:Vec<component_enum::Model>  = vec![];
+    for po in po_list {
+        model_list.push(ComponentEnumPO::convert_po_to_model(po));
+    }
+    
+    let delete_result = ComponentEnumMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

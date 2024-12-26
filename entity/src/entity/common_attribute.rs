@@ -1,10 +1,11 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "dd_common_attribute")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "公共属性")]
+    #[sea_orm(primary_key, comment = "属性id")]
     pub id_common_attribute: String,
     /// 属性名称:
     #[sea_orm(comment = "属性名称")]
@@ -41,7 +42,7 @@ pub struct Model {
     pub category: Option<String>,
     /// 系统预置数据标识:
     #[sea_orm(comment = "系统预置数据标识")]
-    pub fg_preset: bool,
+    pub fg_preset: Option<bool>,
     /// 上级实体id:
     #[sea_orm(comment = "上级实体id")]
     pub id_ref_entity: Option<String>,
@@ -99,3 +100,24 @@ impl Linked for ProjectLinked {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model(common_attribute_model: Model) -> ActiveModel {
+    ActiveModel {
+        id_common_attribute: Set(common_attribute_model.id_common_attribute.clone()),
+        attribute_name: Set(common_attribute_model.attribute_name.clone()),
+        display_name: Set(common_attribute_model.display_name.clone()),
+        column_name: Set(common_attribute_model.column_name.clone()),
+        default_value: Set(common_attribute_model.default_value.clone()),
+        fg_mandatory: Set(common_attribute_model.fg_mandatory.clone()),
+        len: Set(common_attribute_model.len.clone()),
+        pcs: Set(common_attribute_model.pcs.clone()),
+        sn: Set(common_attribute_model.sn.clone()),
+        ref_attribute_name: Set(common_attribute_model.ref_attribute_name.clone()),
+        ref_display_name: Set(common_attribute_model.ref_display_name.clone()),
+        category: Set(common_attribute_model.category.clone()),
+        fg_preset: Set(common_attribute_model.fg_preset.clone()),
+        id_ref_entity: Set(common_attribute_model.id_ref_entity.clone()),
+        id_data_type: Set(common_attribute_model.id_data_type.clone()),
+        id_project: Set(common_attribute_model.id_project.clone()),
+    }
+}

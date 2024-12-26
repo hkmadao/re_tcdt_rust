@@ -93,7 +93,7 @@ impl ActiveModelBehavior for ActiveModel {}
 
 pub fn convert_model_to_active_model({{ rootInfo.snakeCaseName }}_model: Model) -> ActiveModel {
     ActiveModel {
-        {{ rootInfo.pkAttributeInfo.columnName }}: Set({{ rootInfo.snakeCaseName }}_model.{{ attributeInfo.columnName }}.clone()),
+        {{ rootInfo.pkAttributeInfo.columnName }}: Set({{ rootInfo.snakeCaseName }}_model.{{ rootInfo.pkAttributeInfo.columnName }}.clone()),
     
     {%- for attributeInfo in rootInfo.baseAttributeInfoList %}
         {{ attributeInfo.columnName }}: Set({{ rootInfo.snakeCaseName }}_model.{{ attributeInfo.columnName }}.clone()),

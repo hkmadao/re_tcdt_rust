@@ -3,7 +3,7 @@ use crate::app::AppState;
 use actix_web::{error, get, post, web, Error, HttpResponse, Result};
 use tcdt_service::sea_orm::DatabaseConnection;
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{
@@ -242,7 +242,8 @@ pub async fn remove_on_error_tip(
             log::error!("{:?}", e);
             error::ErrorInternalServerError("internal server error")
         })?;
-    ComponentMutation::delete(conn, form)
+    let component_model = ComponentPO::convert_po_to_model(form);
+    ComponentMutation::delete(conn, component_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

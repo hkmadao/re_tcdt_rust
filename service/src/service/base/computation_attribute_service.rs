@@ -1,54 +1,106 @@
 use crate::{
     common::{
         aq::*,
-        aq_const::{LOGIC_OPERATOR_CODE_AND, OPERATOR_CODE_IN},
     },
     dto::po::base::computation_attribute_po::ComputationAttributePO,
     util::dyn_query::make_select_by_condition,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 use ::entity::entity::computation_attribute;
 use sea_orm::*;
+use sea_orm::ActiveValue::Set;
+use sea_orm::sea_query::Expr;
+use crate::util::id_util::generate_id;
 
 pub struct ComputationAttributeMutation;
 
 impl ComputationAttributeMutation {
     pub async fn create(
         db: &DbConn,
-        computation_attribute_po: ComputationAttributePO,
+        computation_attribute_model: computation_attribute::Model,
     ) -> Result<computation_attribute::Model, TcdtServiceError> {
-        let computation_attribute_save = ComputationAttributePO::insert(computation_attribute_po, db, None)
-            .await
-            .map_err(|err| {
-                log::error!("ComputationAttribute insert failed");
-                TcdtServiceError::build_internal_msg_error("ComputationAttribute insert failed", err)
-            })?;
+        let mut computation_attribute_active_model = computation_attribute::convert_model_to_active_model(computation_attribute_model);
+        let id = generate_id();
+        computation_attribute_active_model.id_computation_attribute = Set(id.clone());
+        let _ = computation_attribute::Entity::insert(computation_attribute_active_model).exec(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "ComputationAttribute insert failed",
+                err,
+            )
+        })?;
+
+        let computation_attribute_save = computation_attribute::Entity::find_by_id(id).one(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "ComputationAttribute insert after find failed",
+                err,
+            )
+        })?
+            .ok_or(TcdtServiceError::build_internal_msg("ComputationAttribute insert after cannot find entity"))?;
         Ok(computation_attribute_save)
     }
 
     pub async fn update_by_id(
         db: &DbConn,
-        computation_attribute_po: ComputationAttributePO,
+        computation_attribute_model: computation_attribute::Model,
     ) -> Result<computation_attribute::Model, TcdtServiceError> {
-        let computation_attribute_save = ComputationAttributePO::update(computation_attribute_po, db, None)
+        let id = computation_attribute_model.id_computation_attribute.clone();
+
+        let computation_attribute_persist_model: computation_attribute::ActiveModel = computation_attribute::Entity::find_by_id(&id)
+            .one(db)
             .await
             .map_err(|err| {
-                log::error!("ComputationAttribute update failed");
-                TcdtServiceError::build_internal_msg_error("ComputationAttribute update failed", err)
-            })?;
+                TcdtServiceError::build_internal_msg_error(
+                    "ComputationAttribute update before find_by_id failed",
+                    err,
+                )
+            })?
+            .ok_or(TcdtServiceError::build_internal_msg(&format!("ComputationAttribute update before cannot find entity [{}].", stringify!(#entity_name_ident))))?
+            .into_active_model();
+
+        let mut computation_attribute_active_model = computation_attribute::convert_model_to_active_model(computation_attribute_model);
+
+        let computation_attribute_save = computation_attribute_active_model
+            .update(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                " ComputationAttribute update failed",
+                err,
+            )
+        })?;
+
         Ok(computation_attribute_save)
     }
 
     pub async fn delete(
         db: &DbConn,
-        computation_attribute_po: ComputationAttributePO,
+        computation_attribute_model: computation_attribute::Model,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let delete_result = ComputationAttributePO::delete(computation_attribute_po, db, None)
+        let delete_result = computation_attribute::Entity::delete(computation_attribute_model.into_active_model())
+            .exec(db)
             .await
             .map_err(|err| {
                 log::error!("ComputationAttribute delete failed");
-                TcdtServiceError::build_internal_msg_error("ComputationAttribute delete failed", err)
+                TcdtServiceError::build_internal_msg_error("ComputationAttribute delete_all failed", err)
+            })?;
+        Ok(delete_result)
+    }
+
+    pub async fn batch_delete(
+        db: &DbConn,
+        computation_attribute_model_list: Vec<computation_attribute::Model>,
+    ) -> Result<DeleteResult, TcdtServiceError> {
+        let id_list = computation_attribute_model_list.iter().map(|computation_attribute_model| {
+            computation_attribute_model.id_computation_attribute.clone()
+        }).collect::<Vec<String>>();
+        let delete_result = computation_attribute::Entity::delete_many()
+            .filter(Expr::col(computation_attribute::Column::IdComputationAttribute).is_in(id_list))
+            .exec(db)
+            .await
+            .map_err(|err| {
+                log::error!("ComputationAttribute batch_delete failed");
+                TcdtServiceError::build_internal_msg_error("ComputationAttribute batch_delete failed", err)
             })?;
         Ok(delete_result)
     }
@@ -75,9 +127,9 @@ impl ComputationAttributeQuery {
             computation_attribute::Entity::find_by_id(id)
                 .one(db)
                 .await.map_err(|err| {
-                    log::error!("ComputationAttribute find_by_id failed");
-                    TcdtServiceError::build_internal_msg_error("ComputationAttribute find_by_id failed", err)
-                })?
+                log::error!("ComputationAttribute find_by_id failed");
+                TcdtServiceError::build_internal_msg_error("ComputationAttribute find_by_id failed", err)
+            })?
                 .ok_or(TcdtServiceError::build_internal_msg("ComputationAttribute cant not find data"))?;
         Ok(computation_attribute_entity)
     }
@@ -86,21 +138,11 @@ impl ComputationAttributeQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<computation_attribute::Model>, TcdtServiceError> {
-        let aq_condition = AqCondition {
-            logic_node: Some(Box::new(AqLogicNode {
-                logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
-                logic_node: None,
-                filter_nodes: vec![AqFilterNode {
-                    name: "idComputationAttribute".to_string(),
-                    operator_code: OPERATOR_CODE_IN.to_owned(),
-                    filter_params: ids
-                        .iter()
-                        .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
-                        .collect(),
-                }],
-            })),
-            orders: vec![],
-        };
+        let aq_condition = AqCondition::build_in_condition("idComputationAttribute", ids
+            .iter()
+            .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+            .collect());
+
         let sql_build = make_select_by_condition(
             computation_attribute::Entity::default(),
             aq_condition,

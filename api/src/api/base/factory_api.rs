@@ -1,13 +1,13 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
     dto::{po::base::factory_po::FactoryPO, vo::base::factory_vo::FactoryVO},
     service::base::factory_service::{FactoryMutation, FactoryQuery},
 };
-
+use entity::entity::factory;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -21,7 +21,9 @@ pub async fn add(
 
     let form = factory_form.into_inner();
 
-    let factory_save = FactoryMutation::create(conn, form)
+    let factory_model = FactoryPO::convert_po_to_model(form);
+
+    let factory_save = FactoryMutation::create(conn, factory_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -47,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = factory_form.into_inner();
 
-    let factory_save = FactoryMutation::update_by_id(conn, form)
+    let factory_model = FactoryPO::convert_po_to_model(form);
+
+    let factory_save = FactoryMutation::update_by_id(conn, factory_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -72,7 +76,32 @@ pub async fn remove(
     let conn = &data.conn;
     let form = factory_form.into_inner();
 
-    let delete_result = FactoryMutation::delete(conn, form)
+    let factory_model = FactoryPO::convert_po_to_model(form);
+
+    let delete_result = FactoryMutation::delete(conn, factory_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    Ok(HttpResponse::Ok().json(delete_result.rows_affected))
+}
+
+#[tcdt_route(batch_remove)]
+#[post("/factory/batchRemove")]
+pub async fn batch_remove(
+    data: web::Data<AppState>,
+    factory_form: web::Json<Vec<FactoryPO>>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let po_list = factory_form.into_inner();
+
+    let mut model_list:Vec<factory::Model>  = vec![];
+    for po in po_list {
+        model_list.push(FactoryPO::convert_po_to_model(po));
+    }
+    
+    let delete_result = FactoryMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

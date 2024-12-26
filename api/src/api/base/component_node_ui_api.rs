@@ -7,7 +7,7 @@ use tcdt_service::{
     dto::{po::base::component_node_ui_po::ComponentNodeUiPO, vo::base::component_node_ui_vo::ComponentNodeUiVO},
     service::base::component_node_ui_service::{ComponentNodeUiMutation, ComponentNodeUiQuery},
 };
-
+use entity::entity::component_node_ui;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -79,6 +79,29 @@ pub async fn remove(
     let component_node_ui_model = ComponentNodeUiPO::convert_po_to_model(form);
 
     let delete_result = ComponentNodeUiMutation::delete(conn, component_node_ui_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    Ok(HttpResponse::Ok().json(delete_result.rows_affected))
+}
+
+#[tcdt_route(batch_remove)]
+#[post("/componentNodeUi/batchRemove")]
+pub async fn batch_remove(
+    data: web::Data<AppState>,
+    component_node_ui_form: web::Json<Vec<ComponentNodeUiPO>>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let po_list = component_node_ui_form.into_inner();
+
+    let mut model_list:Vec<component_node_ui::Model>  = vec![];
+    for po in po_list {
+        model_list.push(ComponentNodeUiPO::convert_po_to_model(po));
+    }
+    
+    let delete_result = ComponentNodeUiMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

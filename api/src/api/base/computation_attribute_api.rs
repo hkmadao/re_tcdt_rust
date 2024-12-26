@@ -1,13 +1,13 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
     dto::{po::base::computation_attribute_po::ComputationAttributePO, vo::base::computation_attribute_vo::ComputationAttributeVO},
     service::base::computation_attribute_service::{ComputationAttributeMutation, ComputationAttributeQuery},
 };
-
+use entity::entity::computation_attribute;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -21,7 +21,9 @@ pub async fn add(
 
     let form = computation_attribute_form.into_inner();
 
-    let computation_attribute_save = ComputationAttributeMutation::create(conn, form)
+    let computation_attribute_model = ComputationAttributePO::convert_po_to_model(form);
+
+    let computation_attribute_save = ComputationAttributeMutation::create(conn, computation_attribute_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -47,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = computation_attribute_form.into_inner();
 
-    let computation_attribute_save = ComputationAttributeMutation::update_by_id(conn, form)
+    let computation_attribute_model = ComputationAttributePO::convert_po_to_model(form);
+
+    let computation_attribute_save = ComputationAttributeMutation::update_by_id(conn, computation_attribute_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -72,7 +76,32 @@ pub async fn remove(
     let conn = &data.conn;
     let form = computation_attribute_form.into_inner();
 
-    let delete_result = ComputationAttributeMutation::delete(conn, form)
+    let computation_attribute_model = ComputationAttributePO::convert_po_to_model(form);
+
+    let delete_result = ComputationAttributeMutation::delete(conn, computation_attribute_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    Ok(HttpResponse::Ok().json(delete_result.rows_affected))
+}
+
+#[tcdt_route(batch_remove)]
+#[post("/computationAttribute/batchRemove")]
+pub async fn batch_remove(
+    data: web::Data<AppState>,
+    computation_attribute_form: web::Json<Vec<ComputationAttributePO>>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let po_list = computation_attribute_form.into_inner();
+
+    let mut model_list:Vec<computation_attribute::Model>  = vec![];
+    for po in po_list {
+        model_list.push(ComputationAttributePO::convert_po_to_model(po));
+    }
+    
+    let delete_result = ComputationAttributeMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

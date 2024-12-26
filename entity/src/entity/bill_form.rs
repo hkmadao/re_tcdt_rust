@@ -1,10 +1,11 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "ui_bill_form")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "表单配置")]
+    #[sea_orm(primary_key, comment = "表单id")]
     pub id_bill_form: String,
     /// 配置内容
     #[sea_orm(comment = "配置内容")]
@@ -51,3 +52,22 @@ pub struct Model {
 pub enum Relation {}
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model(bill_form_model: Model) -> ActiveModel {
+    ActiveModel {
+        id_bill_form: Set(bill_form_model.id_bill_form.clone()),
+        content: Set(bill_form_model.content.clone()),
+        meta_data: Set(bill_form_model.meta_data.clone()),
+        name: Set(bill_form_model.name.clone()),
+        display_name: Set(bill_form_model.display_name.clone()),
+        bill_form_type: Set(bill_form_model.bill_form_type.clone()),
+        id_project: Set(bill_form_model.id_project.clone()),
+        project_name: Set(bill_form_model.project_name.clone()),
+        id_sub_project: Set(bill_form_model.id_sub_project.clone()),
+        sub_project_name: Set(bill_form_model.sub_project_name.clone()),
+        id_component_module: Set(bill_form_model.id_component_module.clone()),
+        component_module_name: Set(bill_form_model.component_module_name.clone()),
+        id_component: Set(bill_form_model.id_component.clone()),
+        component_name: Set(bill_form_model.component_name.clone()),
+    }
+}

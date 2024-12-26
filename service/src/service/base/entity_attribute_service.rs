@@ -1,54 +1,106 @@
 use crate::{
     common::{
         aq::*,
-        aq_const::{LOGIC_OPERATOR_CODE_AND, OPERATOR_CODE_IN},
     },
     dto::po::base::entity_attribute_po::EntityAttributePO,
     util::dyn_query::make_select_by_condition,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 use ::entity::entity::entity_attribute;
 use sea_orm::*;
+use sea_orm::ActiveValue::Set;
+use sea_orm::sea_query::Expr;
+use crate::util::id_util::generate_id;
 
 pub struct EntityAttributeMutation;
 
 impl EntityAttributeMutation {
     pub async fn create(
         db: &DbConn,
-        entity_attribute_po: EntityAttributePO,
+        entity_attribute_model: entity_attribute::Model,
     ) -> Result<entity_attribute::Model, TcdtServiceError> {
-        let entity_attribute_save = EntityAttributePO::insert(entity_attribute_po, db, None)
-            .await
-            .map_err(|err| {
-                log::error!("EntityAttribute insert failed");
-                TcdtServiceError::build_internal_msg_error("EntityAttribute insert failed", err)
-            })?;
+        let mut entity_attribute_active_model = entity_attribute::convert_model_to_active_model(entity_attribute_model);
+        let id = generate_id();
+        entity_attribute_active_model.id_attribute = Set(id.clone());
+        let _ = entity_attribute::Entity::insert(entity_attribute_active_model).exec(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "EntityAttribute insert failed",
+                err,
+            )
+        })?;
+
+        let entity_attribute_save = entity_attribute::Entity::find_by_id(id).one(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "EntityAttribute insert after find failed",
+                err,
+            )
+        })?
+            .ok_or(TcdtServiceError::build_internal_msg("EntityAttribute insert after cannot find entity"))?;
         Ok(entity_attribute_save)
     }
 
     pub async fn update_by_id(
         db: &DbConn,
-        entity_attribute_po: EntityAttributePO,
+        entity_attribute_model: entity_attribute::Model,
     ) -> Result<entity_attribute::Model, TcdtServiceError> {
-        let entity_attribute_save = EntityAttributePO::update(entity_attribute_po, db, None)
+        let id = entity_attribute_model.id_attribute.clone();
+
+        let entity_attribute_persist_model: entity_attribute::ActiveModel = entity_attribute::Entity::find_by_id(&id)
+            .one(db)
             .await
             .map_err(|err| {
-                log::error!("EntityAttribute update failed");
-                TcdtServiceError::build_internal_msg_error("EntityAttribute update failed", err)
-            })?;
+                TcdtServiceError::build_internal_msg_error(
+                    "EntityAttribute update before find_by_id failed",
+                    err,
+                )
+            })?
+            .ok_or(TcdtServiceError::build_internal_msg(&format!("EntityAttribute update before cannot find entity [{}].", stringify!(#entity_name_ident))))?
+            .into_active_model();
+
+        let mut entity_attribute_active_model = entity_attribute::convert_model_to_active_model(entity_attribute_model);
+
+        let entity_attribute_save = entity_attribute_active_model
+            .update(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                " EntityAttribute update failed",
+                err,
+            )
+        })?;
+
         Ok(entity_attribute_save)
     }
 
     pub async fn delete(
         db: &DbConn,
-        entity_attribute_po: EntityAttributePO,
+        entity_attribute_model: entity_attribute::Model,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let delete_result = EntityAttributePO::delete(entity_attribute_po, db, None)
+        let delete_result = entity_attribute::Entity::delete(entity_attribute_model.into_active_model())
+            .exec(db)
             .await
             .map_err(|err| {
                 log::error!("EntityAttribute delete failed");
-                TcdtServiceError::build_internal_msg_error("EntityAttribute delete failed", err)
+                TcdtServiceError::build_internal_msg_error("EntityAttribute delete_all failed", err)
+            })?;
+        Ok(delete_result)
+    }
+
+    pub async fn batch_delete(
+        db: &DbConn,
+        entity_attribute_model_list: Vec<entity_attribute::Model>,
+    ) -> Result<DeleteResult, TcdtServiceError> {
+        let id_list = entity_attribute_model_list.iter().map(|entity_attribute_model| {
+            entity_attribute_model.id_attribute.clone()
+        }).collect::<Vec<String>>();
+        let delete_result = entity_attribute::Entity::delete_many()
+            .filter(Expr::col(entity_attribute::Column::IdAttribute).is_in(id_list))
+            .exec(db)
+            .await
+            .map_err(|err| {
+                log::error!("EntityAttribute batch_delete failed");
+                TcdtServiceError::build_internal_msg_error("EntityAttribute batch_delete failed", err)
             })?;
         Ok(delete_result)
     }
@@ -75,9 +127,9 @@ impl EntityAttributeQuery {
             entity_attribute::Entity::find_by_id(id)
                 .one(db)
                 .await.map_err(|err| {
-                    log::error!("EntityAttribute find_by_id failed");
-                    TcdtServiceError::build_internal_msg_error("EntityAttribute find_by_id failed", err)
-                })?
+                log::error!("EntityAttribute find_by_id failed");
+                TcdtServiceError::build_internal_msg_error("EntityAttribute find_by_id failed", err)
+            })?
                 .ok_or(TcdtServiceError::build_internal_msg("EntityAttribute cant not find data"))?;
         Ok(entity_attribute_entity)
     }
@@ -86,21 +138,11 @@ impl EntityAttributeQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<entity_attribute::Model>, TcdtServiceError> {
-        let aq_condition = AqCondition {
-            logic_node: Some(Box::new(AqLogicNode {
-                logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
-                logic_node: None,
-                filter_nodes: vec![AqFilterNode {
-                    name: "idAttribute".to_string(),
-                    operator_code: OPERATOR_CODE_IN.to_owned(),
-                    filter_params: ids
-                        .iter()
-                        .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
-                        .collect(),
-                }],
-            })),
-            orders: vec![],
-        };
+        let aq_condition = AqCondition::build_in_condition("idAttribute", ids
+            .iter()
+            .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+            .collect());
+
         let sql_build = make_select_by_condition(
             entity_attribute::Entity::default(),
             aq_condition,

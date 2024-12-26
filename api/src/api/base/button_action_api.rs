@@ -1,13 +1,13 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
     dto::{po::base::button_action_po::ButtonActionPO, vo::base::button_action_vo::ButtonActionVO},
     service::base::button_action_service::{ButtonActionMutation, ButtonActionQuery},
 };
-
+use entity::entity::button_action;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -21,7 +21,9 @@ pub async fn add(
 
     let form = button_action_form.into_inner();
 
-    let button_action_save = ButtonActionMutation::create(conn, form)
+    let button_action_model = ButtonActionPO::convert_po_to_model(form);
+
+    let button_action_save = ButtonActionMutation::create(conn, button_action_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -47,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = button_action_form.into_inner();
 
-    let button_action_save = ButtonActionMutation::update_by_id(conn, form)
+    let button_action_model = ButtonActionPO::convert_po_to_model(form);
+
+    let button_action_save = ButtonActionMutation::update_by_id(conn, button_action_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -72,7 +76,32 @@ pub async fn remove(
     let conn = &data.conn;
     let form = button_action_form.into_inner();
 
-    let delete_result = ButtonActionMutation::delete(conn, form)
+    let button_action_model = ButtonActionPO::convert_po_to_model(form);
+
+    let delete_result = ButtonActionMutation::delete(conn, button_action_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    Ok(HttpResponse::Ok().json(delete_result.rows_affected))
+}
+
+#[tcdt_route(batch_remove)]
+#[post("/buttonAction/batchRemove")]
+pub async fn batch_remove(
+    data: web::Data<AppState>,
+    button_action_form: web::Json<Vec<ButtonActionPO>>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let po_list = button_action_form.into_inner();
+
+    let mut model_list:Vec<button_action::Model>  = vec![];
+    for po in po_list {
+        model_list.push(ButtonActionPO::convert_po_to_model(po));
+    }
+    
+    let delete_result = ButtonActionMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

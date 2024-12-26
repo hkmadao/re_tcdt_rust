@@ -78,7 +78,7 @@ pub struct DataTypeVO {
     pub web_input_type: Option<String>,
     /// 系统预置数据标识:
     #[serde(default)]
-    pub fg_preset: bool,
+    pub fg_preset: Option<bool>,
     #[serde(default)]
     pub id_project: Option<String>,
     #[serde(default)]

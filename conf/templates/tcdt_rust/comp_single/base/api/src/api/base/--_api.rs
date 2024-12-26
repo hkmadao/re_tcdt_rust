@@ -7,6 +7,7 @@ use tcdt_service::{
     dto::{po::base::{{ rootInfo.snakeCaseName }}_po::{{ rootInfo.pascalCaseName }}PO, vo::base::{{ rootInfo.snakeCaseName }}_vo::{{ rootInfo.pascalCaseName }}VO},
     service::base::{{ rootInfo.snakeCaseName }}_service::{{ "{" }}{{ rootInfo.pascalCaseName }}Mutation, {{ rootInfo.pascalCaseName }}Query},
 };
+use entity::entity::{{ rootInfo.snakeCaseName }};
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -20,7 +21,7 @@ pub async fn add(
 
     let form = {{ rootInfo.snakeCaseName }}_form.into_inner();
 
-    let {{ rootInfo.snakeCaseName }}_model = ComponentNodeUiPO::convert_po_to_model(form);
+    let {{ rootInfo.snakeCaseName }}_model = {{ rootInfo.pascalCaseName }}PO::convert_po_to_model(form);
 
     let {{ rootInfo.snakeCaseName }}_save = {{ rootInfo.pascalCaseName }}Mutation::create(conn, {{ rootInfo.snakeCaseName }}_model)
         .await
@@ -48,7 +49,7 @@ pub async fn update(
     let conn = &data.conn;
     let form = {{ rootInfo.snakeCaseName }}_form.into_inner();
 
-    let {{ rootInfo.snakeCaseName }}_model = ComponentNodeUiPO::convert_po_to_model(form);
+    let {{ rootInfo.snakeCaseName }}_model = {{ rootInfo.pascalCaseName }}PO::convert_po_to_model(form);
 
     let {{ rootInfo.snakeCaseName }}_save = {{ rootInfo.pascalCaseName }}Mutation::update_by_id(conn, {{ rootInfo.snakeCaseName }}_model)
         .await
@@ -75,7 +76,7 @@ pub async fn remove(
     let conn = &data.conn;
     let form = {{ rootInfo.snakeCaseName }}_form.into_inner();
 
-    let {{ rootInfo.snakeCaseName }}_model = ComponentNodeUiPO::convert_po_to_model(form);
+    let {{ rootInfo.snakeCaseName }}_model = {{ rootInfo.pascalCaseName }}PO::convert_po_to_model(form);
 
     let delete_result = {{ rootInfo.pascalCaseName }}Mutation::delete(conn, {{ rootInfo.snakeCaseName }}_model)
         .await
@@ -95,7 +96,12 @@ pub async fn batch_remove(
     let conn = &data.conn;
     let po_list = {{ rootInfo.snakeCaseName }}_form.into_inner();
 
-    let delete_result = {{ rootInfo.pascalCaseName }}Mutation::batch_delete(conn, po_list)
+    let mut model_list:Vec<{{ rootInfo.snakeCaseName }}::Model>  = vec![];
+    for po in po_list {
+        model_list.push({{ rootInfo.pascalCaseName }}PO::convert_po_to_model(po));
+    }
+    
+    let delete_result = {{ rootInfo.pascalCaseName }}Mutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

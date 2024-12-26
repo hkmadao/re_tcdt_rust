@@ -1,13 +1,13 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
     dto::{po::base::data_type_po::DataTypePO, vo::base::data_type_vo::DataTypeVO},
     service::base::data_type_service::{DataTypeMutation, DataTypeQuery},
 };
-
+use entity::entity::data_type;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -21,10 +21,14 @@ pub async fn add(
 
     let form = data_type_form.into_inner();
 
-    let data_type_save = DataTypeMutation::create(conn, form).await.map_err(|e| {
-        log::error!("{:?}", e);
-        error::ErrorInternalServerError("internal server error")
-    })?;
+    let data_type_model = DataTypePO::convert_po_to_model(form);
+
+    let data_type_save = DataTypeMutation::create(conn, data_type_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
 
     let data_type_vo = DataTypeVO::convert(conn, Some(data_type_save))
         .await
@@ -45,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = data_type_form.into_inner();
 
-    let data_type_save = DataTypeMutation::update_by_id(conn, form)
+    let data_type_model = DataTypePO::convert_po_to_model(form);
+
+    let data_type_save = DataTypeMutation::update_by_id(conn, data_type_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -70,10 +76,14 @@ pub async fn remove(
     let conn = &data.conn;
     let form = data_type_form.into_inner();
 
-    let delete_result = DataTypeMutation::delete(conn, form).await.map_err(|e| {
-        log::error!("{:?}", e);
-        error::ErrorInternalServerError("internal server error")
-    })?;
+    let data_type_model = DataTypePO::convert_po_to_model(form);
+
+    let delete_result = DataTypeMutation::delete(conn, data_type_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
     Ok(HttpResponse::Ok().json(delete_result.rows_affected))
 }
 
@@ -86,7 +96,12 @@ pub async fn batch_remove(
     let conn = &data.conn;
     let po_list = data_type_form.into_inner();
 
-    let delete_result = DataTypeMutation::batch_delete(conn, po_list)
+    let mut model_list:Vec<data_type::Model>  = vec![];
+    for po in po_list {
+        model_list.push(DataTypePO::convert_po_to_model(po));
+    }
+    
+    let delete_result = DataTypeMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -97,20 +112,19 @@ pub async fn batch_remove(
 
 #[tcdt_route(get_by_id)]
 #[get("/dataType/getById/{id}")]
-pub async fn get_by_id(
-    data: web::Data<AppState>,
-    id: web::Path<String>,
-) -> Result<HttpResponse, Error> {
+pub async fn get_by_id(data: web::Data<AppState>, id: web::Path<String>) -> Result<HttpResponse, Error> {
     let conn = &data.conn;
     let id = id.into_inner();
 
-    let data_type_entity = DataTypeQuery::find_by_id(conn, id).await.map_err(|e| {
-        log::error!("{:?}", e);
-        match e {
-            TcdtServiceError::Custom(cus) => error::ErrorInternalServerError(cus.get_message()),
-            _ => error::ErrorInternalServerError("internal server error"),
-        }
-    })?;
+    let data_type_entity = DataTypeQuery::find_by_id(conn, id)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            match e {
+                TcdtServiceError::Custom(cus) => error::ErrorInternalServerError(cus.get_message()),
+                _ => error::ErrorInternalServerError("internal server error"),
+            }
+        })?;
 
     let data_type_vo = DataTypeVO::convert(conn, Some(data_type_entity))
         .await
@@ -134,13 +148,15 @@ pub async fn get_by_ids(
 
     let ids = ids_param.ids.split(",").map(|id| id.to_owned()).collect();
 
-    let data_type_list = DataTypeQuery::find_by_ids(conn, ids).await.map_err(|e| {
-        log::error!("{:?}", e);
-        match e {
-            TcdtServiceError::Custom(cus) => error::ErrorInternalServerError(cus.get_message()),
-            _ => error::ErrorInternalServerError("internal server error"),
-        }
-    })?;
+    let data_type_list = DataTypeQuery::find_by_ids(conn, ids)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            match e {
+                TcdtServiceError::Custom(cus) => error::ErrorInternalServerError(cus.get_message()),
+                _ => error::ErrorInternalServerError("internal server error"),
+            }
+        })?;
 
     let mut vos: Vec<DataTypeVO> = vec![];
     for data_type_entity in data_type_list {

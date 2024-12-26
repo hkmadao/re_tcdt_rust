@@ -1,10 +1,11 @@
+use sea_orm::ActiveValue::Set;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Deserialize, Serialize, Default)]
 #[sea_orm(table_name = "dd_data_type")]
 pub struct Model {
-    #[sea_orm(primary_key, comment = "数据类型")]
+    #[sea_orm(primary_key, comment = "数据类型id")]
     pub id_data_type: String,
     /// 数据类型编码:
     #[sea_orm(comment = "数据类型编码")]
@@ -65,7 +66,7 @@ pub struct Model {
     pub web_input_type: Option<String>,
     /// 系统预置数据标识:
     #[sea_orm(comment = "系统预置数据标识")]
-    pub fg_preset: bool,
+    pub fg_preset: Option<bool>,
     /// 项目id:
     #[sea_orm(comment = "项目id")]
     pub id_project: Option<String>,
@@ -159,3 +160,30 @@ impl Linked for ComputationAttributesLinked {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+pub fn convert_model_to_active_model(data_type_model: Model) -> ActiveModel {
+    ActiveModel {
+        id_data_type: Set(data_type_model.id_data_type.clone()),
+        code: Set(data_type_model.code.clone()),
+        display_name: Set(data_type_model.display_name.clone()),
+        note: Set(data_type_model.note.clone()),
+        sn: Set(data_type_model.sn.clone()),
+        len: Set(data_type_model.len.clone()),
+        pcs: Set(data_type_model.pcs.clone()),
+        column_type: Set(data_type_model.column_type.clone()),
+        object_type: Set(data_type_model.object_type.clone()),
+        object_type_package: Set(data_type_model.object_type_package.clone()),
+        ext1: Set(data_type_model.ext1.clone()),
+        ext2: Set(data_type_model.ext2.clone()),
+        ext3: Set(data_type_model.ext3.clone()),
+        ext4: Set(data_type_model.ext4.clone()),
+        ext5: Set(data_type_model.ext5.clone()),
+        ext6: Set(data_type_model.ext6.clone()),
+        default_value: Set(data_type_model.default_value.clone()),
+        fg_mandatory: Set(data_type_model.fg_mandatory.clone()),
+        type_script_type: Set(data_type_model.type_script_type.clone()),
+        web_input_type: Set(data_type_model.web_input_type.clone()),
+        fg_preset: Set(data_type_model.fg_preset.clone()),
+        id_project: Set(data_type_model.id_project.clone()),
+    }
+}

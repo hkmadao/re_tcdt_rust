@@ -56,5 +56,5 @@ pub struct FactoryVO {
     pub component_name: Option<String>,
     /// 模板标志:
     #[serde(default)]
-    pub fg_template: bool,
+    pub fg_template: Option<bool>,
 }

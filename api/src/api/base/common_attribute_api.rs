@@ -1,13 +1,13 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
     dto::{po::base::common_attribute_po::CommonAttributePO, vo::base::common_attribute_vo::CommonAttributeVO},
     service::base::common_attribute_service::{CommonAttributeMutation, CommonAttributeQuery},
 };
-
+use entity::entity::common_attribute;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -21,7 +21,9 @@ pub async fn add(
 
     let form = common_attribute_form.into_inner();
 
-    let common_attribute_save = CommonAttributeMutation::create(conn, form)
+    let common_attribute_model = CommonAttributePO::convert_po_to_model(form);
+
+    let common_attribute_save = CommonAttributeMutation::create(conn, common_attribute_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -47,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = common_attribute_form.into_inner();
 
-    let common_attribute_save = CommonAttributeMutation::update_by_id(conn, form)
+    let common_attribute_model = CommonAttributePO::convert_po_to_model(form);
+
+    let common_attribute_save = CommonAttributeMutation::update_by_id(conn, common_attribute_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -72,7 +76,9 @@ pub async fn remove(
     let conn = &data.conn;
     let form = common_attribute_form.into_inner();
 
-    let delete_result = CommonAttributeMutation::delete(conn, form)
+    let common_attribute_model = CommonAttributePO::convert_po_to_model(form);
+
+    let delete_result = CommonAttributeMutation::delete(conn, common_attribute_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -90,7 +96,12 @@ pub async fn batch_remove(
     let conn = &data.conn;
     let po_list = common_attribute_form.into_inner();
 
-    let delete_result = CommonAttributeMutation::batch_delete(conn, po_list)
+    let mut model_list:Vec<common_attribute::Model>  = vec![];
+    for po in po_list {
+        model_list.push(CommonAttributePO::convert_po_to_model(po));
+    }
+    
+    let delete_result = CommonAttributeMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

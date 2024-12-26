@@ -1,13 +1,13 @@
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
+use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
     dto::{po::base::project_po::ProjectPO, vo::base::project_vo::ProjectVO},
     service::base::project_service::{ProjectMutation, ProjectQuery},
 };
-
+use entity::entity::project;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -21,7 +21,9 @@ pub async fn add(
 
     let form = project_form.into_inner();
 
-    let project_save = ProjectMutation::create(conn, form)
+    let project_model = ProjectPO::convert_po_to_model(form);
+
+    let project_save = ProjectMutation::create(conn, project_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -47,7 +49,9 @@ pub async fn update(
     let conn = &data.conn;
     let form = project_form.into_inner();
 
-    let project_save = ProjectMutation::update_by_id(conn, form)
+    let project_model = ProjectPO::convert_po_to_model(form);
+
+    let project_save = ProjectMutation::update_by_id(conn, project_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -72,7 +76,32 @@ pub async fn remove(
     let conn = &data.conn;
     let form = project_form.into_inner();
 
-    let delete_result = ProjectMutation::delete(conn, form)
+    let project_model = ProjectPO::convert_po_to_model(form);
+
+    let delete_result = ProjectMutation::delete(conn, project_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    Ok(HttpResponse::Ok().json(delete_result.rows_affected))
+}
+
+#[tcdt_route(batch_remove)]
+#[post("/project/batchRemove")]
+pub async fn batch_remove(
+    data: web::Data<AppState>,
+    project_form: web::Json<Vec<ProjectPO>>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let po_list = project_form.into_inner();
+
+    let mut model_list:Vec<project::Model>  = vec![];
+    for po in po_list {
+        model_list.push(ProjectPO::convert_po_to_model(po));
+    }
+    
+    let delete_result = ProjectMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);

@@ -1,68 +1,101 @@
 use crate::{
     common::{
         aq::*,
-        aq_const::{LOGIC_OPERATOR_CODE_AND, OPERATOR_CODE_IN},
     },
     dto::po::base::role_menu_po::RoleMenuPO,
     util::dyn_query::make_select_by_condition,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 use ::entity::entity::role_menu;
 use sea_orm::*;
+use sea_orm::ActiveValue::Set;
+use sea_orm::sea_query::Expr;
+use crate::util::id_util::generate_id;
 
 pub struct RoleMenuMutation;
 
 impl RoleMenuMutation {
     pub async fn create(
         db: &DbConn,
-        role_menu_po: RoleMenuPO,
+        role_menu_model: role_menu::Model,
     ) -> Result<role_menu::Model, TcdtServiceError> {
-        let role_menu_save = RoleMenuPO::insert(role_menu_po, db, None)
-            .await
-            .map_err(|err| {
-                log::error!("RoleMenu insert failed");
-                TcdtServiceError::build_internal_msg_error("RoleMenu insert failed", err)
-            })?;
+        let mut role_menu_active_model = role_menu::convert_model_to_active_model(role_menu_model);
+        let id = generate_id();
+        role_menu_active_model.id_role_menu = Set(id.clone());
+        let _ = role_menu::Entity::insert(role_menu_active_model).exec(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "RoleMenu insert failed",
+                err,
+            )
+        })?;
+
+        let role_menu_save = role_menu::Entity::find_by_id(id).one(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "RoleMenu insert after find failed",
+                err,
+            )
+        })?
+            .ok_or(TcdtServiceError::build_internal_msg("RoleMenu insert after cannot find entity"))?;
         Ok(role_menu_save)
     }
 
     pub async fn update_by_id(
         db: &DbConn,
-        role_menu_po: RoleMenuPO,
+        role_menu_model: role_menu::Model,
     ) -> Result<role_menu::Model, TcdtServiceError> {
-        let role_menu_save = RoleMenuPO::update(role_menu_po, db, None)
+        let id = role_menu_model.id_role_menu.clone();
+
+        let role_menu_persist_model: role_menu::ActiveModel = role_menu::Entity::find_by_id(&id)
+            .one(db)
             .await
             .map_err(|err| {
-                log::error!("RoleMenu update failed");
-                TcdtServiceError::build_internal_msg_error("RoleMenu update failed", err)
-            })?;
+                TcdtServiceError::build_internal_msg_error(
+                    "RoleMenu update before find_by_id failed",
+                    err,
+                )
+            })?
+            .ok_or(TcdtServiceError::build_internal_msg(&format!("RoleMenu update before cannot find entity [{}].", stringify!(#entity_name_ident))))?
+            .into_active_model();
+
+        let mut role_menu_active_model = role_menu::convert_model_to_active_model(role_menu_model);
+
+        let role_menu_save = role_menu_active_model
+            .update(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                " RoleMenu update failed",
+                err,
+            )
+        })?;
+
         Ok(role_menu_save)
     }
 
     pub async fn delete(
         db: &DbConn,
-        role_menu_po: RoleMenuPO,
+        role_menu_model: role_menu::Model,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let delete_result = RoleMenuPO::delete(role_menu_po, db, None)
+        let delete_result = role_menu::Entity::delete(role_menu_model.into_active_model())
+            .exec(db)
             .await
             .map_err(|err| {
                 log::error!("RoleMenu delete failed");
-                TcdtServiceError::build_internal_msg_error("RoleMenu delete failed", err)
+                TcdtServiceError::build_internal_msg_error("RoleMenu delete_all failed", err)
             })?;
         Ok(delete_result)
     }
 
     pub async fn batch_delete(
         db: &DbConn,
-        role_menu_po_list: Vec<RoleMenuPO>,
+        role_menu_model_list: Vec<role_menu::Model>,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let id_list = role_menu_po_list
-            .iter()
-            .map(|po| po.id_role_menu.clone())
-            .collect::<Vec<_>>();
+        let id_list = role_menu_model_list.iter().map(|role_menu_model| {
+            role_menu_model.id_role_menu.clone()
+        }).collect::<Vec<String>>();
         let delete_result = role_menu::Entity::delete_many()
-            .filter(role_menu::Column::IdRoleMenu.is_in(id_list))
+            .filter(Expr::col(role_menu::Column::IdRoleMenu).is_in(id_list))
             .exec(db)
             .await
             .map_err(|err| {
@@ -94,9 +127,9 @@ impl RoleMenuQuery {
             role_menu::Entity::find_by_id(id)
                 .one(db)
                 .await.map_err(|err| {
-                    log::error!("RoleMenu find_by_id failed");
-                    TcdtServiceError::build_internal_msg_error("RoleMenu find_by_id failed", err)
-                })?
+                log::error!("RoleMenu find_by_id failed");
+                TcdtServiceError::build_internal_msg_error("RoleMenu find_by_id failed", err)
+            })?
                 .ok_or(TcdtServiceError::build_internal_msg("RoleMenu cant not find data"))?;
         Ok(role_menu_entity)
     }
@@ -105,21 +138,11 @@ impl RoleMenuQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<role_menu::Model>, TcdtServiceError> {
-        let aq_condition = AqCondition {
-            logic_node: Some(Box::new(AqLogicNode {
-                logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
-                logic_node: None,
-                filter_nodes: vec![AqFilterNode {
-                    name: "idRoleMenu".to_string(),
-                    operator_code: OPERATOR_CODE_IN.to_owned(),
-                    filter_params: ids
-                        .iter()
-                        .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
-                        .collect(),
-                }],
-            })),
-            orders: vec![],
-        };
+        let aq_condition = AqCondition::build_in_condition("idRoleMenu", ids
+            .iter()
+            .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+            .collect());
+
         let sql_build = make_select_by_condition(
             role_menu::Entity::default(),
             aq_condition,

@@ -1,68 +1,101 @@
 use crate::{
     common::{
         aq::*,
-        aq_const::{LOGIC_OPERATOR_CODE_AND, OPERATOR_CODE_IN},
     },
     dto::po::base::user_po::UserPO,
     util::dyn_query::make_select_by_condition,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
-use tcdt_common::tcdt_trait::TcdtCudParamObjectTrait;
 use ::entity::entity::user;
 use sea_orm::*;
+use sea_orm::ActiveValue::Set;
+use sea_orm::sea_query::Expr;
+use crate::util::id_util::generate_id;
 
 pub struct UserMutation;
 
 impl UserMutation {
     pub async fn create(
         db: &DbConn,
-        user_po: UserPO,
+        user_model: user::Model,
     ) -> Result<user::Model, TcdtServiceError> {
-        let user_save = UserPO::insert(user_po, db, None)
-            .await
-            .map_err(|err| {
-                log::error!("User insert failed");
-                TcdtServiceError::build_internal_msg_error("User insert failed", err)
-            })?;
+        let mut user_active_model = user::convert_model_to_active_model(user_model);
+        let id = generate_id();
+        user_active_model.id_user = Set(id.clone());
+        let _ = user::Entity::insert(user_active_model).exec(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "User insert failed",
+                err,
+            )
+        })?;
+
+        let user_save = user::Entity::find_by_id(id).one(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                "User insert after find failed",
+                err,
+            )
+        })?
+            .ok_or(TcdtServiceError::build_internal_msg("User insert after cannot find entity"))?;
         Ok(user_save)
     }
 
     pub async fn update_by_id(
         db: &DbConn,
-        user_po: UserPO,
+        user_model: user::Model,
     ) -> Result<user::Model, TcdtServiceError> {
-        let user_save = UserPO::update(user_po, db, None)
+        let id = user_model.id_user.clone();
+
+        let user_persist_model: user::ActiveModel = user::Entity::find_by_id(&id)
+            .one(db)
             .await
             .map_err(|err| {
-                log::error!("User update failed");
-                TcdtServiceError::build_internal_msg_error("User update failed", err)
-            })?;
+                TcdtServiceError::build_internal_msg_error(
+                    "User update before find_by_id failed",
+                    err,
+                )
+            })?
+            .ok_or(TcdtServiceError::build_internal_msg(&format!("User update before cannot find entity [{}].", stringify!(#entity_name_ident))))?
+            .into_active_model();
+
+        let mut user_active_model = user::convert_model_to_active_model(user_model);
+
+        let user_save = user_active_model
+            .update(db)
+            .await.map_err(|err| {
+            TcdtServiceError::build_internal_msg_error(
+                " User update failed",
+                err,
+            )
+        })?;
+
         Ok(user_save)
     }
 
     pub async fn delete(
         db: &DbConn,
-        user_po: UserPO,
+        user_model: user::Model,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let delete_result = UserPO::delete(user_po, db, None)
+        let delete_result = user::Entity::delete(user_model.into_active_model())
+            .exec(db)
             .await
             .map_err(|err| {
                 log::error!("User delete failed");
-                TcdtServiceError::build_internal_msg_error("User delete failed", err)
+                TcdtServiceError::build_internal_msg_error("User delete_all failed", err)
             })?;
         Ok(delete_result)
     }
 
     pub async fn batch_delete(
         db: &DbConn,
-        user_po_list: Vec<UserPO>,
+        user_model_list: Vec<user::Model>,
     ) -> Result<DeleteResult, TcdtServiceError> {
-        let id_list = user_po_list
-            .iter()
-            .map(|po| po.id_user.clone())
-            .collect::<Vec<_>>();
+        let id_list = user_model_list.iter().map(|user_model| {
+            user_model.id_user.clone()
+        }).collect::<Vec<String>>();
         let delete_result = user::Entity::delete_many()
-            .filter(user::Column::IdUser.is_in(id_list))
+            .filter(Expr::col(user::Column::IdUser).is_in(id_list))
             .exec(db)
             .await
             .map_err(|err| {
@@ -94,9 +127,9 @@ impl UserQuery {
             user::Entity::find_by_id(id)
                 .one(db)
                 .await.map_err(|err| {
-                    log::error!("User find_by_id failed");
-                    TcdtServiceError::build_internal_msg_error("User find_by_id failed", err)
-                })?
+                log::error!("User find_by_id failed");
+                TcdtServiceError::build_internal_msg_error("User find_by_id failed", err)
+            })?
                 .ok_or(TcdtServiceError::build_internal_msg("User cant not find data"))?;
         Ok(user_entity)
     }
@@ -105,21 +138,11 @@ impl UserQuery {
         db: &DbConn,
         ids: Vec<String>,
     ) -> Result<Vec<user::Model>, TcdtServiceError> {
-        let aq_condition = AqCondition {
-            logic_node: Some(Box::new(AqLogicNode {
-                logic_operator_code: LOGIC_OPERATOR_CODE_AND.to_owned(),
-                logic_node: None,
-                filter_nodes: vec![AqFilterNode {
-                    name: "idUser".to_string(),
-                    operator_code: OPERATOR_CODE_IN.to_owned(),
-                    filter_params: ids
-                        .iter()
-                        .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
-                        .collect(),
-                }],
-            })),
-            orders: vec![],
-        };
+        let aq_condition = AqCondition::build_in_condition("idUser", ids
+            .iter()
+            .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+            .collect());
+
         let sql_build = make_select_by_condition(
             user::Entity::default(),
             aq_condition,

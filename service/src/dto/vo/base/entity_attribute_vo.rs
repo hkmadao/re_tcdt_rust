@@ -130,6 +130,9 @@ pub struct DataTypeVO {
     /// HTML5输入框类型:
     #[serde(default)]
     pub web_input_type: Option<String>,
+    /// 系统预置数据标识:
+    #[serde(default)]
+    pub fg_preset: Option<bool>,
 }
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, ViewObectConvert)]
 #[serde(rename_all = "camelCase")]
