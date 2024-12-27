@@ -38,6 +38,7 @@ use tcdt_service::{
         ext::entity_collection_ext_service::EntityCollectionExtMutation,
     },
 };
+use tcdt_service::dto::po::ext::entity_collection::join_entity_po::JoinEntityPO;
 
 #[tcdt_route(ext_get_by_id)]
 #[get("/entityCollection/extGetById")]
@@ -494,7 +495,7 @@ pub async fn copy_by_id(
             Ok(HttpResponse::Ok().json(app_result))
         }
         SaveResult::None() => {
-            let app_result = AppResult::<i32>::success_msg(String::from("delete success"));
+            let app_result = AppResult::<i32>::success_msg(String::from("copy success"));
             Ok(HttpResponse::Ok().json(app_result))
         }
     }
@@ -648,4 +649,39 @@ fn convert_to_entity_po(entity_vo: &DdEntityVO) -> DdEntityPO {
         })
         .collect();
     entity_po
+}
+
+/// join entity from other collection
+#[tcdt_route(join_entities)]
+#[post("/entityCollection/joinEntities")]
+pub async fn join_entities(
+    data: web::Data<AppState>,
+    join_po: web::Json<JoinEntityPO>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let join_po = join_po.into_inner();
+    let id_entity_collection = join_po.entity_collection.id_entity_collection.clone();
+    EntityCollectionExtMutation::join_entities(conn, join_po)
+        .await
+        .map_err(|e| {
+            log::error!("join_entities error: {:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+
+    let entity_collection_entity =
+        EntityCollectionQuery::find_by_id(conn, id_entity_collection)
+            .await
+            .map_err(|e| {
+                log::error!("{:?}", e);
+                match e {
+                    TcdtServiceError::Custom(cus) => {
+                        error::ErrorInternalServerError(cus.get_message())
+                    }
+                    _ => error::ErrorInternalServerError("internal server error"),
+                }
+            })?;
+
+    let coll_vo = convert_dto(conn, entity_collection_entity).await?;
+
+    Ok(HttpResponse::Ok().json(coll_vo))
 }

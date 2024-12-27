@@ -19,6 +19,7 @@ use ::entity::entity::{
 };
 use sea_orm::*;
 use tcdt_common::tcdt_service_error::TcdtServiceError;
+use crate::util::id_util::generate_id;
 
 pub struct ComponentExtMutation;
 
@@ -379,7 +380,7 @@ async fn insert_or_update_by_action<C: ConnectionTrait>(
     save_po: &mut SavePO,
 ) -> Result<ComponentModel, TcdtServiceError> {
     if save_po.action == DO_NEW {
-        save_po.id_component = nanoid::nanoid!();
+        save_po.id_component = generate_id();
     }
 
     make_relation(save_po);
@@ -673,7 +674,7 @@ fn make_relation(save_po: &mut SavePO) {
     save_po.component_node_uis.iter_mut().for_each(|po| {
         po.id_component = Some(save_po.id_component.clone());
         if po.action == DO_NEW {
-            po.id_component_node_ui = nanoid::nanoid!();
+            po.id_component_node_ui = generate_id();
         }
     });
 
@@ -683,7 +684,7 @@ fn make_relation(save_po: &mut SavePO) {
         .for_each(|po| {
             po.id_component = Some(save_po.id_component.clone());
             if po.action == DO_NEW {
-                po.id_component_entity_associate = nanoid::nanoid!();
+                po.id_component_entity_associate = generate_id();
             }
         });
 
@@ -691,7 +692,7 @@ fn make_relation(save_po: &mut SavePO) {
         po.id_component = Some(save_po.id_component.clone());
         if po.action == DO_NEW {
             let old_id_enum = po.id_component_enum.clone();
-            po.id_component_enum = nanoid::nanoid!();
+            po.id_component_enum = generate_id();
             save_po
                 .component_node_uis
                 .iter_mut()
@@ -707,7 +708,7 @@ fn make_relation(save_po: &mut SavePO) {
         po.id_component = Some(save_po.id_component.clone());
         if po.action == DO_NEW {
             let old_id_entity = po.id_component_entity.clone();
-            po.id_component_entity = nanoid::nanoid!();
+            po.id_component_entity = generate_id();
             if save_po.id_main_component_entity == Some(old_id_entity.clone()) {
                 save_po.id_main_component_entity = Some(po.id_component_entity.clone());
             }
@@ -735,14 +736,14 @@ fn make_relation(save_po: &mut SavePO) {
             attr.id_component_entity = Some(po.id_component_entity.clone());
             if po.action == DO_NEW {
                 let _old_id_attribute = attr.id_ext_attribute.clone();
-                attr.id_ext_attribute = nanoid::nanoid!();
+                attr.id_ext_attribute = generate_id();
             }
         });
         po.computation_attributes.iter_mut().for_each(|attr| {
             attr.id_component_entity = Some(po.id_component_entity.clone());
             if po.action == DO_NEW {
                 let _old_id_computation_attribute = attr.id_computation_attribute.clone();
-                attr.id_computation_attribute = nanoid::nanoid!();
+                attr.id_computation_attribute = generate_id();
             }
         });
     });

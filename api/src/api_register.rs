@@ -285,6 +285,7 @@ pub(crate) fn go_register(cfg: &mut web::ServiceConfig) {
     cfg.service(MenuApi::get_by_id);
     cfg.service(MenuApi::get_by_ids);
     cfg.service(MenuApi::page);
+    cfg.service(MenuApi::aq);
     cfg.service(NodeUiApi::add);
     cfg.service(NodeUiApi::update);
     cfg.service(NodeUiApi::remove);
@@ -377,6 +378,7 @@ pub(crate) fn go_register(cfg: &mut web::ServiceConfig) {
     cfg.service(EntityCollectionExtApi::get_simple_collection);
     cfg.service(EntityCollectionExtApi::save_by_action);
     cfg.service(EntityCollectionExtApi::copy_by_id);
+    cfg.service(EntityCollectionExtApi::join_entities);
     cfg.service(GeneratorApi::generate_single_file);
     cfg.service(GeneratorApi::entity_coll_generate_full);
     cfg.service(GeneratorApi::entity_coll_generate_part);

@@ -8,12 +8,12 @@ use crate::service::ext::generator::genrate_util::{
 use crate::service::ext::generator::write_dir::folder_zip;
 use crate::util::file_util::recursion_get_file_by_folder;
 use ::entity::entity::{component, component_module, project, sub_project};
-use nanoid::nanoid;
 use sea_orm::*;
 use tcdt_common::file_util::get_file_separator;
 use tcdt_common::tcdt_conf::TCDT_CONF;
 use tcdt_common::tcdt_service_error::TcdtServiceError;
 use tera::{Context, Tera};
+use crate::util::id_util::generate_id;
 
 const DIR_TEMPLATE_FULL: &str = "comp_enum_full";
 const DIR_TEMPLATE_PART: &str = "comp_enum_part";
@@ -31,7 +31,7 @@ pub async fn generate_full(
             .ok_or(TcdtServiceError::build_internal_msg(
                 "project entity template code is Empty",
             ))?;
-    let nanoid_dir = nanoid!();
+    let nanoid_dir = generate_id();
     create_folder_strut_by_template_folder(
         &TCDT_CONF.code_template_path.to_string(),
         &template_code,
@@ -111,7 +111,7 @@ pub async fn generate_part(
             ))?;
 
     let component_info = build(db, coll_entity).await?;
-    let nanoid_dir = nanoid!();
+    let nanoid_dir = generate_id();
     let target_code_dir = component_info
         .package_name
         .clone()

@@ -157,6 +157,7 @@ pub mod dto {
             }
             pub mod entity_collection {
                 pub mod collection_po;
+                pub mod join_entity_po;
             }
             pub mod generate {
                 pub mod collection;

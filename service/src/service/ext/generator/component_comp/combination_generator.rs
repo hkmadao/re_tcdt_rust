@@ -10,13 +10,13 @@ use crate::service::{
 };
 use crate::util::file_util::{copy_folder_to_dest, recursion_get_file_by_folder};
 use ::entity::entity::{component, component_module, project, sub_project};
-use nanoid::nanoid;
 use sea_orm::*;
 use std::fs;
 use tcdt_common::file_util::get_file_separator;
 use tcdt_common::tcdt_conf::TCDT_CONF;
 use tcdt_common::tcdt_service_error::TcdtServiceError;
 use tera::{Context, Tera};
+use crate::util::id_util::generate_id;
 
 const DIR_TEMPLATE: &str = "comp_combination";
 
@@ -39,7 +39,7 @@ pub async fn generate(db: &DbConn, id_coll: String) -> Result<GenerateResult, Tc
             .await?;
 
     let component_info = build(db, coll_entity, column_domain_type_map).await?;
-    let nanoid_dir = nanoid!();
+    let nanoid_dir = generate_id();
     let target_code_dir = component_info
         .package_name
         .clone()

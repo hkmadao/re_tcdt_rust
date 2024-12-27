@@ -16,6 +16,14 @@ use ::entity::entity::{
 };
 use sea_orm::*;
 use tcdt_common::tcdt_service_error::TcdtServiceError;
+use crate::common::aq::{AqCondition, EFilterParam};
+use crate::dto::po::ext::entity_collection::join_entity_po::JoinEntityPO;
+use crate::service::base::{dd_entity_service::DdEntityQuery,
+                           dd_enum_service::DdEnumQuery, entity_associate_service,
+                           entity_associate_service::EntityAssociateQuery,
+                           node_ui_service::NodeUiQuery,
+                           enum_associate_service::EnumAssociateQuery};
+use crate::util::id_util::generate_id;
 
 pub struct EntityCollectionExtMutation;
 
@@ -73,6 +81,155 @@ impl EntityCollectionExtMutation {
         })?;
         Ok(SaveResult::Ok(after_save))
     }
+
+    /// join entity from other collection
+    pub async fn join_entities(
+        db: &DbConn,
+        join_po: JoinEntityPO,
+    ) -> Result<(), TcdtServiceError> {
+        let txn = db.begin().await.map_err(|err| {
+            log::error!("tx begin failed");
+            TcdtServiceError::build_internal_msg_error("tx begin failed", err)
+        })?;
+        let mut element_count = 0;
+        if !join_po.entity_ids.is_empty() {
+            // entity
+            let mut entity_model_list = DdEntityQuery::find_by_ids(db, join_po.entity_ids.clone()).await
+                .map_err(|err| {
+                    log::error!("join_entities entity find_by_ids failed");
+                    TcdtServiceError::build_internal_msg_error("join_entities entity find_by_ids failed", err)
+                })?;
+            entity_model_list.iter_mut().for_each(|entity_model| {
+                entity_model.id_entity_collection = Some(join_po.entity_collection.id_entity_collection.clone());
+            });
+            for entity_model in entity_model_list {
+                dd_entity::Entity::update(dd_entity::convert_model_to_active_model(entity_model))
+                    .exec(&txn)
+                    .await
+                    .map_err(|err| {
+                        log::error!("join_entities update entity failed");
+                        TcdtServiceError::build_internal_msg_error("join_entities update entity failed", err)
+                    })?;
+            }
+            let filter_params = join_po.entity_ids.clone()
+                .iter()
+                .map(|id| EFilterParam::String(Some(Box::new(id.to_string()))))
+                .collect::<Vec<EFilterParam>>();
+            let aq_condition = AqCondition::build_in_condition("idDown", filter_params.clone());
+            // entity_associate
+            let mut entity_associate_model_list = EntityAssociateQuery::find_collection_by_condition(db, aq_condition.clone()).await
+                .map_err(|err| {
+                    log::error!("join_entities find entity_associate failed");
+                    TcdtServiceError::build_internal_msg_error("join_entities find entity_associate failed", err)
+                })?;
+            entity_associate_model_list.iter_mut().for_each(|entity_associate_model| {
+                entity_associate_model.id_entity_collection = Some(join_po.entity_collection.id_entity_collection.clone());
+            });
+            let mut out_entity_id_list = entity_associate_model_list.iter().map(|entity_associate_model| {
+                entity_associate_model.id_up.clone().unwrap_or_default()
+            }).collect::<Vec<String>>();
+            for entity_associate_model in entity_associate_model_list {
+                entity_associate::Entity::update(entity_associate::convert_model_to_active_model(entity_associate_model))
+                    .exec(&txn)
+                    .await
+                    .map_err(|err| {
+                        log::error!("join_entities update entity_associate failed");
+                        TcdtServiceError::build_internal_msg_error("join_entities update entity_associate failed", err)
+                    })?;
+            }
+            // enum_associate
+            let aq_condition = AqCondition::build_in_condition("idEntity", filter_params.clone());
+            let mut enum_associate_model_list = EnumAssociateQuery::find_collection_by_condition(db, aq_condition).await
+                .map_err(|err| {
+                    log::error!("join_entities find enum_associate failed");
+                    TcdtServiceError::build_internal_msg_error("join_entities find enum_associate failed", err)
+                })?;
+            enum_associate_model_list.iter_mut().for_each(|enum_associate_model| {
+                enum_associate_model.id_entity_collection = Some(join_po.entity_collection.id_entity_collection.clone());
+            });
+            let mut out_enum_id_list = enum_associate_model_list.iter().map(|enum_associate_model| {
+                enum_associate_model.id_enum.clone().unwrap_or_default()
+            }).collect::<Vec<String>>();
+            for enum_associate_model in enum_associate_model_list {
+                enum_associate::Entity::update(enum_associate::convert_model_to_active_model(enum_associate_model))
+                    .exec(&txn)
+                    .await
+                    .map_err(|err| {
+                        log::error!("join_entities update enum_associate failed");
+                        TcdtServiceError::build_internal_msg_error("join_entities update enum_associate failed", err)
+                    })?;
+            }
+            let mut all_out_id_list: Vec<String> = join_po.entity_ids.clone();
+            all_out_id_list.append(&mut out_entity_id_list);
+            all_out_id_list.append(&mut out_enum_id_list);
+            let mut node_ui_active_model_list: Vec<node_ui::ActiveModel> = vec![];
+            for id_element in all_out_id_list {
+                let node_ui_active_model = node_ui::ActiveModel {
+                    id_node_ui: Set(generate_id()),
+                    x: Set(Some(200 * element_count)),
+                    y: Set(Some(300)),
+                    width: Set(Some(300)),
+                    height: Set(Some(200)),
+                    id_element: Set(Some(id_element)),
+                    id_entity_collection: Set(Some(join_po.entity_collection.id_entity_collection.clone())),
+                };
+                node_ui_active_model_list.push(node_ui_active_model);
+                element_count = element_count + 1;
+            }
+            node_ui::Entity::insert_many(node_ui_active_model_list)
+                .exec(&txn)
+                .await
+                .map_err(|err| {
+                    log::error!("join_entities insert entity node_ui failed");
+                    TcdtServiceError::build_internal_msg_error("join_entities insert entity node_ui failed", err)
+                })?;
+        }
+        if !join_po.enum_ids.is_empty() {
+            // enum
+            let mut enum_model_list = DdEnumQuery::find_by_ids(db, join_po.enum_ids.clone()).await
+                .map_err(|err| {
+                    log::error!("join_entities enum find_by_ids failed");
+                    TcdtServiceError::build_internal_msg_error("join_entities enum find_by_ids failed", err)
+                })?;
+            enum_model_list.iter_mut().for_each(|enum_model| {
+                enum_model.id_entity_collection = Some(join_po.entity_collection.id_entity_collection.clone());
+            });
+            let mut node_ui_active_model_list: Vec<node_ui::ActiveModel> = vec![];
+            for enum_model in enum_model_list {
+                let id_enum = enum_model.id_enum.clone();
+                dd_enum::Entity::update(dd_enum::convert_model_to_active_model(enum_model))
+                    .exec(&txn)
+                    .await
+                    .map_err(|err| {
+                        log::error!("join_entities update enum failed");
+                        TcdtServiceError::build_internal_msg_error("join_entities update enum failed", err)
+                    })?;
+                let node_ui_active_model = node_ui::ActiveModel {
+                    id_node_ui: Set(generate_id()),
+                    x: Set(Some(200 * element_count)),
+                    y: Set(Some(300)),
+                    width: Set(Some(300)),
+                    height: Set(Some(200)),
+                    id_element: Set(Some(id_enum)),
+                    id_entity_collection: Set(Some(join_po.entity_collection.id_entity_collection.clone())),
+                };
+                node_ui_active_model_list.push(node_ui_active_model);
+                element_count = element_count + 1;
+            }
+            node_ui::Entity::insert_many(node_ui_active_model_list)
+                .exec(&txn)
+                .await
+                .map_err(|err| {
+                    log::error!("join_entities insert enum node_ui failed");
+                    TcdtServiceError::build_internal_msg_error("join_entities insert enum node_ui failed", err)
+                })?;
+        }
+        txn.commit().await.map_err(|err| {
+            log::error!("tx commit failed");
+            TcdtServiceError::build_internal_msg_error("tx commit failed", err)
+        })?;
+        Ok(())
+    }
 }
 
 async fn delete_check_by_action<C: ConnectionTrait>(
@@ -92,7 +249,7 @@ async fn delete_check_by_action<C: ConnectionTrait>(
         if entity_count > 0 {
             let msg = DeleteRefErrorMessageVO {
                 id_data: save_po.id_entity_collection.clone(),
-                message: format!("entity collectin exist entity, can not delete",),
+                message: format!("entity collectin exist entity, can not delete", ),
                 source_class_name: String::from(""),
                 ref_class_name: String::from(""),
             };
@@ -109,7 +266,7 @@ async fn delete_check_by_action<C: ConnectionTrait>(
         if enum_count > 0 {
             let msg = DeleteRefErrorMessageVO {
                 id_data: save_po.id_entity_collection.clone(),
-                message: format!("entity collectin exist enum, can not delete",),
+                message: format!("entity collectin exist enum, can not delete", ),
                 source_class_name: String::from(""),
                 ref_class_name: String::from(""),
             };
@@ -470,7 +627,7 @@ async fn insert_or_update_by_action<C: ConnectionTrait>(
     save_po: &mut SavePO,
 ) -> Result<EntityCollectionModel, TcdtServiceError> {
     if save_po.action == DO_NEW {
-        save_po.id_entity_collection = nanoid::nanoid!();
+        save_po.id_entity_collection = generate_id();
         let active_entity = make_collection_active_model(save_po);
 
         let _ = EntityCollectionEntity::insert(active_entity)
@@ -781,21 +938,21 @@ fn make_relation(save_po: &mut SavePO) {
     save_po.node_uis.iter_mut().for_each(|po| {
         po.id_entity_collection = Some(save_po.id_entity_collection.clone());
         if po.action == DO_NEW {
-            po.id_node_ui = nanoid::nanoid!();
+            po.id_node_ui = generate_id();
         }
     });
 
     save_po.entity_associates.iter_mut().for_each(|po| {
         po.id_entity_collection = Some(save_po.id_entity_collection.clone());
         if po.action == DO_NEW {
-            po.id_entity_associate = nanoid::nanoid!();
+            po.id_entity_associate = generate_id();
         }
     });
 
     save_po.enum_associates.iter_mut().for_each(|po| {
         po.id_entity_collection = Some(save_po.id_entity_collection.clone());
         if po.action == DO_NEW {
-            po.id_enum_associate = nanoid::nanoid!();
+            po.id_enum_associate = generate_id();
         }
     });
 
@@ -803,7 +960,7 @@ fn make_relation(save_po: &mut SavePO) {
         po.id_entity_collection = Some(save_po.id_entity_collection.clone());
         if po.action == DO_NEW {
             let old_id_enum = po.id_enum.clone();
-            po.id_enum = nanoid::nanoid!();
+            po.id_enum = generate_id();
             save_po.enum_associates.iter_mut().for_each(|asso| {
                 if asso.id_enum == Some(old_id_enum.clone()) {
                     asso.id_enum = Some(po.id_enum.clone());
@@ -818,7 +975,7 @@ fn make_relation(save_po: &mut SavePO) {
         po.attributes.iter_mut().for_each(|attr| {
             attr.id_enum = Some(po.id_enum.clone());
             if po.action == DO_NEW {
-                attr.id_enum_attribute = nanoid::nanoid!();
+                attr.id_enum_attribute = generate_id();
             }
         });
     });
@@ -827,7 +984,7 @@ fn make_relation(save_po: &mut SavePO) {
         po.id_entity_collection = Some(save_po.id_entity_collection.clone());
         if po.action == DO_NEW {
             let old_id_entity = po.id_entity.clone();
-            po.id_entity = nanoid::nanoid!();
+            po.id_entity = generate_id();
             save_po.enum_associates.iter_mut().for_each(|asso| {
                 if asso.id_entity == Some(old_id_entity.clone()) {
                     asso.id_entity = Some(po.id_entity.clone());
@@ -851,7 +1008,7 @@ fn make_relation(save_po: &mut SavePO) {
             attr.id_entity = Some(po.id_entity.clone());
             if po.action == DO_NEW {
                 let old_id_attribute = attr.id_attribute.clone();
-                attr.id_attribute = nanoid::nanoid!();
+                attr.id_attribute = generate_id();
                 save_po.enum_associates.iter_mut().for_each(|asso| {
                     if asso.id_attribute == Some(old_id_attribute.clone()) {
                         asso.id_attribute = Some(attr.id_attribute.clone());

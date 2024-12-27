@@ -208,6 +208,7 @@ pub async fn page(
     Ok(HttpResponse::Ok().json(page_info))
 }
 
+#[tcdt_route(aq)]
 #[post("/menu/aq")]
 pub async fn aq(
     _req: HttpRequest,

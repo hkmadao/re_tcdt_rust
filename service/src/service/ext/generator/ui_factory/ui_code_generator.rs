@@ -7,12 +7,12 @@ use crate::service::ext::generator::genrate_util::{
 use crate::service::ext::generator::write_dir::folder_zip;
 use crate::util::file_util::recursion_get_file_by_folder;
 use ::entity::entity::{bill_form, button_action, factory, project, query, tree};
-use nanoid::nanoid;
 use sea_orm::*;
 use tcdt_common::file_util::get_file_separator;
 use tcdt_common::tcdt_conf::TCDT_CONF;
 use tcdt_common::tcdt_service_error::TcdtServiceError;
 use tera::{Context, Tera};
+use crate::util::id_util::generate_id;
 
 const DIR_TEMPLATE: &str = "web_ui";
 
@@ -31,7 +31,7 @@ pub async fn ui_code_generate(
             ))?;
 
     let ui_factory_po = build(db, &factory_entity).await?;
-    let nanoid_dir = nanoid!();
+    let nanoid_dir = generate_id();
     let target_code_dir = ui_factory_po
         .name
         .clone()

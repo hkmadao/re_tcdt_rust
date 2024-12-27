@@ -11,12 +11,12 @@ use crate::service::{
 };
 use crate::util::file_util::recursion_get_file_by_folder;
 use ::entity::entity::{dto_entity_collection, dto_module, project, sub_project};
-use nanoid::nanoid;
 use sea_orm::*;
 use tcdt_common::file_util::get_file_separator;
 use tcdt_common::tcdt_conf::TCDT_CONF;
 use tcdt_common::tcdt_service_error::TcdtServiceError;
 use tera::{Context, Tera};
+use crate::util::id_util::generate_id;
 
 const DIR_TEMPLATE_INPUT_FULL: &str = "dto_input_full";
 const DIR_TEMPLATE_INPUT_PART: &str = "dto_input_part";
@@ -68,7 +68,7 @@ async fn generate_full(
     let column_domain_type_map =
         DataTypeExtQuery::find_and_make_map_by_project_id(db, project_entity.id_project.clone())
             .await?;
-    let nanoid_dir = nanoid!();
+    let nanoid_dir = generate_id();
     create_folder_strut_by_template_folder(
         &TCDT_CONF.code_template_path.to_string(),
         &template_code,
@@ -151,7 +151,7 @@ async fn generate_part(
             .await?;
 
     let application_info = build(db, coll_entity, column_domain_type_map).await?;
-    let nanoid_dir = nanoid!();
+    let nanoid_dir = generate_id();
     let target_code_dir = application_info
         .package_name
         .clone()

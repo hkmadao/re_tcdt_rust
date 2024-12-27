@@ -7,12 +7,12 @@ use crate::service::ext::generator::genrate_util::{
 use crate::service::ext::generator::write_dir::folder_zip;
 use crate::util::file_util::{get_file_extension, recursion_get_file_by_folder};
 use ::entity::entity::project;
-use nanoid::nanoid;
 use sea_orm::*;
 use tcdt_common::file_util::get_file_separator;
 use tcdt_common::tcdt_conf::TCDT_CONF;
 use tcdt_common::tcdt_service_error::TcdtServiceError;
 use tera::{Context, Tera};
+use crate::util::id_util::generate_id;
 
 const DIR_TEMPLATE_SINGLE_FILE: &str = "app_single_file";
 const DIR_TEMPLATE_FULL: &str = "app_full";
@@ -32,7 +32,7 @@ pub async fn generate_single_file(
             .ok_or(TcdtServiceError::build_custom_msg(
                 "project entity template code is Empty",
             ))?;
-    let nanoid_dir = nanoid!();
+    let nanoid_dir = generate_id();
     create_folder_strut_by_template_folder(
         &TCDT_CONF.code_template_path.to_string(),
         &template_code,
@@ -103,7 +103,7 @@ pub async fn generate_full(
                 "project entity template code is Empty",
             ))?;
 
-    let nanoid_dir = nanoid!();
+    let nanoid_dir = generate_id();
     create_folder_strut_by_template_folder(
         &TCDT_CONF.code_template_path.to_string(),
         &template_code,
@@ -178,7 +178,7 @@ pub async fn generate_part(
             .ok_or(TcdtServiceError::build_custom_msg(
                 "project entity template code is Empty",
             ))?;
-    let nanoid_dir = nanoid!();
+    let nanoid_dir = generate_id();
     let target_code_dir = application_info
         .package_name
         .clone()

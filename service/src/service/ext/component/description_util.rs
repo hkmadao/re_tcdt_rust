@@ -10,13 +10,13 @@ use ::entity::entity::{
     computation_attribute, data_type, dd_entity, dd_enum, entity_associate, entity_attribute,
     enum_associate, enum_attribute, ext_attribute, sub_project,
 };
-use nanoid::nanoid;
 use sea_orm::*;
 use tcdt_common::name_switch_util::{
     camel_case_to_pascal_case, pascal_case_to_snake_case, snake_case_to_camel_case,
     snake_case_to_macro_case,
 };
 use tcdt_common::tcdt_service_error::TcdtServiceError;
+use crate::util::id_util::generate_id;
 
 pub struct DescriptionUtil<'a> {
     db: &'a DbConn,
@@ -123,7 +123,7 @@ impl<'a> DescriptionUtil<'a> {
             .await?;
 
         let description_info = DescriptionInfo {
-            id: nanoid!(),
+            id: generate_id(),
             attribute_name: Some(camel_case_name.clone()),
             display_name: entity_entity.display_name.clone(),
             camel_case_name: Some(camel_case_name.clone()),
@@ -277,7 +277,7 @@ impl<'a> DescriptionUtil<'a> {
                 let fk_snake_case_name = pascal_case_to_snake_case(&fk_attribute_name);
                 let fk_macro_case_name = snake_case_to_macro_case(&fk_attribute_name);
                 let fk_description_info = DescriptionInfo {
-                    id: nanoid!(),
+                    id: generate_id(),
                     attribute_name: Some(fk_camel_case_name.clone()),
                     display_name: up_associate.fk_attribute_display_name.clone(),
                     camel_case_name: Some(fk_camel_case_name.clone()),
@@ -303,7 +303,7 @@ impl<'a> DescriptionUtil<'a> {
                 let down_snake_case_name = pascal_case_to_snake_case(&down_attribute_name);
                 let down_macro_case_name = snake_case_to_macro_case(&down_attribute_name);
                 let down_info = DescriptionInfo {
-                    id: nanoid!(),
+                    id: generate_id(),
                     attribute_name: Some(down_camel_case_name.clone()),
                     display_name: up_associate.fk_attribute_display_name.clone(),
                     camel_case_name: Some(down_camel_case_name.clone()),
@@ -327,7 +327,7 @@ impl<'a> DescriptionUtil<'a> {
                 ref_domain_type_code = Some(String::from(INTERNAL_REF));
             }
             let description_info = DescriptionInfo {
-                id: nanoid!(),
+                id: generate_id(),
                 attribute_name: Some(camel_case_name.clone()),
                 display_name: up_associate.ref_attribute_display_name.clone(),
                 camel_case_name: Some(camel_case_name.clone()),
@@ -484,7 +484,7 @@ impl<'a> DescriptionUtil<'a> {
                 let fk_snake_case_name = pascal_case_to_snake_case(&fk_attribute_name);
                 let fk_macro_case_name = snake_case_to_macro_case(&fk_attribute_name);
                 let fk_description_info = DescriptionInfo {
-                    id: nanoid!(),
+                    id: generate_id(),
                     attribute_name: Some(fk_camel_case_name.clone()),
                     display_name: down_associate.fk_attribute_display_name.clone(),
                     camel_case_name: Some(fk_camel_case_name.clone()),
@@ -510,7 +510,7 @@ impl<'a> DescriptionUtil<'a> {
                 let out_ref_snake_case_name = pascal_case_to_snake_case(&out_ref_attribute_name);
                 let out_ref_macro_case_name = snake_case_to_macro_case(&out_ref_attribute_name);
                 let out_ref_info = DescriptionInfo {
-                    id: nanoid!(),
+                    id: generate_id(),
                     attribute_name: Some(out_ref_camel_case_name.clone()),
                     display_name: down_associate.ref_attribute_name.clone(),
                     camel_case_name: Some(out_ref_camel_case_name.clone()),
@@ -534,7 +534,7 @@ impl<'a> DescriptionUtil<'a> {
                 ref_domain_type_code = Some(String::from(INTERNAL_ARRAY));
             }
             let description_info = DescriptionInfo {
-                id: nanoid!(),
+                id: generate_id(),
                 attribute_name: Some(camel_case_name.clone()),
                 display_name: down_associate.ref_attribute_display_name.clone(),
                 camel_case_name: Some(camel_case_name.clone()),
@@ -723,7 +723,7 @@ impl<'a> DescriptionUtil<'a> {
             }
             let enum_info = self.get_enum_info(&entity_attr.id_attribute)?;
             let description_info = DescriptionInfo {
-                id: nanoid!(),
+                id: generate_id(),
                 attribute_name: entity_attr.attribute_name.clone(),
                 display_name: entity_attr.display_name.clone(),
                 column_name: entity_attr.column_name.clone(),
@@ -770,7 +770,7 @@ impl<'a> DescriptionUtil<'a> {
             let snake_case_name = pascal_case_to_snake_case(&attribute_name);
             let macro_case_name = snake_case_to_macro_case(&attribute_name);
             let description_info = DescriptionInfo {
-                id: nanoid!(),
+                id: generate_id(),
                 attribute_name: computation_attribute_entity.attribute_name.clone(),
                 display_name: computation_attribute_entity.display_name.clone(),
                 fg_computation: Some(true),

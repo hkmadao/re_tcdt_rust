@@ -15,6 +15,7 @@ use ::entity::entity::{
 };
 use sea_orm::*;
 use tcdt_common::tcdt_service_error::TcdtServiceError;
+use crate::util::id_util::generate_id;
 
 pub struct DtoEntityCollectionExtMutation;
 
@@ -399,7 +400,7 @@ async fn insert_or_update_by_action<C: ConnectionTrait>(
     save_po: &mut SavePO,
 ) -> Result<DtoEntityCollectionModel, TcdtServiceError> {
     if save_po.action == DO_NEW {
-        save_po.id_dto_entity_collection = nanoid::nanoid!();
+        save_po.id_dto_entity_collection = generate_id();
     }
     make_relation(save_po);
 
@@ -766,21 +767,21 @@ fn make_relation(save_po: &mut SavePO) {
     save_po.dto_node_uis.iter_mut().for_each(|po| {
         po.id_dto_entity_collection = Some(save_po.id_dto_entity_collection.clone());
         if po.action == DO_NEW {
-            po.id_dto_node_ui = nanoid::nanoid!();
+            po.id_dto_node_ui = generate_id();
         }
     });
 
     save_po.de_associates.iter_mut().for_each(|po| {
         po.id_dto_entity_collection = Some(save_po.id_dto_entity_collection.clone());
         if po.action == DO_NEW {
-            po.id_dto_entity_associate = nanoid::nanoid!();
+            po.id_dto_entity_associate = generate_id();
         }
     });
 
     save_po.dto_enum_associates.iter_mut().for_each(|po| {
         po.id_dto_entity_collection = Some(save_po.id_dto_entity_collection.clone());
         if po.action == DO_NEW {
-            po.id_dto_enum_associate = nanoid::nanoid!();
+            po.id_dto_enum_associate = generate_id();
         }
     });
 
@@ -788,7 +789,7 @@ fn make_relation(save_po: &mut SavePO) {
         po.id_dto_entity_collection = Some(save_po.id_dto_entity_collection.clone());
         if po.action == DO_NEW {
             let old_id_enum = po.id_dto_enum.clone();
-            po.id_dto_enum = nanoid::nanoid!();
+            po.id_dto_enum = generate_id();
             save_po.dto_enum_associates.iter_mut().for_each(|asso| {
                 if asso.id_dto_enum == Some(old_id_enum.clone()) {
                     asso.id_dto_enum = Some(po.id_dto_enum.clone());
@@ -803,7 +804,7 @@ fn make_relation(save_po: &mut SavePO) {
         po.dto_enum_attributes.iter_mut().for_each(|attr| {
             attr.id_dto_enum = Some(po.id_dto_enum.clone());
             if po.action == DO_NEW {
-                attr.id_dto_enum_attribute = nanoid::nanoid!();
+                attr.id_dto_enum_attribute = generate_id();
             }
         });
     });
@@ -812,7 +813,7 @@ fn make_relation(save_po: &mut SavePO) {
         po.id_dto_entity_collection = Some(save_po.id_dto_entity_collection.clone());
         if po.action == DO_NEW {
             let old_id_entity = po.id_dto_entity.clone();
-            po.id_dto_entity = nanoid::nanoid!();
+            po.id_dto_entity = generate_id();
             if save_po.id_main_dto_entity == Some(old_id_entity.clone()) {
                 save_po.id_main_dto_entity = Some(po.id_dto_entity.clone());
             }
@@ -839,7 +840,7 @@ fn make_relation(save_po: &mut SavePO) {
             attr.id_dto_entity = Some(po.id_dto_entity.clone());
             if po.action == DO_NEW {
                 let old_id_attribute = attr.id_dto_entity_attribute.clone();
-                attr.id_dto_entity_attribute = nanoid::nanoid!();
+                attr.id_dto_entity_attribute = generate_id();
                 save_po.dto_enum_associates.iter_mut().for_each(|asso| {
                     if asso.id_dto_entity_attribute == Some(old_id_attribute.clone()) {
                         asso.id_dto_entity_attribute = Some(attr.id_dto_entity_attribute.clone());
@@ -851,7 +852,7 @@ fn make_relation(save_po: &mut SavePO) {
             attr.id_dto_entity = Some(po.id_dto_entity.clone());
             if po.action == DO_NEW {
                 let _old_id_attribute = attr.id_dto_computation_attribute.clone();
-                attr.id_dto_computation_attribute = nanoid::nanoid!();
+                attr.id_dto_computation_attribute = generate_id();
             }
         });
     });
