@@ -32,6 +32,13 @@ use tcdt_service::{
         ext::dto_entity_collection_ext_service::DtoEntityCollectionExtMutation,
     },
 };
+use tcdt_service::common::result::DeleteRefErrorMessageVO;
+use tcdt_service::service::base::dto_entity_collection_service::DtoEntityCollectionMutation;
+use tcdt_service::service::base::dto_entity_service::DtoEntityQuery;
+use tcdt_service::service::base::dto_enum_service::DtoEnumQuery;
+use tcdt_service::service::base::dto_node_ui_service::{DtoNodeUiMutation, DtoNodeUiQuery};
+use tcdt_service::util::id_util::generate_id;
+use ::entity::entity::dto_entity_collection;
 
 #[tcdt_route(ext_get_by_id)]
 #[get("/dtoEntityCollection/extGetById")]
@@ -530,4 +537,78 @@ fn convert_to_entity_po(entity_vo: &DtoEntityVO) -> collection::DtoEntityPO {
         })
         .collect();
     entity_po
+}
+
+#[tcdt_route(remove_on_error_tip)]
+#[post("/dtoEntityCollection/removeOnErrorTip")]
+pub async fn remove_on_error_tip(
+    data: web::Data<AppState>,
+    collection_form: web::Json<SavePO>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let form = collection_form.into_inner();
+
+    let condition = AqCondition::build_equal_condition("idDtoEntityCollection", EFilterParam::String(Some(Box::new(form.id_dto_entity_collection.clone()))));
+    let exists = DtoEnumQuery::exists_by_condition(conn, condition.clone())
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    let mut err_msg_list: Vec<DeleteRefErrorMessageVO> = vec![];
+    if exists {
+        let err_msg_vo = DeleteRefErrorMessageVO {
+            id_data: generate_id(),
+            message: "ref by DtoEnum".to_string(),
+            source_class_name: "".to_string(),
+            ref_class_name: "".to_string(),
+        };
+        err_msg_list.push(err_msg_vo);
+    }
+    let exists = DtoEntityQuery::exists_by_condition(conn, condition.clone())
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    if exists {
+        let err_msg_vo = DeleteRefErrorMessageVO {
+            id_data: generate_id(),
+            message: "ref by DtoEntity".to_string(),
+            source_class_name: "".to_string(),
+            ref_class_name: "".to_string(),
+        };
+        err_msg_list.push(err_msg_vo);
+    }
+    if !err_msg_list.is_empty() {
+        let result = AppResult::<Vec<DeleteRefErrorMessageVO>>::failed_msg_and_data("".to_string(), err_msg_list);
+        return Ok(HttpResponse::Ok().json(result));
+    }
+    let node_ui_list = DtoNodeUiQuery::find_collection_by_condition(conn, condition)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    DtoNodeUiMutation::batch_delete(conn, node_ui_list)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    let dto_entity_collection_model = dto_entity_collection::Model{
+        id_dto_entity_collection: form.id_dto_entity_collection.clone(),
+        package_name: form.package_name.clone(),
+        display_name: form.display_name.clone(),
+        id_main_dto_entity: form.id_main_dto_entity.clone(),
+        id_dto_module: form.id_dto_module.clone(),
+    };
+    DtoEntityCollectionMutation::delete(conn, dto_entity_collection_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    let result = AppResult::<i32>::success_not_data();
+    Ok(HttpResponse::Ok().json(result))
 }

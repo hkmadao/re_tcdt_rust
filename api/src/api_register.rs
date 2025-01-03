@@ -370,6 +370,7 @@ pub(crate) fn go_register(cfg: &mut web::ServiceConfig) {
     cfg.service(DtoEntityCollectionExtApi::get_full_coll);
     cfg.service(DtoEntityCollectionExtApi::save_by_action);
     cfg.service(DtoEntityCollectionExtApi::copy_by_id);
+    cfg.service(DtoEntityCollectionExtApi::remove_on_error_tip);
     cfg.service(DtoEntityExtApi::get_dto_attr_by_ids);
     cfg.service(DtoEntityExtApi::aq_detail);
     cfg.service(DtoEnumExtApi::aq_detail);
@@ -379,6 +380,7 @@ pub(crate) fn go_register(cfg: &mut web::ServiceConfig) {
     cfg.service(EntityCollectionExtApi::save_by_action);
     cfg.service(EntityCollectionExtApi::copy_by_id);
     cfg.service(EntityCollectionExtApi::join_entities);
+    cfg.service(EntityCollectionExtApi::remove_on_error_tip);
     cfg.service(GeneratorApi::generate_single_file);
     cfg.service(GeneratorApi::entity_coll_generate_full);
     cfg.service(GeneratorApi::entity_coll_generate_part);

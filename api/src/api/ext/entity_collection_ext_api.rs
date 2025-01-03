@@ -3,6 +3,7 @@ use crate::app::AppState;
 use actix_web::{error, get, post, web, Error, HttpRequest, HttpResponse, Result};
 use tcdt_service::sea_orm::DatabaseConnection;
 use std::collections::HashMap;
+use entity::entity::entity_collection;
 use tcdt_common::tcdt_service_error::TcdtServiceError;
 use tcdt_common::tcdt_trait::TcdtViewObjectTrait;
 use tcdt_macro::tcdt_route;
@@ -38,7 +39,11 @@ use tcdt_service::{
         ext::entity_collection_ext_service::EntityCollectionExtMutation,
     },
 };
+use tcdt_service::common::result::DeleteRefErrorMessageVO;
 use tcdt_service::dto::po::ext::entity_collection::join_entity_po::JoinEntityPO;
+use tcdt_service::service::base::entity_collection_service::EntityCollectionMutation;
+use tcdt_service::service::base::node_ui_service::{NodeUiMutation, NodeUiQuery};
+use tcdt_service::util::id_util::generate_id;
 
 #[tcdt_route(ext_get_by_id)]
 #[get("/entityCollection/extGetById")]
@@ -684,4 +689,77 @@ pub async fn join_entities(
     let coll_vo = convert_dto(conn, entity_collection_entity).await?;
 
     Ok(HttpResponse::Ok().json(coll_vo))
+}
+
+#[tcdt_route(remove_on_error_tip)]
+#[post("/entityCollection/removeOnErrorTip")]
+pub async fn remove_on_error_tip(
+    data: web::Data<AppState>,
+    collection_form: web::Json<SaveCollVO>,
+) -> Result<HttpResponse, Error> {
+    let conn = &data.conn;
+    let form = collection_form.into_inner();
+
+    let condition = AqCondition::build_equal_condition("idEntityCollection", EFilterParam::String(Some(Box::new(form.id_entity_collection.clone()))));
+    let exists = DdEnumQuery::exists_by_condition(conn, condition.clone())
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    let mut err_msg_list: Vec<DeleteRefErrorMessageVO> = vec![];
+    if exists {
+        let err_msg_vo = DeleteRefErrorMessageVO {
+            id_data: generate_id(),
+            message: "ref by Enum".to_string(),
+            source_class_name: "".to_string(),
+            ref_class_name: "".to_string(),
+        };
+        err_msg_list.push(err_msg_vo);
+    }
+    let exists = DdEntityQuery::exists_by_condition(conn, condition.clone())
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    if exists {
+        let err_msg_vo = DeleteRefErrorMessageVO {
+            id_data: generate_id(),
+            message: "ref by Entity".to_string(),
+            source_class_name: "".to_string(),
+            ref_class_name: "".to_string(),
+        };
+        err_msg_list.push(err_msg_vo);
+    }
+    if !err_msg_list.is_empty() {
+        let result = AppResult::<Vec<DeleteRefErrorMessageVO>>::failed_msg_and_data("".to_string(), err_msg_list);
+        return Ok(HttpResponse::Ok().json(result));
+    }
+    let node_ui_list = NodeUiQuery::find_collection_by_condition(conn, condition)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    NodeUiMutation::batch_delete(conn, node_ui_list)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    let entity_collection_model = entity_collection::Model{
+        id_entity_collection: form.id_entity_collection.clone(),
+        package_name: form.package_name.clone(),
+        display_name: form.display_name.clone(),
+        id_sub_project: form.id_sub_project.clone(),
+    };
+    EntityCollectionMutation::delete(conn, entity_collection_model)
+        .await
+        .map_err(|e| {
+            log::error!("{:?}", e);
+            error::ErrorInternalServerError("internal server error")
+        })?;
+    let result = AppResult::<i32>::success_not_data();
+    Ok(HttpResponse::Ok().json(result))
 }
