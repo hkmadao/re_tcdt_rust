@@ -8,6 +8,7 @@ use tcdt_service::{
     service::base::project_service::{ProjectMutation, ProjectQuery},
 };
 use entity::entity::project;
+use tcdt_service::util::file_util::illegal_folder_name;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
@@ -20,6 +21,14 @@ pub async fn add(
     let conn = &data.conn;
 
     let form = project_form.into_inner();
+
+    if form.template_code == None {
+        return Err(error::ErrorInternalServerError("template_code is empty"));
+    }
+
+    if illegal_folder_name(&form.template_code.clone().unwrap()) {
+        return Err(error::ErrorInternalServerError("template_code illegal"));
+    }
 
     let project_model = ProjectPO::convert_po_to_model(form);
 
@@ -48,6 +57,14 @@ pub async fn update(
 ) -> Result<HttpResponse, Error> {
     let conn = &data.conn;
     let form = project_form.into_inner();
+
+    if form.template_code == None {
+        return Err(error::ErrorInternalServerError("template_code is empty"));
+    }
+
+    if illegal_folder_name(&form.template_code.clone().unwrap()) {
+        return Err(error::ErrorInternalServerError("template_code illegal"));
+    }
 
     let project_model = ProjectPO::convert_po_to_model(form);
 
@@ -96,11 +113,11 @@ pub async fn batch_remove(
     let conn = &data.conn;
     let po_list = project_form.into_inner();
 
-    let mut model_list:Vec<project::Model>  = vec![];
+    let mut model_list: Vec<project::Model> = vec![];
     for po in po_list {
         model_list.push(ProjectPO::convert_po_to_model(po));
     }
-    
+
     let delete_result = ProjectMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {

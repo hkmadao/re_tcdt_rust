@@ -57,6 +57,7 @@ use crate::api::{
     ext::generator_api as GeneratorApi,
     ext::menu_ext_api as MenuExtApi,
     ext::project_ext_api as ProjectExtApi,
+    ext::template_file_api as TemplateFileApi,
 };
 
 pub(crate) fn go_register(cfg: &mut web::ServiceConfig) {
@@ -399,5 +400,11 @@ pub(crate) fn go_register(cfg: &mut web::ServiceConfig) {
     cfg.service(ProjectExtApi::entity_collection_aq);
     cfg.service(ProjectExtApi::component_aq);
     cfg.service(ProjectExtApi::dto_collection_aq);
+    cfg.service(TemplateFileApi::get_tree_by_project_id);
+    cfg.service(TemplateFileApi::get_file_by_path);
+    cfg.service(TemplateFileApi::add);
+    cfg.service(TemplateFileApi::update_stat);
+    cfg.service(TemplateFileApi::update_content);
+    cfg.service(TemplateFileApi::remove_file);
 
 }

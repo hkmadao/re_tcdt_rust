@@ -18,3 +18,13 @@ pub fn folder_exists(folder_path: &str) -> bool {
         Err(_) => false,
     }
 }
+
+pub fn file_exists(file_path: &str) -> bool {
+    let path = Path::new(file_path);
+    let metadata_result = fs::metadata(path);
+
+    match metadata_result {
+        Ok(metadata) => metadata.is_file(),
+        Err(_) => false,
+    }
+}

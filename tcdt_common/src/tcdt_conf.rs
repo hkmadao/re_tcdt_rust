@@ -8,6 +8,7 @@ pub struct TcdtConf {
     pub tcdt_static: String,
     pub code_template_path: String,
     pub code_generate_path: String,
+    pub enable_code_template_edit: bool,
     pub enable_code_generate_debug_mode: bool,
 }
 lazy_static! {
@@ -21,15 +22,18 @@ lazy_static! {
             env::var("CODE_TEMPLATE_PATH").expect("CODE_TEMPLATE_PATH is not set in .env file");
         let code_generate_path =
             env::var("CODE_GENERATE_PATH").expect("CODE_GENERATE_PATH is not set in .env file");
+        let enable_code_template_edit =
+            env::var("ENABLE_CODE_TEMPLATE_EDIT").expect("ENABLE_CODE_TEMPLATE_EDIT is not set in .env file");
         let enable_code_generate_debug_mode_str =
             env::var("ENABLE_CODE_GENERATE_DEBUG_MODE").expect("ENABLE_CODE_GENERATE_DEBUG_MODE is not set in .env file");
         TcdtConf {
-            host: host,
-            port: port,
+            host,
+            port,
             database_url: db_url,
-            code_template_path: code_template_path,
-            tcdt_static: tcdt_static,
-            code_generate_path: code_generate_path,
+            code_template_path,
+            tcdt_static,
+            code_generate_path,
+            enable_code_template_edit: enable_code_template_edit.trim() == "true",
             enable_code_generate_debug_mode: enable_code_generate_debug_mode_str.trim() == "true",
         }
     };

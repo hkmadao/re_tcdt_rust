@@ -3494,6 +3494,7 @@ dependencies = [
  "log",
  "nanoid",
  "rand 0.8.5",
+ "regex",
  "rust-crypto",
  "sea-orm",
  "serde",

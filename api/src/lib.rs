@@ -80,6 +80,7 @@ mod api {
             pub mod generator_api;
             pub mod menu_ext_api;
             pub mod project_ext_api;
+            pub mod template_file_api;
         }
 }
 

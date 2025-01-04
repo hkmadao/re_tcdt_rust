@@ -153,7 +153,7 @@ pub fn get_file_extension(file_name: &str) -> Option<&str> {
     path.extension().and_then(|ext| ext.to_str())
 }
 
-fn file_exists(file_path: &str) -> bool {
+pub fn file_exists(file_path: &str) -> bool {
     let path = Path::new(file_path);
     let metadata_result = fs::metadata(path);
 
@@ -163,7 +163,7 @@ fn file_exists(file_path: &str) -> bool {
     }
 }
 
-fn folder_exists(folder_path: &str) -> bool {
+pub fn folder_exists(folder_path: &str) -> bool {
     let path = Path::new(folder_path);
     let metadata_result = fs::metadata(path);
 
@@ -171,4 +171,16 @@ fn folder_exists(folder_path: &str) -> bool {
         Ok(metadata) => metadata.is_dir(),
         Err(_) => false,
     }
+}
+
+pub fn illegal_folder_name(name: &str) -> bool {
+    name.is_empty()
+        || name.contains("/")
+        || name.contains("\\")
+        || name.contains("*")
+        || name.contains("?")
+        || name.contains(">")
+        || name.contains("<")
+        || name.contains(":")
+        || name.contains("'")
 }

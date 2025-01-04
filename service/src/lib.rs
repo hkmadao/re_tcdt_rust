@@ -97,6 +97,7 @@ pub mod service {
             }
             pub mod write_dir;
         }
+        pub mod template_file_ext_service;
     }
 }
 
@@ -261,6 +262,9 @@ pub mod dto {
                 pub mod component;
                 pub mod dto_collection;
                 pub mod entity_collection;
+            }
+            pub mod template_file {
+                pub mod template_file;
             }
         }
     }
