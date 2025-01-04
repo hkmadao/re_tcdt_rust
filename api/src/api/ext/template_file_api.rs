@@ -40,14 +40,24 @@ pub async fn get_tree_by_project_id(
         .ok_or(error::ErrorInternalServerError("idProject not found"))?
         .to_string();
 
-    let template_file = TemplateFileExtQuery::fetch_tree_by_project_id(conn, id_project)
-        .await
-        .map_err(|e| {
-            log::error!("{:?}", e);
-            error::ErrorInternalServerError("internal server error")
-        })?;
-
-    Ok(HttpResponse::Ok().json(template_file))
+    let template_file_result = TemplateFileExtQuery::fetch_tree_by_project_id(conn, id_project).await;
+    match template_file_result {
+        Ok(template_file) => {
+            Ok(HttpResponse::Ok().json(template_file))
+        }
+        Err(err) => {
+            match err {
+                TcdtServiceError::TcdtInternal(internal_err) => {
+                    log::error!("{:?}", internal_err);
+                    Err(error::ErrorInternalServerError("internal server error"))
+                }
+                TcdtServiceError::Custom(custom_err) => {
+                    log::error!("{:?}", custom_err);
+                    Err(error::ErrorInternalServerError(custom_err.get_message()))
+                }
+            }
+        }
+    }
 }
 
 #[tcdt_route(get_file_by_path)]

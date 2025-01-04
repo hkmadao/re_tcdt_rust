@@ -32,12 +32,16 @@ impl TemplateFileExtQuery {
         }
 
         let project_template_file_path = format!("{}{}{}", TCDT_CONF.code_template_path.to_string(), get_file_separator(), template_code);
+        if !folder_exists(&project_template_file_path) {
+            return Err(TcdtServiceError::build_custom_msg("project template code dir not exists"));
+        }
+
         let path = Path::new(&project_template_file_path);
         let children_file_list = traverse_folder(&id_project, &path)?;
         let template_file_stat = TemplateFileStat {
             id_project: id_project.clone(),
             parent_path_name: None,
-            file_path_name: Some(project_template_file_path.clone()),
+            file_path_name: Some(trim_file_path(&project_template_file_path.clone())),
             file_name: template_code,
             fg_file: false,
             content: None,
