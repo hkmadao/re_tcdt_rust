@@ -11,6 +11,8 @@ pub fn main() {
 }
 
 mod conf {
+    pub(crate) mod security_handle;
+    pub(crate) mod cors_handle;
     pub(crate) mod error_handle;
     pub(crate) mod response_handle;
 }
@@ -60,6 +62,7 @@ mod api {
             pub mod role_api;
             pub mod role_menu_api;
             pub mod sub_project_api;
+            pub mod token_api;
             pub mod tree_api;
             pub mod user_api;
             pub mod user_role_api;
@@ -78,9 +81,11 @@ mod api {
             pub mod dto_enum_ext_api;
             pub mod entity_collection_ext_api;
             pub mod generator_api;
+            pub mod login_ext_api;
             pub mod menu_ext_api;
             pub mod project_ext_api;
             pub mod template_file_api;
+            pub mod user_ext_api;
         }
 }
 

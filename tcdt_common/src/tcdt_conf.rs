@@ -4,6 +4,8 @@ use std::env;
 pub struct TcdtConf {
     pub host: String,
     pub port: String,
+    pub security: bool,
+    pub enable_change_password: bool,
     pub database_url: String,
     pub tcdt_static: String,
     pub code_template_path: String,
@@ -16,6 +18,8 @@ lazy_static! {
         dotenvy::from_filename_override("conf/.env").ok();
         let host = env::var("HOST").expect("HOST is not set in .env file");
         let port = env::var("PORT").expect("PORT is not set in .env file");
+        let enable_change_password = env::var("ENABLE_CHANGE_PASSWORD").expect("ENABLE_CHANGE_PASSWORD is not set in .env file");
+        let security = env::var("SECURITY").expect("SECURITY is not set in .env file");
         let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
         let tcdt_static = env::var("TCDT_STATIC").expect("TCDT_STATIC is not set in .env file");
         let code_template_path =
@@ -29,6 +33,8 @@ lazy_static! {
         TcdtConf {
             host,
             port,
+            security: security.trim() == "true",
+            enable_change_password: enable_change_password == "true",
             database_url: db_url,
             code_template_path,
             tcdt_static,

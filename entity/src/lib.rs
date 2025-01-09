@@ -45,6 +45,7 @@ pub mod entity {
     pub mod role;
     pub mod role_menu;
     pub mod sub_project;
+    pub mod token;
     pub mod tree;
     pub mod user;
     pub mod user_role;
@@ -88,6 +89,7 @@ pub mod meta {
     pub mod role_desc;
     pub mod role_menu_desc;
     pub mod sub_project_desc;
+    pub mod token_desc;
     pub mod tree_desc;
     pub mod user_desc;
     pub mod user_role_desc;

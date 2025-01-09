@@ -47,6 +47,10 @@ pub struct AttributeInfo {
     pub column_name: String,
      /// 数据类型
     pub data_type: String,
+    /// 是否可查询，如大字段，设置不可根据条件查询
+    pub fg_query: bool,
+    /// 是否可返回，如密码字段，设置不可返回
+    pub fg_return: bool,
      /// 关联的内部属性名称（外键属性，外键引用属性）
     pub inner_attribute_name: String,
      /// 外部实体名

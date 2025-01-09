@@ -51,6 +51,7 @@ lazy_static! {
             desc_map.insert("Role".to_owned(), Box::leak(Box::new(meta::role_desc::get_role_desc())));
             desc_map.insert("RoleMenu".to_owned(), Box::leak(Box::new(meta::role_menu_desc::get_role_menu_desc())));
             desc_map.insert("SubProject".to_owned(), Box::leak(Box::new(meta::sub_project_desc::get_sub_project_desc())));
+            desc_map.insert("Token".to_owned(), Box::leak(Box::new(meta::token_desc::get_token_desc())));
             desc_map.insert("Tree".to_owned(), Box::leak(Box::new(meta::tree_desc::get_tree_desc())));
             desc_map.insert("User".to_owned(), Box::leak(Box::new(meta::user_desc::get_user_desc())));
             desc_map.insert("UserRole".to_owned(), Box::leak(Box::new(meta::user_role_desc::get_user_role_desc())));

@@ -56,6 +56,7 @@ pub mod service {
         pub mod role_menu_service;
         pub mod role_service;
         pub mod sub_project_service;
+        pub mod token_service;
         pub mod tree_service;
         pub mod user_role_service;
         pub mod user_service;
@@ -145,6 +146,7 @@ pub mod dto {
             pub mod role_menu_po;
             pub mod role_po;
             pub mod sub_project_po;
+            pub mod token_po;
             pub mod tree_po;
             pub mod user_po;
             pub mod user_role_po;
@@ -213,6 +215,7 @@ pub mod dto {
             pub mod role_menu_vo;
             pub mod role_vo;
             pub mod sub_project_vo;
+            pub mod token_vo;
             pub mod tree_vo;
             pub mod user_role_vo;
             pub mod user_vo;

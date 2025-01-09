@@ -24,6 +24,7 @@ pub struct UserVO {
     pub account: Option<String>,
     /// 用户密码
     #[serde(default)]
+    #[tcdt_vo(ignore)]
     pub user_pwd: Option<String>,
     /// 手机号码
     #[serde(default)]

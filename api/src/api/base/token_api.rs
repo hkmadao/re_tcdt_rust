@@ -4,81 +4,81 @@ use tcdt_common::tcdt_trait::{TcdtCudParamObjectTrait, TcdtViewObjectTrait};
 use tcdt_macro::tcdt_route;
 use tcdt_service::{
     common::{aq::*, result::PageInfo},
-    dto::{po::base::user_po::UserPO, vo::base::user_vo::UserVO},
-    service::base::user_service::{UserMutation, UserQuery},
+    dto::{po::base::token_po::TokenPO, vo::base::token_vo::TokenVO},
+    service::base::token_service::{TokenMutation, TokenQuery},
 };
-use entity::entity::user;
+use entity::entity::token;
 use crate::api::common::param::IdsParam;
 use crate::app::AppState;
 
-// #[tcdt_route(add)]
-#[post("/user/add")]
+#[tcdt_route(add)]
+#[post("/token/add")]
 pub async fn add(
     data: web::Data<AppState>,
-    user_form: web::Json<UserPO>,
+    token_form: web::Json<TokenPO>,
 ) -> Result<HttpResponse, Error> {
     let conn = &data.conn;
 
-    let form = user_form.into_inner();
+    let form = token_form.into_inner();
 
-    let user_model = UserPO::convert_po_to_model(form);
+    let token_model = TokenPO::convert_po_to_model(form);
 
-    let user_save = UserMutation::create(conn, user_model)
+    let token_save = TokenMutation::create(conn, token_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
             error::ErrorInternalServerError("internal server error")
         })?;
 
-    let user_vo = UserVO::convert(conn, Some(user_save))
+    let token_vo = TokenVO::convert(conn, Some(token_save))
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
             error::ErrorInternalServerError("internal server error")
         })?
         .ok_or_else(|| error::ErrorInternalServerError("internal server error"))?;
-    Ok(HttpResponse::Ok().json(user_vo))
+    Ok(HttpResponse::Ok().json(token_vo))
 }
 
-// #[tcdt_route(update)]
-#[post("/user/update")]
+#[tcdt_route(update)]
+#[post("/token/update")]
 pub async fn update(
     data: web::Data<AppState>,
-    user_form: web::Json<UserPO>,
+    token_form: web::Json<TokenPO>,
 ) -> Result<HttpResponse, Error> {
     let conn = &data.conn;
-    let form = user_form.into_inner();
+    let form = token_form.into_inner();
 
-    let user_model = UserPO::convert_po_to_model(form);
+    let token_model = TokenPO::convert_po_to_model(form);
 
-    let user_save = UserMutation::update_by_id(conn, user_model)
+    let token_save = TokenMutation::update_by_id(conn, token_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
             error::ErrorInternalServerError("internal server error")
         })?;
-    let user_vo = UserVO::convert(conn, Some(user_save))
+    let token_vo = TokenVO::convert(conn, Some(token_save))
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
             error::ErrorInternalServerError("internal server error")
         })?
         .ok_or_else(|| error::ErrorInternalServerError("internal server error"))?;
-    Ok(HttpResponse::Ok().json(user_vo))
+    Ok(HttpResponse::Ok().json(token_vo))
 }
 
-// #[tcdt_route(remove)]
-#[post("/user/remove")]
+#[tcdt_route(remove)]
+#[post("/token/remove")]
 pub async fn remove(
     data: web::Data<AppState>,
-    user_form: web::Json<UserPO>,
+    token_form: web::Json<TokenPO>,
 ) -> Result<HttpResponse, Error> {
     let conn = &data.conn;
-    let form = user_form.into_inner();
+    let form = token_form.into_inner();
 
-    let user_model = UserPO::convert_po_to_model(form);
+    let token_model = TokenPO::convert_po_to_model(form);
 
-    let delete_result = UserMutation::delete(conn, user_model)
+    let delete_result = TokenMutation::delete(conn, token_model)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -87,21 +87,21 @@ pub async fn remove(
     Ok(HttpResponse::Ok().json(delete_result.rows_affected))
 }
 
-// #[tcdt_route(batch_remove)]
-#[post("/user/batchRemove")]
+#[tcdt_route(batch_remove)]
+#[post("/token/batchRemove")]
 pub async fn batch_remove(
     data: web::Data<AppState>,
-    user_form: web::Json<Vec<UserPO>>,
+    token_form: web::Json<Vec<TokenPO>>,
 ) -> Result<HttpResponse, Error> {
     let conn = &data.conn;
-    let po_list = user_form.into_inner();
+    let po_list = token_form.into_inner();
 
-    let mut model_list:Vec<user::Model>  = vec![];
+    let mut model_list:Vec<token::Model>  = vec![];
     for po in po_list {
-        model_list.push(UserPO::convert_po_to_model(po));
+        model_list.push(TokenPO::convert_po_to_model(po));
     }
     
-    let delete_result = UserMutation::batch_delete(conn, model_list)
+    let delete_result = TokenMutation::batch_delete(conn, model_list)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -110,13 +110,13 @@ pub async fn batch_remove(
     Ok(HttpResponse::Ok().json(delete_result.rows_affected))
 }
 
-// #[tcdt_route(get_by_id)]
-#[get("/user/getById/{id}")]
+#[tcdt_route(get_by_id)]
+#[get("/token/getById/{id}")]
 pub async fn get_by_id(data: web::Data<AppState>, id: web::Path<String>) -> Result<HttpResponse, Error> {
     let conn = &data.conn;
     let id = id.into_inner();
 
-    let user_entity = UserQuery::find_by_id(conn, id)
+    let token_entity = TokenQuery::find_by_id(conn, id)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -126,7 +126,7 @@ pub async fn get_by_id(data: web::Data<AppState>, id: web::Path<String>) -> Resu
             }
         })?;
 
-    let user_vo = UserVO::convert(conn, Some(user_entity))
+    let token_vo = TokenVO::convert(conn, Some(token_entity))
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -134,11 +134,11 @@ pub async fn get_by_id(data: web::Data<AppState>, id: web::Path<String>) -> Resu
         })?
         .ok_or_else(|| error::ErrorInternalServerError("internal server error"))?;
 
-    Ok(HttpResponse::Ok().json(user_vo))
+    Ok(HttpResponse::Ok().json(token_vo))
 }
 
-// #[tcdt_route(get_by_ids)]
-#[get("/user/getByIds")]
+#[tcdt_route(get_by_ids)]
+#[get("/token/getByIds")]
 pub async fn get_by_ids(
     data: web::Data<AppState>,
     ids_param_form: web::Form<IdsParam>,
@@ -148,7 +148,7 @@ pub async fn get_by_ids(
 
     let ids = ids_param.ids.split(",").map(|id| id.to_owned()).collect();
 
-    let user_list = UserQuery::find_by_ids(conn, ids)
+    let token_list = TokenQuery::find_by_ids(conn, ids)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
@@ -158,24 +158,24 @@ pub async fn get_by_ids(
             }
         })?;
 
-    let mut vos: Vec<UserVO> = vec![];
-    for user_entity in user_list {
-        let user_vo = UserVO::convert(conn, Some(user_entity))
+    let mut vos: Vec<TokenVO> = vec![];
+    for token_entity in token_list {
+        let token_vo = TokenVO::convert(conn, Some(token_entity))
             .await
             .map_err(|e| {
                 log::error!("{:?}", e);
                 error::ErrorInternalServerError("internal server error")
             })?;
-        if let Some(user_vo) = user_vo {
-            vos.push(user_vo);
+        if let Some(token_vo) = token_vo {
+            vos.push(token_vo);
         }
     }
 
     Ok(HttpResponse::Ok().json(vos))
 }
 
-// #[tcdt_route(page)]
-#[post("/user/aqPage")]
+#[tcdt_route(page)]
+#[post("/token/aqPage")]
 pub async fn page(
     _req: HttpRequest,
     data: web::Data<AppState>,
@@ -186,29 +186,29 @@ pub async fn page(
     let page_index = aq_page.page_index.clone();
     let page_size = aq_page.page_size.clone();
 
-    let (users, num_items) = UserQuery::find_page_by_page_condition(conn, aq_page)
+    let (tokens, num_items) = TokenQuery::find_page_by_page_condition(conn, aq_page)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
             error::ErrorInternalServerError("internal server error")
         })?;
-    let mut vos: Vec<UserVO> = vec![];
-    for user_entity in users {
-        let user_vo = UserVO::convert(conn, Some(user_entity))
+    let mut vos: Vec<TokenVO> = vec![];
+    for token_entity in tokens {
+        let token_vo = TokenVO::convert(conn, Some(token_entity))
             .await
             .map_err(|e| {
                 log::error!("{:?}", e);
                 error::ErrorInternalServerError("internal server error")
             })?;
-        if let Some(user_vo) = user_vo {
-            vos.push(user_vo);
+        if let Some(token_vo) = token_vo {
+            vos.push(token_vo);
         }
     }
     let page_info = PageInfo::new(page_index, page_size, num_items, vos);
     Ok(HttpResponse::Ok().json(page_info))
 }
 
-#[post("/user/aq")]
+#[post("/token/aq")]
 pub async fn aq(
     _req: HttpRequest,
     data: web::Data<AppState>,
@@ -217,22 +217,22 @@ pub async fn aq(
     let conn = &data.conn;
     let aq = aq_json.into_inner();
 
-    let user_list = UserQuery::find_collection_by_condition(conn, aq)
+    let token_list = TokenQuery::find_collection_by_condition(conn, aq)
         .await
         .map_err(|e| {
             log::error!("{:?}", e);
             error::ErrorInternalServerError("internal server error")
         })?;
     let mut vos = vec![];
-    for user_entity in user_list {
-        let user_vo = UserVO::convert(conn, Some(user_entity))
+    for token_entity in token_list {
+        let token_vo = TokenVO::convert(conn, Some(token_entity))
             .await
             .map_err(|e| {
                 log::error!("{:?}", e);
                 error::ErrorInternalServerError("internal server error")
             })?;
-        if let Some(user_vo) = user_vo {
-            vos.push(user_vo);
+        if let Some(token_vo) = token_vo {
+            vos.push(token_vo);
         }
     }
     Ok(HttpResponse::Ok().json(vos))

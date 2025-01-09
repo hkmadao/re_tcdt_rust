@@ -26,3 +26,5 @@ COMMENT '{{ entityInfo.pkAttributeInfo.displayName }}{%- if entityInfo.pkAttribu
 
 ALTER TABLE `{{ entityInfo.tableName }}` COMMENT='{{ entityInfo.displayName }}';
 {%- endfor %}
+
+

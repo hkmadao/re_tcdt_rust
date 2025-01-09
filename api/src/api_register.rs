@@ -41,6 +41,7 @@ use crate::api::{
     base::role_api as RoleApi,
     base::role_menu_api as RoleMenuApi,
     base::sub_project_api as SubProjectApi,
+    base::token_api as TokenApi,
     base::tree_api as TreeApi,
     base::user_api as UserApi,
     base::user_role_api as UserRoleApi,
@@ -55,9 +56,11 @@ use crate::api::{
     ext::dto_enum_ext_api as DtoEnumExtApi,
     ext::entity_collection_ext_api as EntityCollectionExtApi,
     ext::generator_api as GeneratorApi,
+    ext::login_ext_api as LoginExtApi,
     ext::menu_ext_api as MenuExtApi,
     ext::project_ext_api as ProjectExtApi,
     ext::template_file_api as TemplateFileApi,
+    ext::user_ext_api as UserExtApi,
 };
 
 pub(crate) fn go_register(cfg: &mut web::ServiceConfig) {
@@ -329,6 +332,13 @@ pub(crate) fn go_register(cfg: &mut web::ServiceConfig) {
     cfg.service(SubProjectApi::get_by_id);
     cfg.service(SubProjectApi::get_by_ids);
     cfg.service(SubProjectApi::page);
+    cfg.service(TokenApi::add);
+    cfg.service(TokenApi::update);
+    cfg.service(TokenApi::remove);
+    cfg.service(TokenApi::batch_remove);
+    cfg.service(TokenApi::get_by_id);
+    cfg.service(TokenApi::get_by_ids);
+    cfg.service(TokenApi::page);
     cfg.service(TreeApi::add);
     cfg.service(TreeApi::update);
     cfg.service(TreeApi::remove);
@@ -394,6 +404,8 @@ pub(crate) fn go_register(cfg: &mut web::ServiceConfig) {
     cfg.service(GeneratorApi::generate_input_part);
     cfg.service(GeneratorApi::generate_output_full);
     cfg.service(GeneratorApi::generate_output_part);
+    cfg.service(LoginExtApi::login);
+    cfg.service(LoginExtApi::logout);
     cfg.service(MenuExtApi::ext_get_by_id);
     cfg.service(ProjectExtApi::aq_detail);
     cfg.service(ProjectExtApi::sub_project_aq);
@@ -406,5 +418,6 @@ pub(crate) fn go_register(cfg: &mut web::ServiceConfig) {
     cfg.service(TemplateFileApi::update_stat);
     cfg.service(TemplateFileApi::update_content);
     cfg.service(TemplateFileApi::remove_file);
+    cfg.service(UserExtApi::update_password);
 
 }

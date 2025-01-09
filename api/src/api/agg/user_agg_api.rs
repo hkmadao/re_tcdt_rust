@@ -9,6 +9,8 @@ use tcdt_service::{
     dto::{po::agg::user_agg_po::UserAggPO, vo::agg::user_agg_vo::UserVO as UserAggVO},
     service::agg::user_agg_service::{UserAggMutation, UserAggQuery},
 };
+use tcdt_service::common::aq_const::{DO_NEW, DO_UPDATE};
+use tcdt_service::util::dyn_query::md5;
 
 #[tcdt_route(save)]
 #[post("/userAgg/save")]
@@ -18,7 +20,21 @@ pub async fn save(
 ) -> Result<HttpResponse, Error> {
     let conn = &data.conn;
 
-    let form = user_form.into_inner();
+    let mut form = user_form.into_inner();
+
+    if form.user_pwd.is_none() || form.user_pwd.clone().unwrap() == "" {
+        return Err(error::ErrorInternalServerError("user_pwd is empty"));
+    }
+
+    if form.action == DO_UPDATE {
+        let user = UserAggQuery::find_by_id(conn, form.id_user.clone())
+            .await
+            .map_err(|e| {
+                log::error!("{:?}", e);
+                error::ErrorInternalServerError("internal server error")
+            })?;
+        form.user_pwd = user.user_pwd.clone();
+    }
 
     let user_entity = UserAggMutation::save(conn, form).await.map_err(|e| {
         log::error!("{:?}", e);

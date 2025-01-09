@@ -9,6 +9,7 @@ name = "entity"
 path = "src/lib.rs"
 
 [dependencies]
+tcdt_common = { path = "../tcdt_common" }
 lazy_static = "=1.4.0"
 serde = { version = "1", features = ["derive"] }
 

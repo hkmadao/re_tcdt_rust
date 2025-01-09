@@ -1,14 +1,13 @@
+use std::rc::Rc;
+use std::sync::Arc;
 use actix_files::Files as Fs;
-use actix_web::{
-    middleware::{self},
-    web, App, Error, HttpRequest, HttpResponse, HttpServer, Result,
-};
-
+use actix_http::body::MessageBody;
+use actix_web::{middleware::{self}, web, App, Error, Handler, HttpRequest, HttpResponse, HttpServer, Result};
 use listenfd::ListenFd;
 use tcdt_common::tcdt_conf::TCDT_CONF;
-use tcdt_service::sea_orm::{Database, DatabaseConnection};
+use tcdt_service::sea_orm::{Database, DatabaseConnection, EntityTrait};
 
-use crate::{api_register::go_register, conf::response_handle::ResponseHandler};
+use crate::{api_register::go_register, conf::{response_handle::ResponseHandler, cors_handle::CorsHandler, security_handle::SecurityHandler}};
 
 #[derive(Debug)]
 pub struct AppState {
@@ -84,9 +83,10 @@ pub async fn start() -> std::io::Result<()> {
 
     let conn = Database::connect(db_url).await.unwrap();
 
-    let state = AppState {  conn };
+    let state = AppState { conn };
 
     let web_data = web::Data::new(state);
+
     // create server and try to serve over socket if possible
     let mut listenfd = ListenFd::from_env();
     let mut server = HttpServer::new(move || {
@@ -94,8 +94,9 @@ pub async fn start() -> std::io::Result<()> {
             .service(Fs::new("/tcdt", &TCDT_CONF.tcdt_static))
             // .service(Fs::new("/tcdt", "./api/static/dist"))
             .app_data(web_data.clone())
+            .wrap(CorsHandler {})
+            .wrap(SecurityHandler {})
             .wrap(ResponseHandler {})
-            // .wrap(middleware::ErrorHandlers::new().handler(StatusCode::INTERNAL_SERVER_ERROR, add_error_header))
             .wrap(middleware::Logger::default()) // enable logger
             .default_service(web::route().to(not_found))
             .configure(go_register)
@@ -111,3 +112,4 @@ pub async fn start() -> std::io::Result<()> {
 
     Ok(())
 }
+

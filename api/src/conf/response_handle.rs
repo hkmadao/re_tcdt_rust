@@ -50,35 +50,11 @@ where
     forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
-        log::info!("{:?}", req.path());
-        log::info!("{:?}", req.method().clone());
-        let _method = req.method().clone().to_string();
 
         let fut = self.service.call(req);
 
         Box::pin(async move {
             let mut res = fut.await?;
-            //跨域配置
-            res.response_mut().headers_mut().insert(
-                header::ACCESS_CONTROL_ALLOW_ORIGIN,
-                header::HeaderValue::from_static("*"),
-            );
-            res.response_mut().headers_mut().insert(
-                header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
-                header::HeaderValue::from_static("false"),
-            );
-            res.response_mut().headers_mut().insert(
-                header::ACCESS_CONTROL_ALLOW_METHODS,
-                header::HeaderValue::from_static("*"),
-            );
-            res.response_mut().headers_mut().insert(
-                header::ACCESS_CONTROL_ALLOW_HEADERS,
-                header::HeaderValue::from_static("*"),
-            );
-            res.response_mut().headers_mut().insert(
-                header::ACCESS_CONTROL_EXPOSE_HEADERS,
-                header::HeaderValue::from_static("*"),
-            );
 
             if res.status() == StatusCode::INTERNAL_SERVER_ERROR {
                 res.response_mut().headers_mut().insert(
