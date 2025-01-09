@@ -2,7 +2,7 @@ use std::future::{ready, Future, Ready};
 use std::rc::Rc;
 use std::sync::Arc;
 use actix_http::{header, HttpMessage, StatusCode};
-use actix_web::{body::{BoxBody, MessageBody}, dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform}, error, web, Error};
+use actix_web::{body::{BoxBody, MessageBody}, dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform}, error, web, Error, HttpResponse};
 use futures_util::future::LocalBoxFuture;
 use tcdt_common::chrono::Utc;
 use tcdt_common::tcdt_conf::TCDT_CONF;
@@ -54,13 +54,8 @@ where
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let path = req.path().to_string();
-        if req.headers().get(header::AUTHORIZATION).is_none() {
-            log::info!("header authorization is empty");
-            return Box::pin(async move {
-                Err(error::ErrorUnauthorized("header authorization is empty"))
-            });
-        }
-        let authorization_header = req.headers().get(header::AUTHORIZATION).clone().unwrap().clone();
+        let method = req.method().to_string();
+        let headers = req.headers().clone();
 
         log::info!("{:?}", path);
 
@@ -68,6 +63,26 @@ where
         let fut = self.service.call(req);
 
         Box::pin(async move {
+            if method == "OPTIONS" {
+                let res = fut.await?;
+                return Ok(res);
+            }
+            if path == "/entityCollection/generateSingleFile"
+                || path == "/entityCollection/generateFull"
+                || path == "/entityCollection/generatePart"
+                || path == "/factory/generate"
+                || path == "/component/generateEnumPart"
+                || path == "/component/generateEnumFull"
+                || path == "/component/generateCombination"
+                || path == "/component/generateSingle"
+                || path == "/dtoEntityCollection/generateInputFull"
+                || path == "/dtoEntityCollection/generateInputPart"
+                || path == "/dtoEntityCollection/generateOutputFull"
+                || path == "/dtoEntityCollection/generateOutputPart"
+            {
+                let res = fut.await?;
+                return Ok(res);
+            }
             if path == "/login" {
                 let res = fut.await?;
                 return Ok(res);
@@ -79,6 +94,12 @@ where
                     return Ok(res);
                 }
             }
+            if headers.get(header::AUTHORIZATION).is_none() {
+                log::info!("header authorization is empty");
+                let err = error::ErrorUnauthorized("header authorization is empty");
+                return Err(err);
+            }
+            let authorization_header = headers.get(header::AUTHORIZATION).clone().unwrap().clone();
             if authorization_header.is_empty() {
                 log::info!("header authorization is empty");
                 let err = error::ErrorUnauthorized("header authorization is empty");
