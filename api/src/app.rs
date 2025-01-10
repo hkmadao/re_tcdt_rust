@@ -1,5 +1,3 @@
-use std::rc::Rc;
-use std::sync::Arc;
 use actix_files::Files as Fs;
 use actix_http::body::MessageBody;
 use actix_web::{middleware::{self}, web, App, Error, Handler, HttpRequest, HttpResponse, HttpServer, Result};
@@ -94,7 +92,7 @@ pub async fn start() -> std::io::Result<()> {
             .service(Fs::new("/tcdt", &TCDT_CONF.tcdt_static))
             // .service(Fs::new("/tcdt", "./api/static/dist"))
             .app_data(web_data.clone())
-            .wrap(CorsHandler {})
+            // .wrap(CorsHandler {})
             .wrap(SecurityHandler {})
             .wrap(ResponseHandler {})
             .wrap(middleware::Logger::default()) // enable logger
