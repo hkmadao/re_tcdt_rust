@@ -8,6 +8,7 @@ export type TLeftTreeStore = {
   idUiConf?: string;
   /**组件是否是禁用状态 */
   fgDisabled: boolean;
+  fgHidden: boolean;
   /**内部禁用 */
   fgInnerDisabled: boolean;
   /**树的原始数据 */

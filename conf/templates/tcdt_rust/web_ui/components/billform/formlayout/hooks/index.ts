@@ -26,6 +26,12 @@ export const useFgDisabled = () => {
   });
 }
 
+export const useFgHidden = () => {
+  return useSelector((state: { [x: string]: TFormStore }) => {
+    return state[componentName].fgHidden;
+  });
+}
+
 const selectStore = (state: { [x: string]: TFormStore }) => {
   return state[componentName].formData;
 };

@@ -4,19 +4,19 @@ import { DownOutlined } from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
 import moment from 'moment';
 import { Observer, TMessage } from '@/util/observer';
-import { useMainTableColumns } from './hooks/columns';
-import { subject,} from '../../../conf';
+import { useMainTableColumns } from '../hooks/columns';
+import { subject,} from '../../../../conf';
 import styles from './styles.less';
-import { batchRemove, fetchByTreeNode, pageChange, reflesh, search } from './store';
-import { useStoreData, useIdUiConf, } from './hooks';
-import { actions } from './store';
+import { batchRemove, fetchByTreeNode, pageChange, reflesh, search } from '../store';
+import { useStoreData, useIdUiConf, } from '../hooks';
+import { actions } from '../store';
 import { 
 {%- if rootInfo.bTableJson and rootInfo.bTableJson.configList.header is iterable %}
   {%- for bt in rootInfo.bTableJson.configList.header %}
   T{{ bt.tabClassName }},
   {%- endfor %}
 {%- endif %}
-} from '../../../models';
+} from '../../../../models';
 
 {%- if rootInfo.bTableJson and rootInfo.bTableJson.configList.header is iterable %}
   {%- for bt in rootInfo.bTableJson.configList.header %}
@@ -31,7 +31,9 @@ const MainTableLayout: FC = () => {
 
   useEffect(() => {
 {%- if not rootInfo.tJson %}
-    dispatch(reflesh());
+    if (!tableStore.tableData || tableStore.tableData.length === 0) {
+      dispatch(reflesh());
+    }
 {%- endif %}
   },[]);
 

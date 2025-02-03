@@ -9,21 +9,23 @@ import {
     {%- endif %}
   {%- endfor %}
 {%- endif %}
-} from './SubForm';
-import MainFormLayout from './MainFormLayout';
+} from './components/SubForm';
+import MainFormLayout from './components/MainFormLayout';
 import { actions, } from './store';
 
 const FormLayout: FC<{
-  idLayout: string
+  idLayout: string;
   /**组件是否是禁用状态 */
   fgDisabled: boolean;
-}> = ({ idLayout, fgDisabled }) => {
-  const { TabPane } = Tabs;
+  fgHidden: boolean;
+}> = ({ idLayout, fgDisabled, fgHidden }) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(actions.setComponentInfo({ idUiConf: idLayout, fgDisabled }))
-  }, [idLayout, fgDisabled]);
+    dispatch(
+      actions.setComponentInfo({ idUiConf: idLayout, fgDisabled, fgHidden }),
+    );
+  }, [idLayout, fgDisabled, fgHidden]);
 
   return (
     <>

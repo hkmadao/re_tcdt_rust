@@ -16,6 +16,7 @@ export type TFormStore = {
   idUiConf?: string;
   /**组件是否是禁用状态 */
   fgDisabled: boolean;
+  fgHidden: boolean;
   editStatusInfo?: {
     id: string;
     editStatus: 'toAdd' | 'added' | 'toEdit' | 'edited' | 'reflesh' | 'addItem' | 'removeItem';

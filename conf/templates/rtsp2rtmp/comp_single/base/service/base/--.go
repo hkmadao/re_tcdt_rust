@@ -96,7 +96,7 @@ func {{ rootInfo.pascalCaseName }}SelectByIds(ids []string) (models []entity.{{ 
 	// execute the raw query string
 	_, err_query := o.Raw(sqlStr, params...).QueryRows(&models)
 	if err_query != nil {
-		err = fmt.Errorf("selectByIds error: %v", err_make_sql)
+		err = fmt.Errorf("selectByIds error: %v", err_query)
 		return
 	}
 
@@ -118,7 +118,7 @@ func {{ rootInfo.pascalCaseName }}FindCollectionByCondition(condition common.AqC
 	// execute the raw query string
 	_, err_query := o.Raw(sqlStr, params...).QueryRows(&models)
 	if err_query != nil {
-		err = fmt.Errorf("findCollectionByCondition error: %v", err_make_sql)
+		err = fmt.Errorf("findCollectionByCondition error: %v", err_query)
 		return
 	}
 	return
@@ -140,7 +140,7 @@ func {{ rootInfo.pascalCaseName }}FindOneByCondition(condition common.AqConditio
 	models := make([]entity.{{ rootInfo.pascalCaseName }}, 0)
 	_, err_query := o.Raw(sqlStr, params...).QueryRows(&models)
 	if err_query != nil {
-		err = fmt.Errorf("findOneByCondition error: %v", err_make_sql)
+		err = fmt.Errorf("findOneByCondition error: %v", err_query)
 		return
 	}
 	if len(models) < 1 {
@@ -184,7 +184,7 @@ func {{ rootInfo.pascalCaseName }}FindPageByCondition(aqPageInfoInput common.AqP
 	models := make([]entity.{{ rootInfo.pascalCaseName }}, 0)
 	_, err_query := o.Raw(pageSqlStr, params...).QueryRows(&models)
 	if err_query != nil {
-		err = fmt.Errorf("findPageByCondition error: %v", err_make_sql)
+		err = fmt.Errorf("findPageByCondition error: %v", err_query)
 		return
 	}
 	dataList := make([]interface{}, 0)

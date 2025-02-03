@@ -1,41 +1,42 @@
-import { FC, useEffect, useState } from 'react';
-import { Button, Space } from 'antd';
+import { FC, useEffect } from 'react';
+import { Button } from 'antd';
+import { useSelector, useDispatch } from 'react-redux';
 import { Observer, TMessage } from '@/util/observer';
-import { subject, actionFormConf, } from '../../conf';
+import { subject, actionFormConf } from '../../../../conf';
+import { useFgAdd, useFgDisabled, useIdUiConf } from '../hooks';
+import { actions } from '../store';
 
-const FormToolBar: FC<{
-  idLayout: string
-  /**组件是否是禁用状态 */
-  fgDisabled: boolean;
-}> = ({ idLayout, fgDisabled }) => {
-  const [componentFgDiabled, setComponentFgDiabled] = useState<boolean>(fgDisabled);
-  const [fgAdd, setFgAdd] = useState<boolean>(true);
-
-  useEffect(() => {
-    setComponentFgDiabled(fgDisabled);
-  }, [fgDisabled]);
+const FromToolBarComponent: FC<{}> = ({}) => {
+  const idUiConf = useIdUiConf();
+  const fgDisabled = useFgDisabled();
+  const fgAdd = useFgAdd();
+  const dispatch = useDispatch();
 
   useEffect(() => {
+    if (!idUiConf) {
+      return;
+    }
+    
     const toAddObserver: Observer = {
       topic: 'toAdd',
-      consumerId: idLayout,
+      consumerId: idUiConf!,
       update: function (message: TMessage): void {
-        if (message.consumerIds.includes(idLayout)) {
+        if (message.consumerIds.includes(idUiConf!)) {
           return;
         }
-        setFgAdd(true);
+        dispatch(actions.setFgAdd(true));
       },
     };
     subject.subscribe(toAddObserver);
 
     const toEditObserver: Observer = {
       topic: 'toEdit',
-      consumerId: idLayout,
+      consumerId: idUiConf!,
       update: function (message: TMessage): void {
-        if (message.consumerIds.includes(idLayout)) {
+        if (message.consumerIds.includes(idUiConf!)) {
           return;
         }
-        setFgAdd(false);
+        dispatch(actions.setFgAdd(false));
       },
     };
     subject.subscribe(toEditObserver);
@@ -45,19 +46,19 @@ const FormToolBar: FC<{
       subject.unsubsribe(toAddObserver);
       subject.unsubsribe(toEditObserver);
     };
-  }, []);
+  }, [idUiConf]);
 
   const handleSave = () => {
     if (fgAdd) {
       subject.publish({
         topic: 'add',
-        producerId: idLayout,
+        producerId: idUiConf!,
         data: undefined,
       });
     } else {
       subject.publish({
         topic: 'edit',
-        producerId: idLayout,
+        producerId: idUiConf!,
         data: undefined,
       });
     }
@@ -66,15 +67,15 @@ const FormToolBar: FC<{
   const handleAddAgain = () => {
     subject.publish({
       topic: 'addAgain',
-      producerId: idLayout,
+      producerId: idUiConf!,
       data: undefined,
     });
   };
 
   const handleCancel = () => {
     subject.publish({
-      topic: 'cancle',
-      producerId: idLayout,
+      topic: 'cancel',
+      producerId: idUiConf!,
       data: undefined,
     });
   };
@@ -82,7 +83,7 @@ const FormToolBar: FC<{
   const handleReflesh = () => {
     subject.publish({
       topic: 'detailReflesh',
-      producerId: idLayout,
+      producerId: idUiConf!,
       data: undefined,
     });
   };
@@ -141,4 +142,4 @@ const FormToolBar: FC<{
   );
 };
 
-export default FormToolBar;
+export default FromToolBarComponent;

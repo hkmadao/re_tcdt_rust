@@ -18,10 +18,10 @@ import FormLayout from './billform/formlayout';
 import LeftTree from './lefttree';
 {%- endif %}
 {%- if rootInfo.vButtonJson %}
-import TableToolBar from './toolbar/TableToolBar';
+import TableToolBar from './toolbar/tabletoolbar';
 {%- endif %}
 {%- if rootInfo.buttonJson %}
-import FormToolBar from './toolbar/FormToolBar';
+import FormToolBar from './toolbar/formtoolbar';
 {%- endif %}
 {%- if rootInfo.qJson %}
 import SearchArea from './searcharea';
@@ -66,32 +66,32 @@ const Center: FC = () => {
       if (layout.type === 'component') {
 {%- if rootInfo.bTableJson %}
         if (layout.component?.componentType === 'viewBillform') {
-          return <Layout {...param}><TableLayout idLayout={layout.id} fgDisabled={asso.disabled} /></Layout>;
+          return <Layout {...param}><TableLayout idLayout={layout.id} fgDisabled={asso.disabled} fgHidden={asso.hidden} /></Layout>;
         }
 {%- endif %}
 {%- if rootInfo.bJson %}
         if (layout.component?.componentType === 'editBillform') {
-          return <Layout {...param}><FormLayout idLayout={layout.id} fgDisabled={asso.disabled} /></Layout>;
+          return <Layout {...param}><FormLayout idLayout={layout.id} fgDisabled={asso.disabled} fgHidden={asso.hidden} /></Layout>;
         }
 {%- endif %}
 {%- if rootInfo.tJson %}
         if (layout.component?.componentType === 'tree') {
-          return <Layout {...param}><LeftTree idLayout={layout.id} fgDisabled={asso.disabled} /></Layout>;
+          return <Layout {...param}><LeftTree idLayout={layout.id} fgDisabled={asso.disabled} fgHidden={asso.hidden} /></Layout>;
         }
 {%- endif %}
 {%- if rootInfo.vButtonJson %}
         if (layout.component?.componentType === 'viewButton') {
-          return <Layout {...param}><TableToolBar idLayout={layout.id} fgDisabled={asso.disabled} /></Layout>;
+          return <Layout {...param}><TableToolBar idLayout={layout.id} fgDisabled={asso.disabled} fgHidden={asso.hidden} /></Layout>;
         }
 {%- endif %}
 {%- if rootInfo.buttonJson %}
         if (layout.component?.componentType === 'editButton') {
-          return <Layout {...param}><FormToolBar idLayout={layout.id} fgDisabled={asso.disabled} /></Layout>;
+          return <Layout {...param}><FormToolBar idLayout={layout.id} fgDisabled={asso.disabled} fgHidden={asso.hidden} /></Layout>;
         }
 {%- endif %}
 {%- if rootInfo.qJson %}
         if (layout.component?.componentType === 'search') {
-          return <Layout {...param}><SearchArea idLayout={layout.id} fgDisabled={asso.disabled} /></Layout>;
+          return <Layout {...param}><SearchArea idLayout={layout.id} fgDisabled={asso.disabled} fgHidden={asso.hidden} /></Layout>;
         }
 {%- endif %}
         return <Layout {...param}>自定义组件</Layout>;

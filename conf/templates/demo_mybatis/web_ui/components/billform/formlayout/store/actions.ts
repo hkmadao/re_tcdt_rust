@@ -64,7 +64,7 @@ const buildActions = (store: Ref<TFormStore>) => {
     };
   }
 
-  const cancle = () => {
+  const cancel = () => {
     if (store.value.editData) {
       subject.publish({
         topic: 'updateSuccess',
@@ -107,7 +107,7 @@ const buildActions = (store: Ref<TFormStore>) => {
     };
   }
 
-  return { setComponentInfo, setSelectedTreeNode, setFormData, addFormData, cancle, updateFormData }
+  return { setComponentInfo, setSelectedTreeNode, setFormData, addFormData, cancel, updateFormData }
 }
 
 export default buildActions;

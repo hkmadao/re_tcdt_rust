@@ -6,7 +6,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Form, Space, Button } from 'antd';
 import { FC, useRef, useState, useEffect } from 'react';
 import styles from './styles.less';
-import { actions, } from './store';
+import { actions, } from '../store';
 import { 
 {%- if rootInfo.bJson and rootInfo.bJson.configForm.body is iterable %}
   {%- for bt in rootInfo.bJson.configForm.body %}
@@ -15,7 +15,7 @@ import {
     {%- endif %}
   {%- endfor %}
 {%- endif %}
-} from '../../../models';
+} from '../../../../models';
 import { 
   useFgDisabled,
   useFormData,
@@ -28,7 +28,7 @@ import {
     {%- endif %}
   {%- endfor %}
 {%- endif %}
-} from './hooks';
+} from '../hooks';
 
 {%- if rootInfo.bJson and rootInfo.bJson.configForm.body is iterable %}
   {%- for bt in rootInfo.bJson.configForm.body %}

@@ -156,13 +156,13 @@ onMounted(() => {
     return;
   }
   const cancleObserver: Observer = {
-    topic: 'cancle',
+    topic: 'cancel',
     consumerId: idUiConfRef.value,
     update: function (message: TMessage): void {
       if (message.consumerIds.includes(idUiConfRef.value)) {
         return;
       }
-      actions.cancle();
+      actions.cancel();
     },
   };
   subject.subscribe(cancleObserver);

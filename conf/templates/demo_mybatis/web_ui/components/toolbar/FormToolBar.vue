@@ -80,7 +80,7 @@ const handleAddAgain = () => {
 
 const handleCancel = () => {
   subject.publish({
-    topic: 'cancle',
+    topic: 'cancel',
     data: undefined,
     producerId: props.idLayout,
   });

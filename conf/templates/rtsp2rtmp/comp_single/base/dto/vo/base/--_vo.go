@@ -17,19 +17,19 @@ type {{ rootInfo.pascalCaseName }}VO struct {
 {%- endfor %}
 {%- for attributeInfo in rootInfo.upAttributeInfoList %}
 	// {{ attributeInfo.displayName }}{%- if attributeInfo.note %}{% else %}:{{ attributeInfo.note }}{%- endif %}
-	{{ attributeInfo.pascalCaseName }} {{ attributeInfo.objectType }}VO `json:"{{ attributeInfo.camelCaseName }}"`
+	{{ attributeInfo.pascalCaseName }} {{ attributeInfo.objectType }}VO `vo:"ignore" json:"{{ attributeInfo.camelCaseName }}"`
 {%- endfor %}
 {%- for attributeInfo in rootInfo.upSingleAttributeInfoList %}
 	// {{ attributeInfo.displayName }}{%- if attributeInfo.note %}{% else %}:{{ attributeInfo.note }}{%- endif %}
-	{{ attributeInfo.pascalCaseName }} {{ attributeInfo.objectType }}VO `json:"{{ attributeInfo.camelCaseName }}"`
+	{{ attributeInfo.pascalCaseName }} {{ attributeInfo.objectType }}VO `vo:"ignore" json:"{{ attributeInfo.camelCaseName }}"`
 {%- endfor %}
 {%- for attributeInfo in rootInfo.downAttributeInfoList %}
 	// {{ attributeInfo.displayName }}{%- if attributeInfo.note %}{% else %}:{{ attributeInfo.note }}{%- endif %}
-	{{ attributeInfo.pascalCaseName }} []{{ attributeInfo.objectType }}VO `json:"{{ attributeInfo.camelCaseName }}"`
+	// {{ attributeInfo.pascalCaseName }} []{{ attributeInfo.objectType }}VO `json:"{{ attributeInfo.camelCaseName }}"`
 {%- endfor %}
 {%- for attributeInfo in rootInfo.downSingleAttributeInfoList %}
 	// {{ attributeInfo.displayName }}{%- if attributeInfo.note %}{% else %}:{{ attributeInfo.note }}{%- endif %}
-	{{ attributeInfo.pascalCaseName }} {{ attributeInfo.objectType }}VO `json:"{{ attributeInfo.camelCaseName }}"`
+	// {{ attributeInfo.pascalCaseName }} {{ attributeInfo.objectType }}VO `json:"{{ attributeInfo.camelCaseName }}"`
 {%- endfor %}
 }
 

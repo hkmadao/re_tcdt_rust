@@ -17,6 +17,7 @@ export type TTableStore = {
   idUiConf?: string;
   /**组件是否是禁用状态 */
   fgDisabled: boolean;
+  fgHidden: boolean;
   /**当前页面编号 */
   tableData?: T{{ bt.tabClassName }}[];
   selectedRowKeys?: Key[];

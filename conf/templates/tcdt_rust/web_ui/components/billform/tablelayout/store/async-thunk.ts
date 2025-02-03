@@ -60,10 +60,10 @@ export const fetchByTreeNode = createAsyncThunk(
     const pageInfo: TPageInfo<T{{ bt.tabClassName }}> = await ListAPI.pageList(
       params,
     );
-return {
-  selectedTreeNode,
-  pageInfo,
-}
+    return {
+      selectedTreeNode,
+      pageInfo,
+    }
   },
 );
 
@@ -116,10 +116,10 @@ export const search = createAsyncThunk(
     const pageInfo: TPageInfo<T{{ bt.tabClassName }}> = await ListAPI.pageList(
       params,
     );
-return {
-  searchData,
-  pageInfo,
-}
+    return {
+      searchData,
+      pageInfo,
+    }
   },
 );
 
@@ -169,7 +169,7 @@ export const reflesh = createAsyncThunk(
     const pageInfo: TPageInfo<T{{ bt.tabClassName }}> = await ListAPI.pageList(
       searchParam,
     );
-return pageInfo
+    return pageInfo
   },
 );
 
@@ -220,7 +220,7 @@ export const pageChange = createAsyncThunk(
     const pageInfo: TPageInfo<T{{ bt.tabClassName }}> = await ListAPI.pageList(
       queyrParams,
     );
-return pageInfo
+    return pageInfo
   },
 );
 

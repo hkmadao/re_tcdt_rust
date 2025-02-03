@@ -13,7 +13,6 @@ pub fn main() {
 mod conf {
     pub(crate) mod security_handle;
     pub(crate) mod cors_handle;
-    pub(crate) mod error_handle;
     pub(crate) mod response_handle;
 }
 

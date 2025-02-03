@@ -15,11 +15,12 @@ import { subject } from "../../../../conf";
   {%- for bt in rootInfo.bTableJson.configList.header %}
 export const setComponentInfo: CaseReducer<
   TTableStore,
-  PayloadAction<{ idUiConf: string; fgDisabled: boolean; }>
+  PayloadAction<{ idUiConf: string; fgDisabled: boolean; fgHidden: boolean; }>
 > = (state, action) => {
-  const { idUiConf, fgDisabled } = action.payload;
+  const { idUiConf, fgDisabled, fgHidden } = action.payload;
   state.idUiConf = idUiConf;
   state.fgDisabled = fgDisabled;
+  state.fgHidden = fgHidden;
 };
 
 export const setSelectedTreeNode: CaseReducer<

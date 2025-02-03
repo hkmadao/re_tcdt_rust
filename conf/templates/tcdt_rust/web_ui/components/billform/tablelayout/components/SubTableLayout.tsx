@@ -12,7 +12,7 @@ import {
     {%- endif %}
   {%- endfor %}
 {%- endif %}
-} from './hooks';
+} from '../hooks';
 import { 
 {%- if rootInfo.bMDJson and rootInfo.bMDJson.children is iterable %}
   {%- for field in rootInfo.bMDJson.children %}
@@ -21,7 +21,7 @@ import {
     {%- endif %}
   {%- endfor %}
 {%- endif %}
-} from '../../../models';
+} from '../../../../models';
 
 const SubTableLayout: FC = () => {
 {%- if rootInfo.bTableJson and rootInfo.bTableJson.configList.body is iterable %}

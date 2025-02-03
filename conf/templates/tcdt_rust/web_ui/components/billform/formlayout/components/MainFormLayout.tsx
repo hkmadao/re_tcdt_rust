@@ -21,16 +21,16 @@ import {
   T{{ bt.tabClassName }},
   {%- endfor %}
 {%- endif %}
-} from '../../../models';
+} from '../../../../models';
 import { getRefByAttr } from '@/util';
-import { billformConf, subject } from '../../../conf';
+import { billformConf, subject } from '../../../../conf';
 import {
   actions,
   toEdit,
   save,
   reflesh,
-} from './store';
-import { useEditStatusInfo, useFormData, useIdUiConf, useFgDisabled, } from './hooks';
+} from '../store';
+import { useEditStatusInfo, useFormData, useIdUiConf, useFgDisabled, } from '../hooks';
 
 {%- if rootInfo.bJson and rootInfo.bJson.configForm.header is iterable %}
   {%- for bt in rootInfo.bJson.configForm.header %}
@@ -55,13 +55,13 @@ const MainFormLayout: FC = () => {
     }
 
     const cancleObserver: Observer = {
-      topic: 'cancle',
+      topic: 'cancel',
       consumerId: idUiConf,
       update: function (message: TMessage): void {
         if (message.consumerIds.includes(idUiConf)) {
           return;
         }
-        dispatch(actions.cancle());
+        dispatch(actions.cancel());
       },
     };
     subject.subscribe(cancleObserver);

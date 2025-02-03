@@ -35,6 +35,12 @@ export const useFgDisabled = () => {
   });
 }
 
+export const useFgHidden = () => {
+  return useSelector((state: { [x: string]: TTableStore }) => {
+    return state[componentName].fgHidden;
+  });
+}
+
 export const useStoreData = () => {
   return useSelector(selectStoreData);
 }

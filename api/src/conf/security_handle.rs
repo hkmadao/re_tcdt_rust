@@ -68,7 +68,8 @@ where
                 let res = fut.await?;
                 return Ok(res);
             }
-            if path == "/entityCollection/generateSingleFile"
+            if path.starts_with("/tcdt/") ||
+                path == "/entityCollection/generateSingleFile"
                 || path == "/entityCollection/generateFull"
                 || path == "/entityCollection/generatePart"
                 || path == "/factory/generate"

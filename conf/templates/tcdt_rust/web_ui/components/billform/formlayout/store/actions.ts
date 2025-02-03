@@ -16,11 +16,12 @@ import { deepCopy } from "@/util";
   {%- for bt in rootInfo.bJson.configForm.header %}
 export const setComponentInfo: CaseReducer<
   TFormStore,
-  PayloadAction<{ idUiConf: string; fgDisabled: boolean; }>
+  PayloadAction<{ idUiConf: string; fgDisabled: boolean; fgHidden: boolean; }>
 > = (state, action) => {
-  const { idUiConf, fgDisabled } = action.payload;
+  const { idUiConf, fgDisabled, fgHidden } = action.payload;
   state.idUiConf = idUiConf;
   state.fgDisabled = fgDisabled;
+  state.fgHidden = fgHidden;
 };
 
 export const setFormData: CaseReducer<
@@ -74,7 +75,7 @@ export const addFormData: CaseReducer<
   };
 };
 
-export const cancle: CaseReducer<
+export const cancel: CaseReducer<
   TFormStore,
   PayloadAction<void>
 > = (state, action) => {

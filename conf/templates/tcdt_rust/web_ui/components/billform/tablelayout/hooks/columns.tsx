@@ -184,7 +184,6 @@ export const useMainTableColumns: () => TableColumnType<T{{ ht.tabClassName }}>[
       {%- if b.inputType and b.inputType == "Select" %}
         {
           width: 150,
-          fixed: 'right',
           title: '{{ b.displayName }}',
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',

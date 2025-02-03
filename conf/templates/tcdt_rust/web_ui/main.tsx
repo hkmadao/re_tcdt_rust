@@ -5,7 +5,7 @@ import ModuleLayout from './components';
 import { useLoadingStatus } from './hooks';
 import styles from './index.less';
 
-const MainModule: FC = () => {
+const MainLayout: FC = () => {
   const loadStatus = useLoadingStatus();
   return (
     <>
@@ -19,4 +19,4 @@ const MainModule: FC = () => {
   );
 };
 
-export default MainModule;
+export default MainLayout;

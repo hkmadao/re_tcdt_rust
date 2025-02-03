@@ -1,5 +1,5 @@
 import { FC, Key, useEffect, useRef, useState } from 'react';
-import { Button, TreeProps, Input, Tree, InputRef, Space } from 'antd';
+import { Button, TreeProps, Input, Tree, InputRef, Space, Checkbox, } from 'antd';
 import { CloseCircleFilled, CloseOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { TTree } from '@/models';
@@ -204,7 +204,7 @@ const LeftTreeLayout: FC<TOprationLayout> = () => {
               <ReloadOutlined />
             </Button>
           </Space>
-          <div style={{ display: 'flex', justifyContent: 'end', gap: '10px' }}>
+          <div style={{ "{{" }} display: 'flex', justifyContent: 'end', gap: '10px' {{ "}}" }}>
             {'禁用状态:'}
             <Checkbox
               checked={fgInnerDisabled}
