@@ -38,4 +38,16 @@ pub struct ButtonActionPO {
     /// 子项目名称:
     #[serde(default)]
     pub sub_project_name: Option<String>,
+    /// 组件模块id:
+    #[serde(default)]
+    pub id_component_module: Option<String>,
+    /// 组件模块名称:
+    #[serde(default)]
+    pub component_module_name: Option<String>,
+    /// 组件id:
+    #[serde(default)]
+    pub id_component: Option<String>,
+    /// 组件名称:
+    #[serde(default)]
+    pub component_name: Option<String>,
 }

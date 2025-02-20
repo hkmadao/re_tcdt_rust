@@ -28,6 +28,18 @@ pub struct Model {
     /// 子项目名称:
     #[sea_orm(comment = "子项目名称")]
     pub sub_project_name: Option<String>,
+    /// 组件模块id:
+    #[sea_orm(comment = "组件模块id")]
+    pub id_component_module: Option<String>,
+    /// 组件模块名称:
+    #[sea_orm(comment = "组件模块名称")]
+    pub component_module_name: Option<String>,
+    /// 组件id:
+    #[sea_orm(comment = "组件id")]
+    pub id_component: Option<String>,
+    /// 组件名称:
+    #[sea_orm(comment = "组件名称")]
+    pub component_name: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -45,5 +57,9 @@ pub fn convert_model_to_active_model(button_action_model: Model) -> ActiveModel 
         project_name: Set(button_action_model.project_name.clone()),
         id_sub_project: Set(button_action_model.id_sub_project.clone()),
         sub_project_name: Set(button_action_model.sub_project_name.clone()),
+        id_component_module: Set(button_action_model.id_component_module.clone()),
+        component_module_name: Set(button_action_model.component_module_name.clone()),
+        id_component: Set(button_action_model.id_component.clone()),
+        component_name: Set(button_action_model.component_name.clone()),
     }
 }

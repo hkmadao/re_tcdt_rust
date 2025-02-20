@@ -66,6 +66,34 @@ pub fn get_button_action_desc() ->  EntityDesc {
         data_type: "String".to_owned(),
         ..Default::default()
     };
+    let id_component_module_attribute_info = AttributeInfo {
+        column_name: "id_component_module".to_owned(),
+        name: "idComponentModule".to_owned(),
+        display_name: "组件模块id".to_owned(),
+        data_type: "String".to_owned(),
+        ..Default::default()
+    };
+    let component_module_name_attribute_info = AttributeInfo {
+        column_name: "component_module_name".to_owned(),
+        name: "componentModuleName".to_owned(),
+        display_name: "组件模块名称".to_owned(),
+        data_type: "String".to_owned(),
+        ..Default::default()
+    };
+    let id_component_attribute_info = AttributeInfo {
+        column_name: "id_component".to_owned(),
+        name: "idComponent".to_owned(),
+        display_name: "组件id".to_owned(),
+        data_type: "String".to_owned(),
+        ..Default::default()
+    };
+    let component_name_attribute_info = AttributeInfo {
+        column_name: "component_name".to_owned(),
+        name: "componentName".to_owned(),
+        display_name: "组件名称".to_owned(),
+        data_type: "String".to_owned(),
+        ..Default::default()
+    };
     let entity_desc = EntityDesc {
       entity_info: entity_info,
       pk_attribute_info: id_button_action_attribute_info.clone(),
@@ -86,6 +114,10 @@ pub fn get_button_action_desc() ->  EntityDesc {
           ("projectName".to_owned(), project_name_attribute_info),
           ("idSubProject".to_owned(), id_sub_project_attribute_info),
           ("subProjectName".to_owned(), sub_project_name_attribute_info),
+          ("idComponentModule".to_owned(), id_component_module_attribute_info),
+          ("componentModuleName".to_owned(), component_module_name_attribute_info),
+          ("idComponent".to_owned(), id_component_attribute_info),
+          ("componentName".to_owned(), component_name_attribute_info),
       ]),
     };
 
