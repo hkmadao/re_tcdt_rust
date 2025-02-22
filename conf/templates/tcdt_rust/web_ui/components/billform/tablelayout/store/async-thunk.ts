@@ -46,12 +46,14 @@ export const fetchByTreeNode = createAsyncThunk(
       orders: [
 {%- if rootInfo.bTableJson and rootInfo.bTableJson.configList.header is iterable %}
   {%- for bt in rootInfo.bTableJson.configList.header %}
-    {%- if bt.orderProperty %}
+    {%- if bt.orderInfoList %}
+      {%- for orderInfo in bt.orderInfoList %}
         {
-          property: '{{ bt.orderProperty }}',
-          direction: {%- if bt.orderType == 'ASC' %} EDirection.ASC{% else %} EDirection.DESC{%- endif %},
+          property: '{{ orderInfo.orderProperty }}',
+          direction: {%- if orderInfo.orderType == 'ASC' %} EDirection.ASC{% else %} EDirection.DESC{%- endif %},
           ignoreCase: false,
         },
+      {%- endfor %}
     {%- endif %}
   {%- endfor %}
 {%- endif %}
@@ -102,12 +104,14 @@ export const search = createAsyncThunk(
       orders: [
 {%- if rootInfo.bTableJson and rootInfo.bTableJson.configList.header is iterable %}
   {%- for bt in rootInfo.bTableJson.configList.header %}
-    {%- if bt.orderProperty %}
+    {%- if bt.orderInfoList %}
+      {%- for orderInfo in bt.orderInfoList %}
         {
-          property: '{{ bt.orderProperty }}',
-          direction: {%- if bt.orderType == 'ASC' %} EDirection.ASC{% else %} EDirection.DESC{%- endif %},
+          property: '{{ orderInfo.orderProperty }}',
+          direction: {%- if orderInfo.orderType == 'ASC' %} EDirection.ASC{% else %} EDirection.DESC{%- endif %},
           ignoreCase: false,
         },
+      {%- endfor %}
     {%- endif %}
   {%- endfor %}
 {%- endif %}
@@ -155,12 +159,14 @@ export const reflesh = createAsyncThunk(
       orders: [
 {%- if rootInfo.bTableJson and rootInfo.bTableJson.configList.header is iterable %}
   {%- for bt in rootInfo.bTableJson.configList.header %}
-    {%- if bt.orderProperty %}
+    {%- if bt.orderInfoList %}
+      {%- for orderInfo in bt.orderInfoList %}
         {
-          property: '{{ bt.orderProperty }}',
-          direction: {%- if bt.orderType == 'ASC' %} EDirection.ASC{% else %} EDirection.DESC{%- endif %},
+          property: '{{ orderInfo.orderProperty }}',
+          direction: {%- if orderInfo.orderType == 'ASC' %} EDirection.ASC{% else %} EDirection.DESC{%- endif %},
           ignoreCase: false,
         },
+      {%- endfor %}
     {%- endif %}
   {%- endfor %}
 {%- endif %}
@@ -206,12 +212,14 @@ export const pageChange = createAsyncThunk(
       orders: [
 {%- if rootInfo.bTableJson and rootInfo.bTableJson.configList.header is iterable %}
   {%- for bt in rootInfo.bTableJson.configList.header %}
-    {%- if bt.orderProperty %}
+    {%- if bt.orderInfoList %}
+      {%- for orderInfo in bt.orderInfoList %}
         {
-          property: '{{ bt.orderProperty }}',
-          direction: {%- if bt.orderType == 'ASC' %} EDirection.ASC{% else %} EDirection.DESC{%- endif %},
+          property: '{{ orderInfo.orderProperty }}',
+          direction: {%- if orderInfo.orderType == 'ASC' %} EDirection.ASC{% else %} EDirection.DESC{%- endif %},
           ignoreCase: false,
         },
+      {%- endfor %}
     {%- endif %}
   {%- endfor %}
 {%- endif %}
@@ -254,12 +262,14 @@ export const batchRemove = createAsyncThunk(
       orders: [
 {%- if rootInfo.bTableJson and rootInfo.bTableJson.configList.header is iterable %}
   {%- for bt in rootInfo.bTableJson.configList.header %}
-    {%- if bt.orderProperty %}
+    {%- if bt.orderInfoList %}
+      {%- for orderInfo in bt.orderInfoList %}
         {
-          property: '{{ bt.orderProperty }}',
-          direction: {%- if bt.orderType == 'ASC' %} EDirection.ASC{% else %} EDirection.DESC{%- endif %},
+          property: '{{ orderInfo.orderProperty }}',
+          direction: {%- if orderInfo.orderType == 'ASC' %} EDirection.ASC{% else %} EDirection.DESC{%- endif %},
           ignoreCase: false,
         },
+      {%- endfor %}
     {%- endif %}
   {%- endfor %}
 {%- endif %}
