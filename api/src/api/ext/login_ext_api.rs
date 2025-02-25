@@ -3,6 +3,7 @@ use actix_http::header;
 use actix_web::{error, post, web, Error, HttpRequest, HttpResponse, Result};
 use serde::{Deserialize, Serialize};
 use entity::entity::token;
+use tcdt_common::tcdt_conf::TCDT_CONF;
 use tcdt_service::{
     sea_orm::{EntityTrait, QueryFilter},
 };
@@ -60,14 +61,15 @@ pub async fn login(
         return Err(error::ErrorInternalServerError("username or password error"));
     }
     let token = generate_password(32);
-    let expired_time = tcdt_common::chrono::Local::now() + tcdt_common::chrono::Duration::hours(1);
+    let token_duration = TCDT_CONF.token_duration;
+    let expired_time = tcdt_common::chrono::Local::now() + tcdt_common::chrono::Duration::minutes(token_duration);
     let token_model = token::Model {
         id_sys_token: generate_id(),
         username: user.account.clone(),
         nick_name: user.nick_name.clone(),
         create_time: Some(tcdt_common::chrono::Local::now()),
         token: Some(token.clone()),
-        expired_time: Some(expired_time),
+        expired_time: Some(expired_time.clone()),
         user_info_string: None,
     };
     TokenMutation::create(conn, token_model)
@@ -81,7 +83,7 @@ pub async fn login(
         nick_name: user.nick_name.unwrap_or_default(),
         username: user.account.unwrap_or_default(),
         token: token.clone(),
-        expired_time: tcdt_common::chrono::Local::now() + tcdt_common::chrono::Duration::hours(1),
+        expired_time,
     };
     Ok(HttpResponse::Ok().json(result))
 }

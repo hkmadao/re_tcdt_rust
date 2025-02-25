@@ -96,6 +96,13 @@ where
                     return Ok(res);
                 }
             }
+            let token_duration = TCDT_CONF.token_duration;
+            if !security {
+                if path == "/user/updatePw" {
+                    let res = fut.await?;
+                    return Ok(res);
+                }
+            }
             if headers.get(header::AUTHORIZATION).is_none() {
                 log::info!("header authorization is empty");
                 let err = error::ErrorUnauthorized("header authorization is empty");
@@ -129,7 +136,7 @@ where
                 let err = error::ErrorUnauthorized("token expired");
                 return Err(err);
             }
-            token_entity.expired_time = Some(tcdt_common::chrono::Local::now() + tcdt_common::chrono::Duration::hours(1));
+            token_entity.expired_time = Some(tcdt_common::chrono::Local::now() + tcdt_common::chrono::Duration::minutes(token_duration));
             TokenMutation::update_by_id(db_conn, token_entity)
                 .await
                 .map_err(|err| {

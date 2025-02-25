@@ -12,6 +12,7 @@ pub struct TcdtConf {
     pub code_generate_path: String,
     pub enable_code_template_edit: bool,
     pub enable_code_generate_debug_mode: bool,
+    pub token_duration: i64,
 }
 lazy_static! {
     pub static ref TCDT_CONF: TcdtConf = {
@@ -30,6 +31,9 @@ lazy_static! {
             env::var("ENABLE_CODE_TEMPLATE_EDIT").expect("ENABLE_CODE_TEMPLATE_EDIT is not set in .env file");
         let enable_code_generate_debug_mode_str =
             env::var("ENABLE_CODE_GENERATE_DEBUG_MODE").expect("ENABLE_CODE_GENERATE_DEBUG_MODE is not set in .env file");
+        let token_durtion_str =
+            env::var("TOKEN_DURATION").expect("TOKEN_DURATION is not set in .env file");
+        let token_durtion = token_durtion_str.parse::<i64>().expect("TOKEN_DURATION need a number type");
         TcdtConf {
             host,
             port,
@@ -41,6 +45,7 @@ lazy_static! {
             code_generate_path,
             enable_code_template_edit: enable_code_template_edit.trim() == "true",
             enable_code_generate_debug_mode: enable_code_generate_debug_mode_str.trim() == "true",
+            token_duration:token_durtion,
         }
     };
 }
