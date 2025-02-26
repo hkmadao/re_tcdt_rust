@@ -51,8 +51,28 @@ const Center: FC = () => {
     };
     subject.subscribe(pageObserver);
     
+    const addLoadingCountObserver: Observer = {
+      topic: '/page/addLoadingCount',
+      consumerId: idUiConf,
+      update: function (message: TMessage): void {
+        dispatch(actions.addLoadingCount());
+      },
+    };
+    subject.subscribe(addLoadingCountObserver);
+
+    const reduceLoadingCountObserver: Observer = {
+      topic: '/page/reduceLoadingCount',
+      consumerId: idUiConf,
+      update: function (message: TMessage): void {
+        dispatch(actions.reduceLoadingCount());
+      },
+    };
+    subject.subscribe(reduceLoadingCountObserver);
+    
     return () => {
       subject.unsubsribe(pageObserver);
+      subject.unsubsribe(addLoadingCountObserver);
+      subject.unsubsribe(reduceLoadingCountObserver);
     }
   }, []);
 

@@ -21,9 +21,26 @@ export const tableSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchByTreeNode.pending, (state, action) => { })
-      .addCase(fetchByTreeNode.rejected, (state, action) => { })
+      .addCase(fetchByTreeNode.pending, (state, action) => {
+        subject.publish({
+          topic: '/page/addLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
+       })
+      .addCase(fetchByTreeNode.rejected, (state, action) => {
+        subject.publish({
+          topic: '/page/reduceLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
+       })
       .addCase(fetchByTreeNode.fulfilled, (state, action) => {
+        subject.publish({
+          topic: '/page/reduceLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
         if (!action.payload) {
           return;
         }
@@ -34,16 +51,33 @@ export const tableSlice = createSlice({
         state.tableData = pageInfo.dataList;
         state.selectedTreeNode = selectedTreeNode;
         state.selectedRowKeys  = [];
-        state.searchData = undefined;
+        // state.searchData = undefined;
         subject.publish({
           topic: 'listReload',
           producerId: state.idUiConf!,
           data: undefined,
         });
       })
-      .addCase(search.pending, (state, action) => { })
-      .addCase(search.rejected, (state, action) => { })
+      .addCase(search.pending, (state, action) => {
+        subject.publish({
+          topic: '/page/addLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
+       })
+      .addCase(search.rejected, (state, action) => { 
+        subject.publish({
+          topic: '/page/reduceLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
+      })
       .addCase(search.fulfilled, (state, action) => {
+        subject.publish({
+          topic: '/page/reduceLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
         if (!action.payload) {
           return;
         }
@@ -61,9 +95,26 @@ export const tableSlice = createSlice({
           data: undefined,
         });
       })
-      .addCase(reflesh.pending, (state, action) => { })
-      .addCase(reflesh.rejected, (state, action) => { })
+      .addCase(reflesh.pending, (state, action) => {
+        subject.publish({
+          topic: '/page/addLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
+       })
+      .addCase(reflesh.rejected, (state, action) => { 
+        subject.publish({
+          topic: '/page/reduceLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
+      })
       .addCase(reflesh.fulfilled, (state, action) => {
+        subject.publish({
+          topic: '/page/reduceLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
         if (!action.payload) {
           return;
         }
@@ -81,9 +132,26 @@ export const tableSlice = createSlice({
           data: undefined,
         });
       })
-      .addCase(pageChange.pending, (state, action) => { })
-      .addCase(pageChange.rejected, (state, action) => { })
+      .addCase(pageChange.pending, (state, action) => { 
+        subject.publish({
+          topic: '/page/addLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
+      })
+      .addCase(pageChange.rejected, (state, action) => {
+        subject.publish({
+          topic: '/page/reduceLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
+       })
       .addCase(pageChange.fulfilled, (state, action) => {
+        subject.publish({
+          topic: '/page/reduceLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
         if (!action.payload) {
           return;
         }
@@ -101,9 +169,26 @@ export const tableSlice = createSlice({
           data: undefined,
         });
       })
-      .addCase(batchRemove.pending, (state, action) => { })
-      .addCase(batchRemove.rejected, (state, action) => { })
+      .addCase(batchRemove.pending, (state, action) => { 
+        subject.publish({
+          topic: '/page/addLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
+      })
+      .addCase(batchRemove.rejected, (state, action) => { 
+        subject.publish({
+          topic: '/page/reduceLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
+      })
       .addCase(batchRemove.fulfilled, (state, action) => {
+        subject.publish({
+          topic: '/page/reduceLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
         if (!action.payload) {
           return;
         }

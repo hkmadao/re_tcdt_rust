@@ -1,4 +1,4 @@
-import { FC, Key, useEffect, useRef, useState } from 'react';
+import { FC, Key, useEffect, useRef, useState, useMemo, } from 'react';
 import { Button, TreeProps, Input, Tree, InputRef, Space, Checkbox, } from 'antd';
 import { CloseCircleFilled, CloseOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
@@ -31,6 +31,8 @@ const LeftTreeLayout: FC<TOprationLayout> = () => {
   const [searchValue, setSearchValue] = useState<string>();
 
   const dispatch = useDispatch();
+
+  const fgComponentDisabled = useMemo(() => fgDisabled || fgInnerDisabled, [fgDisabled, fgInnerDisabled]);
 
   useEffect(() => {
     if (!idUiConf) {
@@ -135,7 +137,7 @@ const LeftTreeLayout: FC<TOprationLayout> = () => {
 
   /** 树主配置 */
   const treeConfig: TreeProps<TTree & any> = {
-    disabled: fgDisabled,
+    disabled: fgComponentDisabled,
     treeData: treeDatas,
     expandedKeys,
     selectedKeys: selectedKeys,
@@ -190,17 +192,17 @@ const LeftTreeLayout: FC<TOprationLayout> = () => {
               ref={searchRef}
               value={searchValue}
               onChange={handleChange}
-              readOnly={fgDisabled}
+              readOnly={fgComponentDisabled}
               onKeyDown={handleKeyDown}
               suffix={
                 <Space direction="horizontal" size={2}>
                   {searchValue ? <CloseCircleFilled style={{ "{{" }} color: 'rgb(191 191 191)' {{ "}}" }} onClick={handleClear} /> : ''}
                 </Space>
               } />
-            <Button onClick={handleSearch} type={'primary'} disabled={fgDisabled}>
+            <Button onClick={handleSearch} type={'primary'} disabled={fgComponentDisabled}>
               <SearchOutlined />
             </Button>
-            <Button onClick={onReflesh} type={'primary'} disabled={fgDisabled}>
+            <Button onClick={onReflesh} type={'primary'} disabled={fgComponentDisabled}>
               <ReloadOutlined />
             </Button>
           </Space>

@@ -29,7 +29,7 @@ const SearchAreaComponent: FC<{}> = ({ }) => {
           if (!message || message.consumerIds.includes(idUiConf!)) {
             return;
           }
-          form.resetFields();
+          // form.resetFields();
         })();
       },
     };

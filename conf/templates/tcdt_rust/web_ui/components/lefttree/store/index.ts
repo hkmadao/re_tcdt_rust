@@ -6,7 +6,7 @@ import {
   nanoid,
 } from '@reduxjs/toolkit';
 import { arrToTree, } from '@/util';
-import { treeConf, } from '../../../conf';
+import { subject, treeConf, } from '../../../conf';
 import { fetchTree, remove, } from './async-thunk';
 import { componentName } from '../conf';
 import { initialState } from './initial-state';
@@ -22,9 +22,26 @@ export const leftTreeSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchTree.pending, (state, action) => { })
-      .addCase(fetchTree.rejected, (state, action) => { })
+      .addCase(fetchTree.pending, (state, action) => {
+        subject.publish({
+          topic: '/page/addLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
+       })
+      .addCase(fetchTree.rejected, (state, action) => {
+        subject.publish({
+          topic: '/page/reduceLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
+       })
       .addCase(fetchTree.fulfilled, (state, action) => {
+        subject.publish({
+          topic: '/page/reduceLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
         const treeData = arrToTree(treeConf?.firstTreeRef?.parentIdAttr ?? 'idParent', treeConf?.firstTreeRef?.keyAttr!, treeConf?.firstTreeRef?.labelAttr!, action.payload, true, null);
         state.sourchTreeData = treeData;
         state.treeData = treeData;
@@ -33,9 +50,26 @@ export const leftTreeSlice = createSlice({
           state.expandedKeys = [treeData[0].key];
         }
       })
-      .addCase(remove.pending, (state, action) => { })
-      .addCase(remove.rejected, (state, action) => { })
+      .addCase(remove.pending, (state, action) => {
+        subject.publish({
+          topic: '/page/addLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
+       })
+      .addCase(remove.rejected, (state, action) => {
+        subject.publish({
+          topic: '/page/reduceLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
+       })
       .addCase(remove.fulfilled, (state, action) => {
+        subject.publish({
+          topic: '/page/reduceLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
         const treeData = arrToTree(treeConf?.firstTreeRef?.parentIdAttr ?? 'idParent', treeConf?.firstTreeRef?.keyAttr!, treeConf?.firstTreeRef?.labelAttr!, action.payload, true, null);
         state.sourchTreeData = treeData;
         state.treeData = treeData;

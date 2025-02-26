@@ -5,4 +5,6 @@ export const initialState: TFormStore = {
   idUiConf: 'default',
   formData: {},
   newDataArr: [],
+  fgDisabled: false,
+  fgHidden: false
 };

@@ -1,4 +1,4 @@
-import { Checkbox, Dropdown, Menu, TableColumnType, message } from 'antd';
+import { Checkbox, Dropdown, Menu, TableColumnType, message, Popover, } from 'antd';
 import moment from 'moment';
 import { DownOutlined } from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
@@ -54,7 +54,7 @@ export const useMainTableColumns: () => TableColumnType<T{{ ht.tabClassName }}>[
     {%- if b.fgDisplay %}
       {%- if not b.inputType %}
       {
-        width: 150,
+        width: {{ b.width }},
         title: '{{ b.displayName }}',
         dataIndex: '{{ b.name }}',
         key: '{{ b.name }}',
@@ -65,18 +65,32 @@ export const useMainTableColumns: () => TableColumnType<T{{ ht.tabClassName }}>[
       {%- endif %}
       {%- if b.inputType and b.inputType == "Input" %}
         {
-          width: 150,
+          width: {{ b.width }},
           title: '{{ b.displayName }}',
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
           render: (_dom: any, record: any) => {
-            return <>{record.{{ b.name }} ? record.{{ b.name }} : '--'}</>;
+            const content = record.{{ b.name }} ? record.{{ b.name }} : '--';
+            return (
+              <div
+                style={{ "{{" }}
+                  overflow: 'hidden',
+                  width: '{{ b.textLen }}px',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                {{ "}}" }}
+              >
+                <Popover content={content} trigger="hover">
+                  {content}
+                </Popover>
+              </div>
+            );
           },
         },
       {%- endif %}
       {%- if b.inputType and b.inputType == "InputNumber" %}
         {
-          width: 150,
+          width: {{ b.width }},
           title: '{{ b.displayName }}',
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
@@ -87,18 +101,32 @@ export const useMainTableColumns: () => TableColumnType<T{{ ht.tabClassName }}>[
       {%- endif %}
       {%- if b.inputType and b.inputType == "Text" %}
         {
-          width: 150,
+          width: {{ b.width }},
           title: '{{ b.displayName }}',
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
           render: (_dom: any, record: any) => {
-            return <>{record.{{ b.name }} ? record.{{ b.name }} : '--'}</>;
+            const content = record.{{ b.name }} ? record.{{ b.name }} : '--';
+            return (
+              <div
+                style={{ "{{" }}
+                  overflow: 'hidden',
+                  width: '{{ b.textLen }}px',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                {{ "}}" }}
+              >
+                <Popover content={content} trigger="hover">
+                  {content}
+                </Popover>
+              </div>
+            );
           },
         },
       {%- endif %}
       {%- if b.inputType and b.inputType == "Checkbox" %}
         {
-          width: 150,
+          width: {{ b.width }},
           title: '{{ b.displayName }}',
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
@@ -109,7 +137,7 @@ export const useMainTableColumns: () => TableColumnType<T{{ ht.tabClassName }}>[
       {%- endif %}
       {%- if b.inputType and b.inputType == "DateTime" %}
         {
-          width: 150,
+          width: {{ b.width }},
           title: '{{ b.displayName }}',
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
@@ -128,7 +156,7 @@ export const useMainTableColumns: () => TableColumnType<T{{ ht.tabClassName }}>[
       {%- endif %}
       {%- if b.inputType and b.inputType == "Date" %}
         {
-          width: 150,
+          width: {{ b.width }},
           title: '{{ b.displayName }}',
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
@@ -147,7 +175,7 @@ export const useMainTableColumns: () => TableColumnType<T{{ ht.tabClassName }}>[
       {%- endif %}
       {%- if b.inputType and b.inputType == "Time" %}
         {
-          width: 150,
+          width: {{ b.width }},
           title: '{{ b.displayName }}',
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
@@ -158,7 +186,7 @@ export const useMainTableColumns: () => TableColumnType<T{{ ht.tabClassName }}>[
       {%- endif %}
       {%- if b.inputType and b.inputType == "Ref" %}
         {
-          width: 150,
+          width: {{ b.width }},
           title: '{{ b.displayName }}',
           dataIndex: [
             '{{ b.name }}',
@@ -183,7 +211,7 @@ export const useMainTableColumns: () => TableColumnType<T{{ ht.tabClassName }}>[
       {%- endif %}
       {%- if b.inputType and b.inputType == "Select" %}
         {
-          width: 150,
+          width: {{ b.width }},
           title: '{{ b.displayName }}',
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
@@ -201,7 +229,7 @@ export const useMainTableColumns: () => TableColumnType<T{{ ht.tabClassName }}>[
   {%- endfor %}
 {#
       {
-        width: 150,
+        width: {{ b.width }},
         fixed: 'right',
         title: '操作',
         key: 'action',
@@ -231,6 +259,7 @@ export const use{{ bt.firstUpperTabCode }}Columns: () => TableColumnType<T{{ bt.
         {%- if b.fgDisplay %}
           {%- if not b.inputType %}
         {
+          width: {{ b.width }},
           title: '{{ b.displayName }}',
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
@@ -241,16 +270,32 @@ export const use{{ bt.firstUpperTabCode }}Columns: () => TableColumnType<T{{ bt.
           {%- endif %}
           {%- if b.inputType and b.inputType == "Input" %}
         {
+          width: {{ b.width }},
           title: '{{ b.displayName }}',
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
           render: (_dom: any, record: any) => {
-            return <>{record.{{ b.name }} ? record.{{ b.name }} : '--'}</>;
+            const content = record.{{ b.name }} ? record.{{ b.name }} : '--';
+            return (
+              <div
+                style={{ "{{" }}
+                  overflow: 'hidden',
+                  width: '{{ b.textLen }}px',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                {{ "}}" }}
+              >
+                <Popover content={content} trigger="hover">
+                  {content}
+                </Popover>
+              </div>
+            );
           },
         },
           {%- endif %}
           {%- if b.inputType and b.inputType == "InputNumber" %}
         {
+          width: {{ b.width }},
           title: '{{ b.displayName }}',
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
@@ -261,16 +306,32 @@ export const use{{ bt.firstUpperTabCode }}Columns: () => TableColumnType<T{{ bt.
           {%- endif %}
           {%- if b.inputType and b.inputType == "Text" %}
         {
+          width: {{ b.width }},
           title: '{{ b.displayName }}',
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
           render: (_dom: any, record: any) => {
-            return <>{record.{{ b.name }} ? record.{{ b.name }} : '--'}</>;
+            const content = record.{{ b.name }} ? record.{{ b.name }} : '--';
+            return (
+              <div
+                style={{ "{{" }}
+                  overflow: 'hidden',
+                  width: '{{ b.textLen }}px',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                {{ "}}" }}
+              >
+                <Popover content={content} trigger="hover">
+                  {content}
+                </Popover>
+              </div>
+            );
           },
         },
           {%- endif %}
           {%- if b.inputType and b.inputType == "Checkbox" %}
         {
+          width: {{ b.width }},
           title: '{{ b.displayName }}',
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
@@ -281,6 +342,7 @@ export const use{{ bt.firstUpperTabCode }}Columns: () => TableColumnType<T{{ bt.
           {%- endif %}
           {%- if b.inputType and b.inputType == "DateTime" %}
         {
+          width: {{ b.width }},
           title: '{{ b.displayName }}',
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
@@ -299,6 +361,7 @@ export const use{{ bt.firstUpperTabCode }}Columns: () => TableColumnType<T{{ bt.
           {%- endif %}
           {%- if b.inputType and b.inputType == "Date" %}
         {
+          width: {{ b.width }},
           title: '{{ b.displayName }}',
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
@@ -317,6 +380,7 @@ export const use{{ bt.firstUpperTabCode }}Columns: () => TableColumnType<T{{ bt.
           {%- endif %}
           {%- if b.inputType and b.inputType == "Time" %}
         {
+          width: {{ b.width }},
           title: '{{ b.displayName }}',
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',
@@ -327,6 +391,7 @@ export const use{{ bt.firstUpperTabCode }}Columns: () => TableColumnType<T{{ bt.
           {%- endif %}
           {%- if b.inputType and b.inputType == "Ref" %}
         {
+          width: {{ b.width }},
           title: '{{ b.displayName }}',
           dataIndex: [
             '{{ b.name }}',
@@ -351,6 +416,7 @@ export const use{{ bt.firstUpperTabCode }}Columns: () => TableColumnType<T{{ bt.
           {%- endif %}
           {%- if b.inputType and b.inputType == "Select" %}
         {
+          width: {{ b.width }},
           title: '{{ b.displayName }}',
           dataIndex: '{{ b.name }}',
           key: '{{ b.name }}',

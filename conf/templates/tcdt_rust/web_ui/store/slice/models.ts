@@ -19,6 +19,7 @@ type TEventData = {
 export type TDomainStore = {
   /**页面状态 */
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  loadingCount: number;
   /**页面配置id */
   idUiConf: string;
   /**当前页面编号 */

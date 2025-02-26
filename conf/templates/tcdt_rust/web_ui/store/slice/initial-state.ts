@@ -2,6 +2,7 @@ import { TDomainStore } from './models';
 
 export const initialState: TDomainStore = {
   status: 'idle',
+  loadingCount: 0,
 {%- if rootInfo.uiJson.pages is iterable %}
   {%- for page in rootInfo.uiJson.pages %}
     {%- if loop.first %}

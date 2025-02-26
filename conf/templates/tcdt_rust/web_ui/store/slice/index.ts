@@ -14,6 +14,12 @@ export const slice = createSlice({
     changePageStatus: (state, action: PayloadAction<string>) => {
       state.pageCode = action.payload;
     },
+    addLoadingCount: (state, action: PayloadAction<void>) => {
+      state.loadingCount = state.loadingCount + 1;
+    },
+    reduceLoadingCount: (state, action: PayloadAction<void>) => {
+      state.loadingCount = state.loadingCount - 1;
+    },
   },
   extraReducers: (builder) => {},
 });

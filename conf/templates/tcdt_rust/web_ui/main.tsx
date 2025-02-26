@@ -1,18 +1,15 @@
-import { Spin } from 'antd';
-import { FC } from 'react';
-import classNames from 'classnames';
-import ModuleLayout from './components';
-import { useLoadingStatus } from './hooks';
-import styles from './index.less';
+import { Spin } from "antd";
+import { FC } from "react";
+import classNames from "classnames";
+import ModuleLayout from "./components";
+import { useFgLoading } from "./hooks";
+import styles from "./index.less";
 
 const MainLayout: FC = () => {
-  const loadStatus = useLoadingStatus();
+  const loadStatus = useFgLoading();
   return (
     <>
-      <Spin
-        spinning={loadStatus === 'loading'}
-        wrapperClassName={classNames(styles.spin)}
-      >
+      <Spin spinning={loadStatus} wrapperClassName={classNames(styles.spin)}>
         <ModuleLayout />
       </Spin>
     </>

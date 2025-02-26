@@ -39,6 +39,13 @@ export const fetchByTreeNode = createAsyncThunk(
         {%- endif %}
       {%- endfor %}
     {%- endif %}
+    const state: TTableStore = (thunkAPI.getState() as any)[componentName];
+    const searchData = state.searchData;
+    const searchFilter = buildFiltersBySearchRef(searchData, searcheRefs);
+    if (!searchFilter) {
+      return;
+    }
+    fns.push(...searchFilter.andFilters);
     const params: TPageInfoInput = {
       pageIndex: 1,
       pageSize: 10,
@@ -245,10 +252,20 @@ export const batchRemove = createAsyncThunk(
     }
     await ListAPI.batchRemove(deleteDatas);
     const fns: TFilterNode[] = [];
+{%- if rootInfo.bTableJson and rootInfo.bTableJson.configList.header is iterable %}
+  {%- for bt in rootInfo.bTableJson.configList.header %}
+    {%- if bt.billFormFields is iterable %}
+      {%- for b in bt.billFormFields %}
+        {%- if b.fgTreeAttr and b.refConfig %}
     if (state.selectedTreeNode) {
-      const treeIdFn: TFilterNode = equalFilterNode('cameraId', stringFilterParam(state.selectedTreeNode['id']));
+      const treeIdFn: TFilterNode = equalFilterNode('{{ b.name }}', stringFilterParam(state.selectedTreeNode['{{ b.refConfig.backWriteProp }}']));
       fns.push(treeIdFn);
     }
+        {%- endif %}
+      {%- endfor %}
+    {%- endif %}
+  {%- endfor %}
+{%- endif %}
     const searchData = state.searchData;
     const searchFilter = buildFiltersBySearchRef(searchData, searcheRefs);
     if (!searchFilter) {

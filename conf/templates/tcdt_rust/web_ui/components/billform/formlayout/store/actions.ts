@@ -40,6 +40,15 @@ export const addFormData: CaseReducer<
   state.formData = {
     {{ bt.mainProperty }}: nanoid(),
     action: DOStatus.NEW,
+{%- for ht in rootInfo.bJson.configForm.header %}
+  {%- if ht.billFormFields is iterable %}
+    {%- for b in ht.billFormFields %}
+      {%- if b.defaultValue %}
+    {{ b.name }}: {{ b.defaultValue }},
+      {%- endif %}
+    {%- endfor %}
+  {%- endif %}
+{%- endfor %}
 {%- if rootInfo.bJson and rootInfo.bJson.configForm.body is iterable %}
   {%- for bt in rootInfo.bJson.configForm.body %}
     {%- if bt.billFormFields is iterable %}

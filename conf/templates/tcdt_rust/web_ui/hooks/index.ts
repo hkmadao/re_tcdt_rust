@@ -24,6 +24,12 @@ export const useLoadingStatus = () => {
   return useSelector(selectStatus);
 }
 
+export const useFgLoading = () => {
+  return useSelector((state: { [x: string]: TDomainStore }) => {
+    return state[componentName].loadingCount > 0;
+  });
+}
+
 export const usePageCode = () => {
   return useSelector(selectPageCode);
 }

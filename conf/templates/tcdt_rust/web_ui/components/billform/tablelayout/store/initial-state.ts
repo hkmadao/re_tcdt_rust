@@ -5,9 +5,10 @@ export const initialState: TTableStore = {
   tableData: [],
   selectedRowKeys: [],
   selectedTreeNode: undefined,
-  searchData: undefined,
+  searchData: {},
   pageIndex: 1,
   pageSize: 10,
   totalCount: 0,
   fgDisabled: false,
+  fgHidden: false
 };
