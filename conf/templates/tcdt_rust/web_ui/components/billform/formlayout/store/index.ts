@@ -68,8 +68,19 @@ export const formSlice = createSlice({
           data: undefined,
         });
        })
-      .addCase(reflesh.rejected, (state, action) => { })
+      .addCase(reflesh.rejected, (state, action) => {
+        subject.publish({
+          topic: '/page/reduceLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
+       })
       .addCase(reflesh.fulfilled, (state, action) => {
+        subject.publish({
+          topic: '/page/reduceLoadingCount',
+          producerId: state.idUiConf!,
+          data: undefined,
+        });
         state.formData = action.payload;
         state.editStatusInfo = {
           id: nanoid(),
