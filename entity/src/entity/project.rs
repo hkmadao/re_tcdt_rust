@@ -16,9 +16,12 @@ pub struct Model {
     /// 系统路径:
     #[sea_orm(comment = "系统路径")]
     pub path: Option<String>,
-    /// 项目模板编号:
-    #[sea_orm(comment = "项目模板编号")]
+    /// 后台项目模板编号:
+    #[sea_orm(comment = "后台项目模板编号")]
     pub template_code: Option<String>,
+    /// 前端项目模板编号:
+    #[sea_orm(comment = "前端项目模板编号")]
+    pub web_template_code: Option<String>,
     /// 备注:
     #[sea_orm(comment = "备注")]
     pub note: Option<String>,
@@ -81,6 +84,7 @@ pub fn convert_model_to_active_model(project_model: Model) -> ActiveModel {
         display_name: Set(project_model.display_name.clone()),
         path: Set(project_model.path.clone()),
         template_code: Set(project_model.template_code.clone()),
+        web_template_code: Set(project_model.web_template_code.clone()),
         note: Set(project_model.note.clone()),
         file_name_type: Set(project_model.file_name_type.clone()),
     }

@@ -24,7 +24,7 @@ pub async fn ui_code_generate(
     let project_entity = get_project(db, &factory_entity).await?;
     let template_code =
         project_entity
-            .template_code
+            .web_template_code
             .clone()
             .ok_or(TcdtServiceError::build_internal_msg(
                 "project entity template code is Empty",

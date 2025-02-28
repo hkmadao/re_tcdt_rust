@@ -1,8 +1,5 @@
-{%- if rootInfo.mainEntityInfo %}
-package {{ rootInfo.mainEntityInfo.basePath }}.dto.po;
-{%- endif %}
-{%- if not rootInfo.mainEntityInfo %}
-package {{ rootInfo.basePath }}.{{ rootInfo.packageName}}.dto.po;
+{%- if rootInfo.compInfo %}
+package {{ rootInfo.compInfo.basePath }}.{{ rootInfo.packageName }}.dto.po;
 {%- endif %}
 
 import java.util.List;

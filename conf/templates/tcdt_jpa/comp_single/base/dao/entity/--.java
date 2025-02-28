@@ -12,7 +12,12 @@ import org.hibernate.annotations.GenericGenerator;
 import com.cft.mdc.base.BaseEntity;
 import {{ rootInfo.basePath }}.{{ rootInfo.packageName}}.dao.desc.{{ rootInfo.className }}Desc;
 {%- for upEntityInfo in rootInfo.upEntityInfoList %}
-import {{ rootInfo.basePath }}dao.entity.{{ rootInfo.packageName}};
+import {{ upEntityInfo.basePath }}.{{ upEntityInfo.packageName}}.dao.desc.{{ upEntityInfo.className}}Desc;
+import {{ upEntityInfo.basePath }}.{{ upEntityInfo.packageName}}.dao.entity.{{ upEntityInfo.className}};
+{%- endfor %}
+{%- for downEntityInfo in rootInfo.downEntityInfoList %}
+import {{ downEntityInfo.basePath }}.{{ downEntityInfo.packageName}}.dao.desc.{{ downEntityInfo.className}}Desc;
+import {{ downEntityInfo.basePath }}.{{ downEntityInfo.packageName}}.dao.entity.{{ downEntityInfo.className}};
 {%- endfor %}
 {%- for outBasePackage in rootInfo.outBasePackageList %}
 import {{ outBasePackage.objectTypePackage }}.{{ outBasePackage.objectType }};
@@ -45,12 +50,12 @@ public class {{ rootInfo.className }} extends BaseEntity {
     /**
      * {{ attributeInfo.displayName }}{%- if attributeInfo.note %}:{{ attributeInfo.note }}{%- else %}{%- endif %}
      */
-    @Column(name = "{{ attributeInfo.columnName }}" //\
+    @Column(name = "{{ attributeInfo.columnName }}" 
     {%- if attributeInfo.len %}
-    , length = {{ attributeInfo.len }} //\
+    , length = {{ attributeInfo.len }} 
     {%- endif %}
     {%- if attributeInfo.pcs %}
-            , precision = {{ attributeInfo.len }},scale = {{ attributeInfo.pcs }} //\
+            , precision = {{ attributeInfo.len }},scale = {{ attributeInfo.pcs }} 
     {%- endif %}
         )
     private {{ attributeInfo.objectType }} {{ attributeInfo.camelCaseName }};
@@ -60,12 +65,12 @@ public class {{ rootInfo.className }} extends BaseEntity {
     /**
      * {{ attributeInfo.displayName }}{%- if attributeInfo.note %}:{{ attributeInfo.note }}{%- else %}{%- endif %}
      */
-    @Column(name = "{{ attributeInfo.columnName }}" //\
+    @Column(name = "{{ attributeInfo.columnName }}" 
     {%- if attributeInfo.len %}
-    , length = {{ attributeInfo.len }} //\
+    , length = {{ attributeInfo.len }} 
     {%- endif %}
     {%- if attributeInfo.pcs %}
-            , precision = {{ attributeInfo.len }},scale = {{ attributeInfo.pcs }} //\
+            , precision = {{ attributeInfo.len }},scale = {{ attributeInfo.pcs }} 
     {%- endif %}
         )
     private {{ attributeInfo.objectType }} {{ attributeInfo.camelCaseName }};

@@ -27,9 +27,12 @@ pub struct ProjectVO {
     /// 系统路径:
     #[serde(default)]
     pub path: Option<String>,
-    /// 项目模板编号:
+    /// 后台项目模板编号:
     #[serde(default)]
     pub template_code: Option<String>,
+    /// 前端项目模板编号:
+    #[serde(default)]
+    pub web_template_code: Option<String>,
     /// 备注:
     #[serde(default)]
     pub note: Option<String>,

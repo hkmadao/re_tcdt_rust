@@ -41,7 +41,14 @@ pub fn get_project_desc() ->  EntityDesc {
     let template_code_attribute_info = AttributeInfo {
         column_name: "template_code".to_owned(),
         name: "templateCode".to_owned(),
-        display_name: "项目模板编号".to_owned(),
+        display_name: "后台项目模板编号".to_owned(),
+        data_type: "String".to_owned(),
+        ..Default::default()
+    };
+    let web_template_code_attribute_info = AttributeInfo {
+        column_name: "web_template_code".to_owned(),
+        name: "webTemplateCode".to_owned(),
+        display_name: "前端项目模板编号".to_owned(),
         data_type: "String".to_owned(),
         ..Default::default()
     };
@@ -112,6 +119,7 @@ pub fn get_project_desc() ->  EntityDesc {
           ("displayName".to_owned(), display_name_attribute_info),
           ("path".to_owned(), path_attribute_info),
           ("templateCode".to_owned(), template_code_attribute_info),
+          ("webTemplateCode".to_owned(), web_template_code_attribute_info),
           ("note".to_owned(), note_attribute_info),
           ("fileNameType".to_owned(), file_name_type_attribute_info),
           ("subProjects".to_owned(), sub_projects_attribute_info),
