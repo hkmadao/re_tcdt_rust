@@ -46,6 +46,9 @@ pub struct Model {
     /// 批量获取下级实体数量:
     #[sea_orm(comment = "批量获取下级实体数量")]
     pub down_batch_size: Option<i32>,
+    /// 是否系统引用连线
+    #[sea_orm(comment = "是否系统引用连线")]
+    pub fg_sys_ref: Option<bool>,
     /// 实体集id:
     #[sea_orm(comment = "实体集id")]
     pub id_entity_collection: Option<String>,
@@ -134,6 +137,7 @@ pub fn convert_model_to_active_model(entity_associate_model: Model) -> ActiveMod
         fg_foreign_key: Set(entity_associate_model.fg_foreign_key.clone()),
         down_order_str: Set(entity_associate_model.down_order_str.clone()),
         down_batch_size: Set(entity_associate_model.down_batch_size.clone()),
+        fg_sys_ref: Set(entity_associate_model.fg_sys_ref.clone()),
         id_entity_collection: Set(entity_associate_model.id_entity_collection.clone()),
         id_up: Set(entity_associate_model.id_up.clone()),
         id_down: Set(entity_associate_model.id_down.clone()),

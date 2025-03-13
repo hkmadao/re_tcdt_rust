@@ -116,6 +116,9 @@ pub struct DtoEntityAssociateVO {
     /// DTO实体集id
     #[serde(default)]
     pub id_dto_entity_collection: Option<String>,
+    /// 是否系统引用连线
+    #[serde(default)]
+    pub fg_sys_ref: Option<bool>,
 }
 /**枚举实体 */
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, ViewObectConvert)]
@@ -536,39 +539,48 @@ pub struct CommonAttributeVO {
     #[tcdt_vo(vo_primary_key)]
     #[serde(default)]
     pub id_common_attribute: String,
-    /// 属性名称
+    /// 属性名称:
     #[serde(default)]
     pub attribute_name: Option<String>,
-    /// 显示名称
+    /// 显示名称:
     #[serde(default)]
     pub display_name: Option<String>,
-    /// 字段名称
+    /// 字段名称:
     #[serde(default)]
     pub column_name: Option<String>,
-    /// 默认值
+    /// 默认值:
     #[serde(default)]
     pub default_value: Option<String>,
-    /// 是否必填
+    /// 是否必填:
     #[serde(default)]
     pub fg_mandatory: Option<bool>,
-    /// 数据长度
+    /// 数据长度:
     #[serde(default)]
     pub len: Option<i32>,
-    /// 精度
+    /// 精度:
     #[serde(default)]
     pub pcs: Option<i32>,
-    /// 序号
+    /// 序号:
     #[serde(default)]
     pub sn: Option<i32>,
-    /// 引用属性名称
+    /// 引用属性名称:
     #[serde(default)]
     pub ref_attribute_name: Option<String>,
-    /// 引用属性显示名称
+    /// 引用属性显示名称:
     #[serde(default)]
     pub ref_display_name: Option<String>,
-    /// 属性类别
+    /// 属性类别:
     #[serde(default)]
     pub category: Option<String>,
+    /// 系统预置数据标识:
+    #[serde(default)]
+    pub fg_preset: Option<bool>,
+    #[serde(default)]
+    pub id_ref_entity: Option<String>,
+    #[serde(default)]
+    pub id_data_type: Option<String>,
+    #[serde(default)]
+    pub id_project: Option<String>,
 }
 /**DTO计算属性 */
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize, ViewObectConvert)]

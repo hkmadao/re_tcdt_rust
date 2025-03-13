@@ -90,7 +90,7 @@ pub(crate) async fn build(
             &column_domain_type_map,
             false,
         )
-        .await?;
+            .await?;
         let mut attr_info_list = entity_info.attribute_info_list.clone();
         let cp_associates = com_entity
             .find_linked(component::ComponentEntityAssociatesLinked)
@@ -132,7 +132,7 @@ pub(crate) async fn build(
                 &entity_attrs,
                 &column_domain_type_map,
             )
-            .await?;
+                .await?;
             if let Some(fk_attribute_info) = fk_attribute_info {
                 attr_info_list.push(fk_attribute_info);
             }
@@ -146,7 +146,7 @@ pub(crate) async fn build(
                 &entity_attrs,
                 &column_domain_type_map,
             )
-            .await?;
+                .await?;
             if let Some(ref_attribute_info) = ref_attribute_info {
                 attr_info_list.push(ref_attribute_info);
             }
@@ -170,7 +170,7 @@ pub(crate) async fn build(
                 &entity_attrs,
                 &column_domain_type_map,
             )
-            .await?;
+                .await?;
             if let Some(array_attribute_info) = array_attribute_info {
                 attr_info_list.push(array_attribute_info);
             }
@@ -232,8 +232,14 @@ pub(crate) async fn build(
         .flat_map(|entity_info| entity_info.down_entity_info_list)
         .collect::<Vec<_>>();
 
-    let up_out_ref_entity_info_list = distinct(all_up_out_ref_entity_info_list);
-    let up_down_entity_info_list = distinct(all_down_entity_info_list);
+    let up_ref_entity_info_list = distinct(all_up_out_ref_entity_info_list);
+    // set main_base_entity_info field
+    let main_base_entity_info = main_entity_info.clone();
+    let up_ref_entity_info_list = up_ref_entity_info_list.clone().into_iter().map(|mut entity_vo| {
+        entity_vo.main_entity_info = Some(Box::new(main_base_entity_info.clone()));
+        return entity_vo;
+    }).collect::<Vec<_>>();
+    let down_entity_info_list = distinct(all_down_entity_info_list);
 
     let ref_component_info = ComponentInfoPO {
         id_component: String::new(),
@@ -241,8 +247,8 @@ pub(crate) async fn build(
         param_json: None,
         display_name: com_entity.display_name.clone(),
         base_path: Some(base_path),
-        up_entity_info_list: up_out_ref_entity_info_list.clone(),
-        down_entity_info_list: up_down_entity_info_list.clone(),
+        up_entity_info_list: up_ref_entity_info_list.clone(),
+        down_entity_info_list: down_entity_info_list.clone(),
         main_entity_info: main_entity_info.clone(),
         out_base_package_list: base_package_name_list,
     };
@@ -493,7 +499,7 @@ async fn build_fk_attribute(
         column_domain_type_map,
         true,
     )
-    .await?;
+        .await?;
     fk_attr_info.out_entity_info = Some(Box::new(out_entity_info.clone()));
 
     let out_pk_attribute_info = out_entity_info.pk_attribute_info.clone().unwrap();
@@ -681,7 +687,7 @@ async fn build_ref_attribute(
         column_domain_type_map,
         true,
     )
-    .await?;
+        .await?;
     ref_attr_info.object_type = out_entity_info.class_name.clone();
     let out_object_type_package = format!(
         "{}.{}",
@@ -865,7 +871,7 @@ async fn build_array_attribute(
         column_domain_type_map,
         true,
     )
-    .await?;
+        .await?;
 
     attr_info.object_type = out_entity_info.class_name.clone();
     let out_object_type_package = format!(
@@ -1061,6 +1067,7 @@ async fn make_base_entity_info(
         id_component_entity: component_entity_entity.id_component_entity.clone(),
         id_entity: dd_entity_entity.id_entity.clone(),
         fg_main: false,
+        main_entity_info: None,
         param_json: None,
         base_path: Some(base_path),
         package_name: com_entity.package_name.clone(),
@@ -1157,6 +1164,7 @@ fn build_desc_info(
         id_entity: entity_info.id_entity.clone(),
         id_component_entity: entity_info.id_component_entity.clone(),
         fg_main: entity_info.fg_main.clone(),
+        main_entity_info: None,
         param_json: entity_info.param_json.clone(),
         base_path: entity_info.base_path.clone(),
         package_name: entity_info.package_name.clone(),
@@ -1224,11 +1232,11 @@ fn build_attribute_type_info(
         }
         if attr_info.attribute_type_code.is_none()
             || attr_info
-                .attribute_type_code
-                .clone()
-                .unwrap()
-                .trim()
-                .is_empty()
+            .attribute_type_code
+            .clone()
+            .unwrap()
+            .trim()
+            .is_empty()
         {
             attr_info.attribute_type_code = attribute_type_vo.code.clone();
         }

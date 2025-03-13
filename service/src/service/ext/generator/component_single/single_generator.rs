@@ -125,7 +125,7 @@ pub async fn generate(db: &DbConn, id_coll: String) -> Result<GenerateResult, Tc
         &main_entity_info,
         &get_base_file_name(&project_entity, &main_entity_info),
     )?;
-    let up_entity_info_list = main_entity_info.up_entity_info_list;
+    let up_entity_info_list = component_info.up_entity_info_list;
     for up_entity_po in up_entity_info_list {
         let up_entity_po = fill_entity_info_param_json(up_entity_po)?;
         generate_entity_code(

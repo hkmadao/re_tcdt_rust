@@ -191,6 +191,9 @@ pub struct EntityInfoPO {
     /// 主实体标志
     #[serde(default)]
     pub fg_main: bool,
+    /// 主实体基础信息
+    #[serde(default)]
+    pub main_entity_info: Option<Box<EntityInfoPO>>,
     /// 调试用参数
     #[serde(default)]
     pub param_json: Option<String>,

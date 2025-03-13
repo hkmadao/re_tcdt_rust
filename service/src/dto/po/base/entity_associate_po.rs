@@ -58,6 +58,9 @@ pub struct EntityAssociatePO {
     /// 批量获取下级实体数量:
     #[serde(default)]
     pub down_batch_size: Option<i32>,
+    /// 是否系统引用连线
+    #[serde(default)]
+    pub fg_sys_ref: Option<bool>,
     #[serde(default)]
     pub id_entity_collection: Option<String>,
     #[serde(default)]

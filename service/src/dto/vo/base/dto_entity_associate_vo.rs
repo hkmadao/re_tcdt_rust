@@ -50,6 +50,9 @@ pub struct DtoEntityAssociateVO {
     /// 外键属性显示名称:
     #[serde(default)]
     pub fk_attribute_display_name: Option<String>,
+    /// 是否系统引用连线
+    #[serde(default)]
+    pub fg_sys_ref: Option<bool>,
     #[serde(default)]
     pub id_dto_entity_collection: Option<String>,
     #[serde(default)]

@@ -263,6 +263,11 @@ pub(crate) async fn build(
         entity_info.main_entity_info = Some(Box::new(main_entity_info.clone()));
     });
 
+    let up_entity_info_list = up_entity_info_list.into_iter().map(|mut entity_info| {
+        entity_info.main_entity_info = Some(Box::new(main_entity_info.clone()));
+        return entity_info;
+    }).collect::<Vec<_>>();
+
     main_entity_info.child_entity_info_list = child_entity_info_list.clone();
 
     let ref_component_info = ComponentInfoPO {

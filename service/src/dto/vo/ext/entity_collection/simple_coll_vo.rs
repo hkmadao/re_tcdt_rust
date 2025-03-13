@@ -180,4 +180,7 @@ pub struct EntityAssociateVO {
     /// 实体集id
     #[serde(default)]
     pub id_entity_collection: Option<String>,
+    /// 是否系统引用连线
+    #[serde(default)]
+    pub fg_sys_ref: Option<bool>,
 }

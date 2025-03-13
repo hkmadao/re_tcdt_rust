@@ -46,6 +46,9 @@ pub struct DtoEntityAssociatePO {
     ///  上级DTO实体信息id
     #[serde(default)]
     pub id_up: Option<String>,
+    /// 是否系统引用连线
+    #[serde(default)]
+    pub fg_sys_ref: Option<bool>,
 }
 /// DTO实体属性
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]

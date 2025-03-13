@@ -87,6 +87,13 @@ pub fn get_dto_entity_associate_desc() ->  EntityDesc {
         data_type: "String".to_owned(),
         ..Default::default()
     };
+    let fg_sys_ref_attribute_info = AttributeInfo {
+        column_name: "fg_sys_ref".to_owned(),
+        name: "fgSysRef".to_owned(),
+        display_name: "是否系统引用连线".to_owned(),
+        data_type: "Boolean".to_owned(),
+        ..Default::default()
+    };
     let id_dto_entity_collection_attribute_info = AttributeInfo {
         column_name: "id_dto_entity_collection".to_owned(),
         name: "idDtoEntityCollection".to_owned(),
@@ -182,6 +189,7 @@ pub fn get_dto_entity_associate_desc() ->  EntityDesc {
           ("fkColumnName".to_owned(), fk_column_name_attribute_info),
           ("fkAttributeName".to_owned(), fk_attribute_name_attribute_info),
           ("fkAttributeDisplayName".to_owned(), fk_attribute_display_name_attribute_info),
+          ("fgSysRef".to_owned(), fg_sys_ref_attribute_info),
           ("idDtoEntityCollection".to_owned(), id_dto_entity_collection_attribute_info),
           ("dtoEntityCollection".to_owned(), dto_entity_collection_attribute_info),
           ("idUp".to_owned(), id_up_attribute_info),

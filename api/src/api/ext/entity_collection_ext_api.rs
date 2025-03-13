@@ -590,6 +590,7 @@ fn convert_to_entity_assosiciate_po(asso_vo: &EntityAssociateVO) -> EntityAssoci
         id_up: asso_vo.id_up.clone(),
         id_entity_collection: asso_vo.id_entity_collection.clone(),
         id_down: asso_vo.id_down.clone(),
+        fg_sys_ref: asso_vo.fg_sys_ref.clone(),
     }
 }
 

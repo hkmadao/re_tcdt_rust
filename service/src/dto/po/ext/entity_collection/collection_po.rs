@@ -241,6 +241,9 @@ pub struct EntityAssociatePO {
     /// 下级实体id
     #[serde(default)]
     pub id_down: Option<String>,
+    /// 是否系统引用连线
+    #[serde(default)]
+    pub fg_sys_ref: Option<bool>,
 }
 /// ui信息
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]

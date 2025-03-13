@@ -899,6 +899,7 @@ fn make_enti_asso_active_model(
         id_up: Set(po.id_up.clone()),
         id_dto_entity_collection: Set(po.id_dto_entity_collection.clone()),
         id_down: Set(po.id_down.clone()),
+        fg_sys_ref: Set(po.fg_sys_ref.clone()),
     }
 }
 

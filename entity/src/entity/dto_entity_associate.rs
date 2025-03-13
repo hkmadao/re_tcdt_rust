@@ -37,6 +37,9 @@ pub struct Model {
     /// 外键属性显示名称:
     #[sea_orm(comment = "外键属性显示名称")]
     pub fk_attribute_display_name: Option<String>,
+    /// 是否系统引用连线
+    #[sea_orm(comment = "是否系统引用连线")]
+    pub fg_sys_ref: Option<bool>,
     /// DTO实体集id:
     #[sea_orm(comment = "DTO实体集id")]
     pub id_dto_entity_collection: Option<String>,
@@ -108,6 +111,7 @@ pub fn convert_model_to_active_model(dto_entity_associate_model: Model) -> Activ
         fk_column_name: Set(dto_entity_associate_model.fk_column_name.clone()),
         fk_attribute_name: Set(dto_entity_associate_model.fk_attribute_name.clone()),
         fk_attribute_display_name: Set(dto_entity_associate_model.fk_attribute_display_name.clone()),
+        fg_sys_ref: Set(dto_entity_associate_model.fg_sys_ref.clone()),
         id_dto_entity_collection: Set(dto_entity_associate_model.id_dto_entity_collection.clone()),
         id_up: Set(dto_entity_associate_model.id_up.clone()),
         id_down: Set(dto_entity_associate_model.id_down.clone()),
