@@ -368,6 +368,7 @@ impl ParamBuild {
             let fk_attribute_info = AttributeInfoPO {
                 fg_foreign_key: associate_entity.fg_foreign_key.clone(),
                 fg_mandatory: fg_fg_mandatory,
+                column_name: associate_entity.fk_column_name.clone(),
                 attribute_name: Some(fk_camel_case_name.clone()),
                 display_name: associate_entity.fk_attribute_display_name.clone(),
                 note: associate_entity.fk_attribute_display_name.clone(),

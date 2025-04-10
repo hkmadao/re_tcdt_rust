@@ -574,6 +574,7 @@ async fn build_ref_attribute(
         let fk_macro_case_name = snake_case_to_macro_case(&fk_snake_case_name);
         let fk_attribute_info = AttributeInfoPO {
             fg_mandatory: fg_fg_mandatory,
+            column_name: associate_entity_entity.fk_column_name.clone(),
             attribute_name: Some(fk_camel_case_name.clone()),
             display_name: associate_entity_entity.fk_attribute_display_name.clone(),
             note: associate_entity_entity.fk_attribute_display_name.clone(),
