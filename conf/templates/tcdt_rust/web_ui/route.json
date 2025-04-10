@@ -1,6 +1,0 @@
-{
-  "path": "dynamic/{{ rootInfo.name }}",
-  "name": "{{ rootInfo.displayName }}",
-  "component": "@/pages/{{ rootInfo.name }}",
-  "exact": true
-}
