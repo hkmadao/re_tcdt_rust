@@ -5,7 +5,7 @@ use crate::service::ext::generator::genrate_util::{
     create_folder_strut_by_template_folder, generator,
 };
 use crate::service::ext::generator::write_dir::folder_zip;
-use crate::util::file_util::recursion_get_file_by_folder;
+use crate::util::file_util::{recursion_get_file_by_folder, rename_file_placeholder};
 use ::entity::entity::{bill_form, button_action, factory, project, query, tree};
 use sea_orm::*;
 use tcdt_common::file_util::get_file_separator;
@@ -390,14 +390,14 @@ fn generate_ui_code(
             })?;
     }
     for template_file_full_name in template_file_full_name_list {
-        generator(
+        let generate_file_path = generator(
             &target_path,
             &template_file_path,
             &template_file_full_name,
-            &ui_factory_po.display_name.clone().unwrap(),
             &context,
             &tera,
         )?;
+        let new_file_name = rename_file_placeholder(&generate_file_path, "_{displayName}_", &ui_factory_po.display_name.clone().unwrap())?;
     }
     Ok(())
 }

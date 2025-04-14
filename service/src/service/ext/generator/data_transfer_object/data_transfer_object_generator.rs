@@ -9,7 +9,7 @@ use crate::service::{
     base::dto_entity_collection_service::DtoEntityCollectionQuery,
     ext::data_type_ext_service::DataTypeExtQuery,
 };
-use crate::util::file_util::recursion_get_file_by_folder;
+use crate::util::file_util::{recursion_get_file_by_folder, rename_file_placeholder};
 use ::entity::entity::{dto_entity_collection, dto_module, project, sub_project};
 use sea_orm::*;
 use tcdt_common::file_util::get_file_separator;
@@ -173,7 +173,7 @@ async fn generate_part(
     // common relative path
     let common_relative_path = format!("{}{}", template_dir_name, get_file_separator());
     // target generate common path
-    let target_generate_common_path = format!("{}{}", target_common_path, get_file_separator(),);
+    let target_generate_common_path = format!("{}{}", target_common_path, get_file_separator());
     // template common path
     let template_common_path = format!(
         "{}{}{}{}{}",
@@ -283,14 +283,14 @@ fn generate_application_code(
             })?;
     }
     for template_file_full_name in template_file_full_name_list {
-        generator(
+        let generate_file_path = generator(
             &target_path,
             &template_file_path,
             &template_file_full_name,
-            &application_info.display_name.clone().unwrap(),
             &context,
             &tera,
         )?;
+        let new_file_name = rename_file_placeholder(&generate_file_path, "_{displayName}_", &application_info.display_name.clone().unwrap())?;
     }
     Ok(())
 }
@@ -315,14 +315,18 @@ fn generate_entity_code(
             })?;
     }
     for template_file_full_name in template_file_full_name_list {
-        generator(
+        let generate_file_path = generator(
             &target_path,
             &template_file_path,
             &template_file_full_name,
-            entity_name,
             &context,
             &tera,
         )?;
+        let new_file_name = rename_file_placeholder(&generate_file_path, "_{camelCase}_", &entity_info_po.camel_case_name.clone().unwrap())?;
+        let new_file_name = rename_file_placeholder(&new_file_name, "_{pascalCase}_", &entity_info_po.pascal_case_name.clone().unwrap())?;
+        let new_file_name = rename_file_placeholder(&new_file_name, "_{snakeCase}_", &entity_info_po.snake_case_name.clone().unwrap())?;
+        let new_file_name = rename_file_placeholder(&new_file_name, "_{macroCase}_", &entity_info_po.macro_case_name.clone().unwrap())?;
+        let new_file_name = rename_file_placeholder(&new_file_name, "_{displayName}_", &entity_info_po.display_name.clone().unwrap())?;
     }
     Ok(())
 }

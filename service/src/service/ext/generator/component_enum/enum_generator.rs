@@ -6,7 +6,7 @@ use crate::service::ext::generator::genrate_util::{
     create_folder_strut_by_template_folder, generator,
 };
 use crate::service::ext::generator::write_dir::folder_zip;
-use crate::util::file_util::recursion_get_file_by_folder;
+use crate::util::file_util::{recursion_get_file_by_folder, rename_file_placeholder};
 use ::entity::entity::{component, component_module, project, sub_project};
 use sea_orm::*;
 use tcdt_common::file_util::get_file_separator;
@@ -153,7 +153,6 @@ pub async fn generate_part(
             &base_target_generate_common_path,
             &base_template_common_path,
             &enum_po,
-            &get_base_file_name(&project_entity, &enum_po),
         )?;
     }
 
@@ -232,7 +231,6 @@ fn generate_entity_code(
     target_path: &str,
     template_file_path: &str,
     enum_info: &EnumInfoPO,
-    entity_name: &str,
 ) -> Result<(), TcdtServiceError> {
     let mut context = Context::new();
     context.insert("rootInfo", &enum_info);
@@ -248,14 +246,18 @@ fn generate_entity_code(
             })?;
     }
     for template_file_full_name in template_file_full_name_list {
-        generator(
+        let generate_file_path = generator(
             &target_path,
             &template_file_path,
             &template_file_full_name,
-            entity_name,
             &context,
             &tera,
         )?;
+       let new_file_name = rename_file_placeholder(&generate_file_path, "_{camelCase}_", &enum_info.camel_case_name.clone().unwrap())?;
+       let new_file_name = rename_file_placeholder(&new_file_name, "_{pascalCase}_", &enum_info.pascal_case_name.clone().unwrap())?;
+       let new_file_name = rename_file_placeholder(&new_file_name, "_{snakeCase}_", &enum_info.snake_case_name.clone().unwrap())?;
+       let new_file_name = rename_file_placeholder(&new_file_name, "_{macroCase}_", &enum_info.macro_case_name.clone().unwrap())?;
+       let new_file_name = rename_file_placeholder(&new_file_name, "_{displayName}_", &enum_info.display_name.clone().unwrap())?;
     }
     Ok(())
 }
@@ -283,7 +285,6 @@ fn generate_component_code(
             &target_path,
             &template_file_path,
             &template_file_full_name,
-            &component_info_po.display_name.clone().unwrap(),
             &context,
             &tera,
         )?;

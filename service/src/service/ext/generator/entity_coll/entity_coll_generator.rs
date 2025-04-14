@@ -5,7 +5,7 @@ use crate::service::ext::generator::genrate_util::{
     create_folder_strut_by_template_folder, generator,
 };
 use crate::service::ext::generator::write_dir::folder_zip;
-use crate::util::file_util::{get_file_extension, recursion_get_file_by_folder};
+use crate::util::file_util::{get_file_extension, recursion_get_file_by_folder, rename_file_placeholder};
 use ::entity::entity::project;
 use sea_orm::*;
 use tcdt_common::file_util::get_file_separator;
@@ -218,7 +218,6 @@ pub async fn generate_part(
             &target_generate_common_path,
             &template_common_path,
             &entity_po,
-            &get_base_file_name(&project_entity, &entity_po),
         )?;
     }
 
@@ -286,10 +285,10 @@ fn generate_singe_file(
         &target_path,
         &template_file_path,
         &template_file_full_name,
-        &application_info.display_name.clone().unwrap(),
         &context,
         &tera,
     )?;
+    let new_file_name = rename_file_placeholder(&generate_file_full_name, "_{displayName}_", &application_info.display_name.clone().unwrap())?;
     Ok(generate_file_full_name)
 }
 
@@ -312,14 +311,14 @@ fn generate_application_code(
             })?;
     }
     for template_file_full_name in template_file_full_name_list {
-        generator(
+        let generate_file_path = generator(
             &target_path,
             &template_file_path,
             &template_file_full_name,
-            &application_info.display_name.clone().unwrap(),
             &context,
             &tera,
         )?;
+        rename_file_placeholder(&generate_file_path, "_{displayName}_", &application_info.display_name.clone().unwrap())?;
     }
     Ok(())
 }
@@ -328,7 +327,6 @@ fn generate_entity_code(
     target_path: &str,
     template_file_path: &str,
     entity_info_po: &EntityInfoPO,
-    entity_name: &str,
 ) -> Result<(), TcdtServiceError> {
     let mut context = Context::new();
     context.insert("rootInfo", &entity_info_po);
@@ -344,14 +342,18 @@ fn generate_entity_code(
             })?;
     }
     for template_file_full_name in template_file_full_name_list {
-        generator(
+        let generate_file_path = generator(
             &target_path,
             &template_file_path,
             &template_file_full_name,
-            entity_name,
             &context,
             &tera,
         )?;
+        rename_file_placeholder(&generate_file_path, "_{camelCase}_", &entity_info_po.camel_case_name.clone().unwrap())?;
+        rename_file_placeholder(&generate_file_path, "_{pascalCase}_", &entity_info_po.pascal_case_name.clone().unwrap())?;
+        rename_file_placeholder(&generate_file_path, "_{snakeCase}_", &entity_info_po.snake_case_name.clone().unwrap())?;
+        rename_file_placeholder(&generate_file_path, "_{macroCase}_", &entity_info_po.macro_case_name.clone().unwrap())?;
+        rename_file_placeholder(&generate_file_path, "_{displayName}_", &entity_info_po.display_name.clone().unwrap())?;
     }
     Ok(())
 }

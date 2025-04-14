@@ -8,7 +8,7 @@ use crate::service::ext::generator::write_dir::folder_zip;
 use crate::service::{
     base::component_service::ComponentQuery, ext::data_type_ext_service::DataTypeExtQuery,
 };
-use crate::util::file_util::{copy_folder_to_dest, recursion_get_file_by_folder};
+use crate::util::file_util::{copy_folder_to_dest, recursion_get_file_by_folder, rename_file_placeholder, rename_sub_folder_placeholder};
 use ::entity::entity::{component, component_module, project, sub_project};
 use sea_orm::*;
 use std::fs;
@@ -117,13 +117,11 @@ pub async fn generate(db: &DbConn, id_coll: String) -> Result<GenerateResult, Tc
         &base_target_generate_common_path,
         &base_template_common_path,
         &main_entity_info,
-        &get_base_file_name(&project_entity, &main_entity_info),
     )?;
     generate_entity_code(
         &ext_target_generate_common_path,
         &ext_template_common_path,
         &main_entity_info,
-        &get_base_file_name(&project_entity, &main_entity_info),
     )?;
     let up_entity_info_list = component_info.up_entity_info_list;
     for up_entity_po in up_entity_info_list {
@@ -132,9 +130,17 @@ pub async fn generate(db: &DbConn, id_coll: String) -> Result<GenerateResult, Tc
             &ext_target_generate_common_path,
             &ext_template_common_path,
             &up_entity_po,
-            &get_base_file_name(&project_entity, &up_entity_po),
         )?;
     }
+
+    //rename folder placeholder, must be render after run it
+    rename_sub_folder_placeholder(&target_common_path, "_{camelCase}_", &main_entity_info.camel_case_name.clone().unwrap())?;
+    rename_sub_folder_placeholder(&target_common_path, "_{snakeCase}_", &main_entity_info.snake_case_name.clone().unwrap())?;
+    rename_sub_folder_placeholder(&target_common_path, "_{pascalCase}_", &main_entity_info.pascal_case_name.clone().unwrap())?;
+    rename_sub_folder_placeholder(&target_common_path, "_{macroCase}_", &main_entity_info.macro_case_name.clone().unwrap())?;
+    rename_sub_folder_placeholder(&target_common_path, "_{lowerCase}_", &main_entity_info.camel_case_name.clone().unwrap().to_lowercase())?;
+    rename_sub_folder_placeholder(&target_common_path, "_{upperCase}_", &main_entity_info.camel_case_name.clone().unwrap().to_uppercase())?;
+
     // copy ext dir content to base dir
     copy_folder_to_dest(
         &ext_target_generate_common_path,
@@ -241,7 +247,6 @@ fn generate_entity_code(
     target_path: &str,
     template_file_path: &str,
     entity_info_po: &EntityInfoPO,
-    entity_name: &str,
 ) -> Result<(), TcdtServiceError> {
     let mut context = Context::new();
     context.insert("rootInfo", &entity_info_po);
@@ -257,14 +262,20 @@ fn generate_entity_code(
             })?;
     }
     for template_file_full_name in template_file_full_name_list {
-        generator(
+        let generate_file_path = generator(
             &target_path,
             &template_file_path,
             &template_file_full_name,
-            entity_name,
             &context,
             &tera,
         )?;
+        let new_file_name = rename_file_placeholder(&generate_file_path, "_{camelCase}_", &entity_info_po.camel_case_name.clone().unwrap())?;
+        let new_file_name = rename_file_placeholder(&new_file_name, "_{pascalCase}_", &entity_info_po.pascal_case_name.clone().unwrap())?;
+        let new_file_name = rename_file_placeholder(&new_file_name, "_{snakeCase}_", &entity_info_po.snake_case_name.clone().unwrap())?;
+        let new_file_name = rename_file_placeholder(&new_file_name, "_{macroCase}_", &entity_info_po.macro_case_name.clone().unwrap())?;
+        let new_file_name = rename_file_placeholder(&new_file_name, "_{lowerCase}_", &entity_info_po.camel_case_name.clone().unwrap().to_lowercase())?;
+        let new_file_name = rename_file_placeholder(&new_file_name, "_{upperCase}_", &entity_info_po.camel_case_name.clone().unwrap().to_uppercase())?;
+        let new_file_name = rename_file_placeholder(&new_file_name, "_{displayName}_", &entity_info_po.display_name.clone().unwrap())?;
     }
     Ok(())
 }

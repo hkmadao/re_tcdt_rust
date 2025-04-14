@@ -55,7 +55,6 @@ pub(crate) fn generator(
     target_path: &str,
     template_file_prefix: &str,
     template_file_full_name: &str,
-    entity_name: &str,
     context: &Context,
     tera: &Tera,
 ) -> Result<String, TcdtServiceError> {
@@ -63,8 +62,7 @@ pub(crate) fn generator(
         "{}{}",
         target_path,
         template_file_full_name.replace(&template_file_prefix, "")
-    )
-    .replace("--", &entity_name);
+    );
     write_to_file(
         tera,
         context,

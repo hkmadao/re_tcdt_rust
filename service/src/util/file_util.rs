@@ -40,40 +40,113 @@ pub fn recursion_get_file_by_folder(path: &str) -> Result<Vec<String>, TcdtServi
 pub fn copy_folder_struct(source_path: &str, target_path: &str) -> Result<(), TcdtServiceError> {
     if target_path.contains(source_path) {
         return Err(TcdtServiceError::build_internal_msg(
-            "target dir can not contains source path",
+            &format!("target dir: '{target_path}' can not contains source path: '{source_path}'"),
         ));
     }
-    let source_dir_read_dir = fs::read_dir(source_path).map_err(|err| {
-        log::error!("source_dir_read_dir read_dir failed");
+    let sub_dir_read_dir = fs::read_dir(source_path).map_err(|err| {
+        log::error!("source_dir_read_dir: '{source_path}' read_dir failed");
         TcdtServiceError::build_internal_msg_error("source_dir_read_dir read_dir failed", err)
     })?;
-    for source_dir_result in source_dir_read_dir {
-        if let Ok(source_dir) = source_dir_result {
-            let fg_dir = source_dir
+    for sub_dir_result in sub_dir_read_dir {
+        if let Ok(sub_dir) = sub_dir_result {
+            let fg_dir = sub_dir
                 .metadata()
                 .map(|meta| meta.is_dir())
                 .unwrap_or(false);
             if fg_dir {
-                let dir_name = source_dir
+                let sub_dir_name = sub_dir
                     .file_name()
                     .as_os_str()
                     .to_str()
                     .unwrap()
                     .to_owned();
-                let new_dir_name = format!("{}{}{}", target_path, get_file_separator(), dir_name);
-                let source_dir_name =
-                    format!("{}{}{}", source_path, get_file_separator(), dir_name);
-                if new_dir_name.len() > 254 {
+                let new_sub_dir_name = format!("{}{}{}", target_path, get_file_separator(), sub_dir_name);
+                let sub_path_dir_name =
+                    format!("{}{}{}", source_path, get_file_separator(), sub_dir_name);
+                if new_sub_dir_name.len() > 254 {
                     return Err(TcdtServiceError::build_internal_msg(&format!(
                         "target dir name: '{}' to long",
-                        new_dir_name
+                        new_sub_dir_name
                     )));
                 }
-                fs::create_dir(&new_dir_name).map_err(|err| {
-                    log::error!("create_dir failed");
+                fs::create_dir(&new_sub_dir_name).map_err(|err| {
+                    log::error!("create_dir: '{new_sub_dir_name}' failed");
                     TcdtServiceError::build_internal_msg_error("create_dir failed", err)
                 })?;
-                copy_folder_struct(&source_dir_name, &new_dir_name)?;
+                copy_folder_struct(&sub_path_dir_name, &new_sub_dir_name)?;
+            }
+        }
+    }
+    Ok(())
+}
+
+pub fn rename_file_placeholder(source_path: &str, from: &str, to: &str) -> Result<String, TcdtServiceError> {
+    let source_metadata = fs::metadata(source_path).map_err(|err| {
+        log::error!("path: '{source_path}' metadata failed");
+        TcdtServiceError::build_internal_msg_error("path read_dir failed", err)
+    })?;
+    if !source_metadata.is_file() {
+        return Err(TcdtServiceError::build_internal_msg(&format!("path: '{source_path}' is not a file")));
+    }
+    if !source_path.contains(from) {
+        return Ok(source_path.to_owned());
+    }
+    let file_path = Path::new(source_path);
+    let file_name = file_path.file_name().ok_or_else(|| {
+        log::error!("path: '{source_path}' get filename failed");
+        TcdtServiceError::build_internal_msg("path get filename failed")
+    })?.to_str().ok_or_else(|| {
+        log::error!("path: '{source_path}' to_str failed");
+        TcdtServiceError::build_internal_msg("path to_str failed")
+    })?;
+
+    let source_path = file_path.to_str().ok_or_else(|| {
+        log::error!("path: '{source_path}' get path failed");
+        TcdtServiceError::build_internal_msg("path get path failed")
+    })?;
+    let end = source_path.len() - file_name.len();
+    let target_name = format!("{}{}", &source_path[..end], file_name.replace(from, to));
+    fs::rename(source_path, &target_name).map_err(|err| {
+        log::error!("rename file path: '{source_path}' to '{target_name}' failed");
+        TcdtServiceError::build_internal_msg_error("rename filename failed", err)
+    })?;
+    Ok(target_name)
+}
+
+pub fn rename_sub_folder_placeholder(source_path: &str, from: &str, to: &str) -> Result<(), TcdtServiceError> {
+    let sub_dir_read_dir = fs::read_dir(source_path).map_err(|err| {
+        log::error!("source_dir_read_dir: '{source_path}' read_dir failed");
+        TcdtServiceError::build_internal_msg_error("source_dir_read_dir read_dir failed", err)
+    })?;
+    for sub_dir_result in sub_dir_read_dir {
+        if let Ok(sub_dir) = sub_dir_result {
+            let fg_dir = sub_dir
+                .metadata()
+                .map(|meta| meta.is_dir())
+                .unwrap_or(false);
+            if fg_dir {
+                let sub_path = sub_dir
+                    .path()
+                    .as_os_str()
+                    .to_str()
+                    .unwrap()
+                    .to_owned();
+                rename_sub_folder_placeholder(&sub_path, from, to)?;
+                let sub_dir_name = sub_dir
+                    .file_name()
+                    .as_os_str()
+                    .to_str()
+                    .unwrap()
+                    .to_owned();
+                if !sub_dir_name.contains(from) {
+                    continue;
+                }
+                let end = sub_path.len() - sub_dir_name.len();
+                let target_name = format!("{}{}", &sub_path[..end], sub_dir_name.replace(from, to));
+                fs::rename(&sub_dir.path(), &target_name).map_err(|err| {
+                    log::error!("rename path: '{sub_path}' to '{target_name}' failed");
+                    TcdtServiceError::build_internal_msg_error("rename dir failed", err)
+                })?;
             }
         }
     }
@@ -86,41 +159,41 @@ pub fn copy_folder_to_dest(source_path: &str, target_path: &str) -> Result<(), T
             "target dir can not contains source path",
         ));
     }
-    let source_dir_read_dir = fs::read_dir(source_path).map_err(|err| {
+    let sub_dir_read_dir = fs::read_dir(source_path).map_err(|err| {
         log::error!("source_dir_read_dir read_dir failed");
         TcdtServiceError::build_internal_msg_error("source_dir_read_dir read_dir failed", err)
     })?;
-    for source_dir_result in source_dir_read_dir {
-        if let Ok(source_dir) = source_dir_result {
-            let fg_dir = source_dir
+    for sub_dir_result in sub_dir_read_dir {
+        if let Ok(sub_dir) = sub_dir_result {
+            let fg_dir = sub_dir
                 .metadata()
                 .map(|meta| meta.is_dir())
                 .unwrap_or(false);
             if fg_dir {
-                let dir_name = source_dir
+                let sub_dir_name = sub_dir
                     .file_name()
                     .as_os_str()
                     .to_str()
                     .unwrap()
                     .to_owned();
-                let new_dir_name = format!("{}{}{}", target_path, get_file_separator(), dir_name);
-                let source_dir_name =
-                    format!("{}{}{}", source_path, get_file_separator(), dir_name);
-                if new_dir_name.len() > 254 {
+                let new_sub_dir_name = format!("{}{}{}", target_path, get_file_separator(), sub_dir_name);
+                let sub_path_name =
+                    format!("{}{}{}", source_path, get_file_separator(), sub_dir_name);
+                if new_sub_dir_name.len() > 254 {
                     return Err(TcdtServiceError::build_internal_msg(&format!(
                         "target dir name: '{}' to long",
-                        new_dir_name
+                        new_sub_dir_name
                     )));
                 }
-                if !folder_exists(&new_dir_name) {
-                    fs::create_dir(&new_dir_name).map_err(|err| {
+                if !folder_exists(&new_sub_dir_name) {
+                    fs::create_dir(&new_sub_dir_name).map_err(|err| {
                         log::error!("create_dir failed");
                         TcdtServiceError::build_internal_msg_error("create_dir failed", err)
                     })?;
                 }
-                copy_folder_to_dest(&source_dir_name, &new_dir_name)?;
+                copy_folder_to_dest(&sub_path_name, &new_sub_dir_name)?;
             } else {
-                let file_name = source_dir
+                let file_name = sub_dir
                     .file_name()
                     .as_os_str()
                     .to_str()
